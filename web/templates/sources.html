@@ -158,6 +158,31 @@ a:hover { color: var(--accent); }
 .source-card:hover::before {
   background: var(--fire-gradient);
 }
+/* Tooltip */
+[data-tooltip] { position: relative; cursor: help; }
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1315; color: var(--text-secondary);
+  font-size: 11px; font-weight: 500;
+  padding: 5px 12px; border-radius: 50px;
+  border: 1px solid var(--border);
+  white-space: nowrap; z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+/* Hover lift */
+.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-lift:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+/* Scroll-triggered stagger */
+.source-card.scroll-reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.source-card.scroll-reveal.visible {
+  opacity: 1; transform: translateY(0);
+}
 .source-icon {
   font-size: 28px; margin-bottom: 16px;
   width: 52px; height: 52px; border-radius: 16px;
@@ -269,17 +294,17 @@ a:hover { color: var(--accent); }
   <div class="navbar-inner">
     <a href="/" class="logo">Fer<span class="logo-accent">chaud</span></a>
     <div class="nav-links">
-      <a href="/dashboard" class="nav-link">Dashboard</a>
-      <a href="/feed" class="nav-link">Feed</a>
-      <a href="/sources" class="nav-link active">Sources</a>
+      <a href="/#features" class="nav-link">Features</a>
       <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/sources" class="nav-link active">Sources</a>
+      <a href="/feed" class="nav-link">Feed</a>
       <a href="/signup" class="btn btn-primary" style="padding:8px 20px;font-size:13px">Get Started</a>
     </div>
   </div>
 </nav>
 
 <!-- ── Hero ──────────────────────────────────────── -->
-<section class="sources-hero">
+<section class="sources-hero page-enter">
   <h1>Powered by real-time<br><span class="fire-text">market intelligence</span></h1>
   <p class="subtitle">Ferchaud aggregates data from 8+ institutional-grade sources to make trading decisions in milliseconds.</p>
   <div class="source-count">
@@ -293,66 +318,66 @@ a:hover { color: var(--accent); }
   <div class="sources-grid">
 
     <!-- 1. Alpaca Markets -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#128200;</div>
       <div class="source-name">Alpaca Markets</div>
-      <div class="source-badge execution">Execution &amp; Data</div>
+      <div class="source-badge execution" data-tooltip="Trade execution and real-time price feeds">Execution &amp; Data</div>
       <p class="source-desc">Real-time market data for 12,000+ US equities. Sub-second price feeds, level 2 data, and direct order execution through commission-free brokerage API.</p>
     </div>
 
     <!-- 2. Grok AI -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#129302;</div>
       <div class="source-name">Grok AI (xAI)</div>
-      <div class="source-badge social">Social Intelligence</div>
+      <div class="source-badge social" data-tooltip="Scans X/Twitter for sentiment and catalysts">Social Intelligence</div>
       <p class="source-desc">Live X/Twitter search powered by Grok. Scans social sentiment, trending tickers, and breaking catalysts in real-time to find alpha before the crowd.</p>
     </div>
 
     <!-- 3. Technical Analysis Engine -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#128202;</div>
       <div class="source-name">Technical Analysis Engine</div>
-      <div class="source-badge technical">Technical Signals</div>
+      <div class="source-badge technical" data-tooltip="Generates scored signals from 10+ indicators">Technical Signals</div>
       <p class="source-desc">10+ indicators including EMA (8/21/50), MACD, RSI, Bollinger Bands, ATR, and Volume Profile. Custom signal scoring system rates setups 1-10.</p>
     </div>
 
     <!-- 4. VPIN Toxicity Monitor -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#128737;</div>
       <div class="source-name">VPIN Toxicity Monitor</div>
-      <div class="source-badge risk">Risk Detection</div>
+      <div class="source-badge risk" data-tooltip="Detects toxic order flow to protect capital">Risk Detection</div>
       <p class="source-desc">Volume-synchronized probability of informed trading. Detects toxic order flow before price moves. Institutional-grade risk filter that protects capital.</p>
     </div>
 
     <!-- 5. Regime Detection (HMM) -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#127919;</div>
       <div class="source-name">Regime Detection (HMM)</div>
-      <div class="source-badge regime">Market Regime</div>
+      <div class="source-badge regime" data-tooltip="Identifies bull, bear, or sideways market state">Market Regime</div>
       <p class="source-desc">Hidden Markov Model identifies market regimes &mdash; bull, bear, or sideways. Dynamically adjusts strategy allocation and risk parameters in real-time.</p>
     </div>
 
     <!-- 6. Full Market Scanner -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#128225;</div>
       <div class="source-name">Full Market Scanner</div>
-      <div class="source-badge discovery">Stock Discovery</div>
+      <div class="source-badge discovery" data-tooltip="Screens 12K+ stocks every 3 minutes for setups">Stock Discovery</div>
       <p class="source-desc">Screens all 12,000+ US equities every 3 minutes. Filters by price ($0.50-$50), volume, and momentum. Finds explosive movers before they trend.</p>
     </div>
 
     <!-- 7. News Aggregation -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#128240;</div>
       <div class="source-name">News Aggregation</div>
-      <div class="source-badge news">News &amp; Catalysts</div>
+      <div class="source-badge news" data-tooltip="Aggregates earnings, FDA, and sector news">News &amp; Catalysts</div>
       <p class="source-desc">Finnhub news API for earnings, FDA approvals, partnerships, and sector catalysts. Cross-references with price action to validate trading signals.</p>
     </div>
 
     <!-- 8. Options Chain Analysis -->
-    <div class="source-card animate-in">
+    <div class="source-card hover-lift scroll-reveal">
       <div class="source-icon">&#9878;</div>
       <div class="source-name">Options Chain Analysis</div>
-      <div class="source-badge options">Options Data</div>
+      <div class="source-badge options" data-tooltip="Real-time options chains for high-conviction plays">Options Data</div>
       <p class="source-desc">Real-time options data for high-conviction plays. ATM calls on breakouts, puts on reversals. Only deployed on liquid names with tight spreads.</p>
     </div>
 
@@ -368,13 +393,35 @@ a:hover { color: var(--accent); }
 
 <!-- ── Footer ────────────────────────────────────── -->
 <footer class="sources-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-  <p>&copy; 2026 Ferchaud. Autonomous trading intelligence.</p>
+  <p>&copy; 2026 Ferchaud</p>
   <div style="display:flex;gap:24px;">
-    <a href="/legal" style="color:var(--muted);font-size:13px;">Legal</a>
+    <a href="/#features" style="color:var(--muted);font-size:13px;">Features</a>
     <a href="/pricing" style="color:var(--muted);font-size:13px;">Pricing</a>
+    <a href="/sources" style="color:var(--muted);font-size:13px;">Sources</a>
+    <a href="/legal" style="color:var(--muted);font-size:13px;">Legal</a>
     <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-size:13px;">Support</a>
   </div>
 </footer>
+
+<script>
+// Scroll-triggered stagger animation for source cards
+(function() {
+  var cards = document.querySelectorAll('.scroll-reveal');
+  if (!cards.length) return;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry, i) {
+      if (entry.isIntersecting) {
+        var idx = Array.prototype.indexOf.call(cards, entry.target);
+        setTimeout(function() {
+          entry.target.classList.add('visible');
+        }, idx * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  cards.forEach(function(card) { observer.observe(card); });
+})();
+</script>
 
 </body>
 </html>

@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ferchaud — AI-Powered Momentum Trading</title>
   <meta name="description" content="Strike while the market's hot. Ferchaud scans 12,000+ stocks for explosive breakout opportunities with 9 AI strategies and 24/7 automation.">
+  <meta property="og:title" content="Ferchaud — AI Trading Platform">
+  <meta property="og:description" content="Algorithmic trading powered by AI. Real-time market scanning, intelligent execution, and transparent revenue sharing.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Ferchaud">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#0a0608">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css" />
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
   <style>
     :root {
@@ -18,6 +22,7 @@
       --surface: #151012;
       --surface-2: #1a1315;
       --border: #2a1a1e;
+      --border-hover: #3d2228;
       --accent: #ff6b2b;
       --accent-light: #ff8c5a;
       --accent-glow: rgba(255,107,43,0.25);
@@ -28,70 +33,23 @@
       --muted: #8a7068;
       --green: #4ade80;
       --red: #f87171;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'SF Mono', 'Fira Code', ui-monospace, monospace;
     }
 
-    *, *::before, *::after {
-      margin: 0; padding: 0; box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       overflow-x: hidden;
       line-height: 1.6;
     }
-
     a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
 
-    /* ── LOADER ── */
-    .loader {
-      position: fixed; inset: 0; z-index: 9999;
-      background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      transition: opacity 0.6s ease, visibility 0.6s ease;
-    }
-    .loader.loaded {
-      opacity: 0; visibility: hidden; pointer-events: none;
-    }
-    .loader-inner { text-align: center; }
-    .loader-logo {
-      font-size: 2.5rem; font-weight: 800;
-      color: var(--text);
-      margin-bottom: 2rem;
-      letter-spacing: -0.03em;
-    }
-    .loader-logo span {
-      background: var(--fire-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .loader-bar {
-      width: 240px; height: 4px;
-      background: var(--surface-2);
-      border-radius: 50px; overflow: hidden;
-      margin: 0 auto 1rem;
-    }
-    .loader-fill {
-      height: 100%; width: 0%;
-      background: var(--fire-gradient);
-      border-radius: 50px;
-      transition: width 0.2s ease;
-    }
-    .loader-pct {
-      font-size: 0.85rem; font-weight: 500;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-    }
-
-    /* ── NAVBAR ── */
+    /* -- NAVBAR -- */
     .navbar {
       position: fixed; top: 16px; left: 24px; right: 24px;
       height: 56px; border-radius: 50px;
@@ -110,20 +68,14 @@
     }
     .nav-brand .chaud {
       background: var(--fire-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .nav-flame {
-      width: 28px; height: 28px;
-    }
-    .nav-links {
-      display: flex; align-items: center; gap: 32px;
-    }
+    .nav-flame { width: 28px; height: 28px; }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
     .nav-links a {
       font-size: 0.875rem; font-weight: 500;
-      color: var(--text-secondary);
-      transition: color 0.2s ease;
+      color: var(--text-secondary); transition: color 0.2s ease;
     }
     .nav-links a:hover { color: var(--text); }
     .nav-cta {
@@ -139,105 +91,61 @@
       box-shadow: 0 4px 20px var(--accent-glow);
     }
 
-    /* ── SEQUENCE SECTION ── */
-    .sequence-section {
+    /* -- HERO -- */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 64px 80px;
+      max-width: 1400px; margin: 0 auto;
+      gap: 64px;
       position: relative;
-      height: 500vh;
     }
-    #sequence-canvas {
-      position: sticky;
-      top: 0;
-      width: 100vw;
-      height: 100vh;
-      display: block;
-      background: radial-gradient(ellipse at center, #1a0a0e 0%, var(--bg) 70%);
-    }
-    .seq-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      z-index: 10;
-      opacity: 0;
+    .hero::before {
+      content: ''; position: absolute;
+      top: -200px; left: 0;
+      width: 700px; height: 700px;
+      background: radial-gradient(ellipse, rgba(255,107,43,0.07) 0%, transparent 70%);
       pointer-events: none;
-      transition: opacity 0.4s ease;
-      padding: 2rem;
     }
-    .seq-overlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .seq-badge {
+    .hero-content { flex: 1.4; position: relative; z-index: 2; }
+    .hero-visual { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; z-index: 2; }
+    .hero-badge {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 8px 20px; border-radius: 50px;
-      background: rgba(255, 107, 43, 0.1);
-      border: 1px solid rgba(255, 107, 43, 0.2);
+      background: rgba(255, 107, 43, 0.08);
+      border: 1px solid rgba(255, 107, 43, 0.18);
       color: var(--accent-light);
-      font-size: 0.75rem; font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      font-size: 0.8rem; font-weight: 600;
+      letter-spacing: 0.08em;
       margin-bottom: 1.5rem;
     }
-    .seq-title {
-      font-size: clamp(2.5rem, 7vw, 5.5rem);
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.5rem;
-      color: var(--text);
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); animation: dot-pulse 1.5s infinite;
     }
-    .seq-h2 {
-      font-size: clamp(2rem, 5.5vw, 4rem);
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      margin-bottom: 1rem;
-      color: var(--text);
+    .hero h1 {
+      font-size: clamp(3rem, 5.5vw, 4.5rem);
+      font-weight: 800; line-height: 1.05;
+      letter-spacing: -0.035em;
+      margin-bottom: 1.25rem;
     }
     .fire-text {
       background: var(--fire-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .seq-sub {
-      font-size: clamp(1rem, 2vw, 1.25rem);
-      color: var(--text-secondary);
-      max-width: 540px;
-      line-height: 1.6;
-      font-weight: 400;
+    .hero-sub {
+      font-size: 1.15rem; color: var(--text-secondary);
+      max-width: 480px; line-height: 1.65; font-weight: 400;
     }
-    .trade-badge {
-      padding: 12px 32px;
-      border-radius: 50px;
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-    .trade-badge.buy {
-      background: rgba(74, 222, 128, 0.12);
-      border: 1px solid rgba(74, 222, 128, 0.3);
-      color: var(--green);
-    }
-    .trade-badge.sell {
-      background: rgba(248, 113, 113, 0.12);
-      border: 1px solid rgba(248, 113, 113, 0.3);
-      color: var(--red);
-    }
-
-    /* ── BUTTONS ── */
+    .hero-actions { display: flex; gap: 12px; margin-top: 2rem; }
     .btn-cta {
       display: inline-flex; align-items: center; justify-content: center;
-      padding: 14px 36px; border-radius: 50px;
+      padding: 14px 32px; border-radius: 50px;
       background: var(--fire-gradient);
-      color: #fff; font-size: 1rem; font-weight: 600;
+      color: #fff; font-size: 0.95rem; font-weight: 600;
       border: none; cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
-      text-decoration: none;
     }
     .btn-cta:hover {
       transform: translateY(-2px);
@@ -245,66 +153,142 @@
     }
     .btn-outline {
       display: inline-flex; align-items: center; justify-content: center;
-      padding: 14px 36px; border-radius: 50px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-secondary); font-size: 1rem; font-weight: 500;
-      cursor: pointer;
-      transition: border-color 0.2s ease, color 0.2s ease;
-      text-decoration: none;
+      padding: 14px 32px; border-radius: 50px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;
+      cursor: pointer; transition: border-color 0.2s ease, color 0.2s ease;
     }
-    .btn-outline:hover {
-      border-color: var(--accent);
-      color: var(--text);
-    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--text); }
 
-    /* ── STATS BAR ── */
-    .stats-section {
-      padding: 80px 24px;
+    .hero-trust {
+      display: flex; align-items: center; gap: 24px;
+      margin-top: 2.5rem; flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.85rem; color: var(--muted); font-weight: 500;
+    }
+    .trust-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border-hover); }
+
+    /* -- HERO CHART CARD -- */
+    .hero-chart-card {
       background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .stats-grid {
-      max-width: 1200px; margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
-    }
-    .stat-card {
-      background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: 24px;
-      padding: 32px 24px;
-      text-align: center;
-      transition: border-color 0.3s ease, transform 0.3s ease;
+      padding: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(255,107,43,0.05);
+      max-width: 420px; width: 100%;
+      position: relative;
     }
-    .stat-card:hover {
-      border-color: rgba(255, 107, 43, 0.3);
-      transform: translateY(-2px);
+    .hero-chart-card::after {
+      content: ''; position: absolute; inset: -1px;
+      border-radius: 25px; z-index: -1;
+      background: linear-gradient(135deg, rgba(255,107,43,0.1), transparent 60%);
+      opacity: 0; transition: opacity 0.4s ease;
     }
-    .stat-number {
-      font-size: 2.5rem; font-weight: 800;
-      letter-spacing: -0.03em;
-      background: var(--fire-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .hero-chart-card:hover::after { opacity: 1; }
+    .chart-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
     }
-    .stat-label {
-      font-size: 0.9rem; font-weight: 500;
-      color: var(--text-secondary);
-      margin-top: 8px;
+    .chart-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 50px;
+      background: rgba(255, 107, 43, 0.1);
+      border: 1px solid rgba(255, 107, 43, 0.15);
+      color: var(--accent-light);
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .chart-ticker {
+      font-size: 0.85rem; font-weight: 600;
+      font-family: var(--mono); color: var(--text-secondary);
+    }
+    .chart-ticker .green { color: var(--green); font-weight: 700; }
+    .hero-chart { width: 100%; display: block; }
+    .chart-line {
+      stroke-dasharray: 800; stroke-dashoffset: 800;
+      animation: draw-chart 2.2s ease forwards 0.5s;
+    }
+    @keyframes draw-chart {
+      to { stroke-dashoffset: 0; }
+    }
+    .chart-area {
+      opacity: 0; animation: area-fade 1s ease forwards 1.5s;
+    }
+    @keyframes area-fade {
+      to { opacity: 1; }
+    }
+    .chart-dot {
+      opacity: 0; transform-origin: center; transform-box: fill-box;
+    }
+    .chart-dot:nth-child(4) { animation: dot-appear 0.4s ease forwards 1.4s; }
+    .chart-dot:nth-child(5) { animation: dot-appear 0.4s ease forwards 1.8s; }
+    .chart-dot:nth-child(6) { animation: dot-appear 0.4s ease forwards 1.6s; }
+    @keyframes dot-appear {
+      from { opacity: 0; r: 0; }
+      to { opacity: 1; r: 4; }
+    }
+    .chart-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 1rem; padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .chart-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+    .chart-gain {
+      font-size: 0.9rem; font-weight: 700; color: var(--green);
+      font-family: var(--mono);
+    }
+    .gain-badge {
+      position: absolute; top: -12px; right: 20px;
+      padding: 6px 16px; border-radius: 50px;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      color: var(--green); font-size: 0.85rem;
+      font-weight: 700; font-family: var(--mono);
+      animation: gain-pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes gain-pulse {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
     }
 
-    /* ── FEATURES ── */
-    .features-section {
+    /* -- POWERED BY BAR -- */
+    .powered-section {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .powered-inner {
+      max-width: 800px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      gap: 48px; flex-wrap: wrap;
+    }
+    .powered-label {
+      font-size: 0.75rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.12em;
+    }
+    .powered-logos {
+      display: flex; align-items: center; gap: 40px;
+    }
+    .powered-logo {
+      font-size: 1rem; font-weight: 700; color: var(--muted);
+      letter-spacing: -0.02em; opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
+    .powered-logo:hover { opacity: 0.8; }
+    .powered-sep {
+      width: 1px; height: 20px; background: var(--border);
+    }
+
+    /* -- HOW IT WORKS -- */
+    .how-section {
       padding: 120px 24px;
       background: var(--bg);
     }
     .section-header {
-      text-align: center;
-      margin-bottom: 64px;
+      text-align: center; margin-bottom: 64px;
     }
     .section-badge {
       display: inline-flex; align-items: center; gap: 8px;
@@ -313,73 +297,196 @@
       border: 1px solid rgba(255, 107, 43, 0.15);
       color: var(--accent-light);
       font-size: 0.75rem; font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      letter-spacing: 0.12em; text-transform: uppercase;
       margin-bottom: 1.25rem;
     }
     .section-title {
       font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.15;
+      font-weight: 800; letter-spacing: -0.03em; line-height: 1.15;
     }
-    .features-grid {
+    .section-sub {
+      font-size: 1.05rem; color: var(--text-secondary);
+      max-width: 520px; margin: 1rem auto 0; line-height: 1.6;
+    }
+    .steps-grid {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px; padding: 2rem;
+      text-align: center; position: relative;
+      transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .step-card:hover {
+      border-color: rgba(255, 107, 43, 0.25);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--fire-gradient);
+      color: #fff; font-size: 0.85rem; font-weight: 800;
+      margin-bottom: 1.25rem;
+    }
+    .step-icon {
+      font-size: 2.5rem; margin-bottom: 1rem; display: block;
+    }
+    .step-title {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text);
+    }
+    .step-desc {
+      font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;
+    }
+
+    /* -- BENTO FEATURES -- */
+    .features-section {
+      padding: 120px 24px;
+      background: var(--bg);
+    }
+    .bento-grid {
       max-width: 1200px; margin: 0 auto;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
+      gap: 16px;
     }
-    .feature-card {
+    .bento-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 36px 28px;
-      transition: border-color 0.3s ease, transform 0.3s ease;
+      border-radius: 24px; padding: 2rem;
+      position: relative; overflow: hidden;
+      transition: all 0.3s ease;
     }
-    .feature-card:hover {
-      border-color: rgba(255, 107, 43, 0.25);
-      transform: translateY(-4px);
+    .bento-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px rgba(255,107,43,0.08);
+      transform: translateY(-2px);
     }
-    .feature-icon {
-      font-size: 2rem;
-      margin-bottom: 16px;
-      display: block;
+    .bento-card::after {
+      content: ''; position: absolute;
+      top: 0; right: 0; width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(255,107,43,0.04) 0%, transparent 70%);
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.3s ease;
     }
-    .feature-title {
+    .bento-card:hover::after { opacity: 1; }
+    .bento-large { grid-column: span 2; }
+    .bento-icon {
+      font-size: 2rem; margin-bottom: 1rem; display: block;
+    }
+    .bento-title {
       font-size: 1.15rem; font-weight: 700;
-      margin-bottom: 10px;
-      color: var(--text);
+      margin-bottom: 0.5rem; color: var(--text);
     }
-    .feature-desc {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
+    .bento-desc {
+      font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;
     }
+    .bento-mini-chart {
+      margin-top: 1.5rem; padding: 1rem;
+      background: var(--surface-2); border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+    .bento-mini-chart svg { width: 100%; height: 60px; display: block; }
 
-    /* ── PRICING ── */
-    .pricing-section {
+    /* -- DASHBOARD PREVIEW -- */
+    .preview-section {
       padding: 120px 24px;
       background: var(--surface);
       border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .preview-card {
+      max-width: 1000px; margin: 48px auto 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 24px; padding: 2rem;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .preview-card::before {
+      content: ''; position: absolute; inset: -1px;
+      border-radius: 25px; z-index: -1;
+      background: linear-gradient(135deg, rgba(255,107,43,0.08), transparent 50%);
+    }
+    .preview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .preview-dots { display: flex; gap: 6px; }
+    .preview-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 12px; margin-bottom: 1.5rem;
+    }
+    .preview-stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1rem; text-align: left;
+    }
+    .preview-stat-label {
+      font-size: 0.65rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.25rem;
+    }
+    .preview-stat-val {
+      font-size: 1.3rem; font-weight: 700; font-family: var(--mono);
+    }
+    .preview-chart-area {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.25rem;
+      height: 180px; display: flex; align-items: flex-end; gap: 4px;
+    }
+    .preview-bar {
+      flex: 1; border-radius: 4px 4px 0 0;
+      transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* -- PRICING -- */
+    .pricing-section {
+      padding: 120px 24px;
+      background: var(--bg);
+    }
+    .pricing-toggle {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; margin-bottom: 48px;
+    }
+    .toggle-label { font-size: 0.9rem; font-weight: 500; color: var(--muted); }
+    .toggle-label.active { color: var(--text); }
+    .toggle-switch {
+      width: 48px; height: 26px; border-radius: 50px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      cursor: pointer; position: relative; transition: background 0.2s ease;
+    }
+    .toggle-switch::after {
+      content: ''; position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--accent); transition: transform 0.2s ease;
+    }
+    .toggle-switch.annual::after { transform: translateX(22px); }
+    .save-badge {
+      padding: 3px 10px; border-radius: 50px;
+      background: rgba(74,222,128,0.12); color: var(--green);
+      font-size: 0.7rem; font-weight: 700;
     }
     .pricing-grid {
       max-width: 1200px; margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
-      align-items: start;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 20px; align-items: start;
     }
     .price-card {
-      background: var(--surface-2);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 36px 28px;
-      text-align: center;
-      position: relative;
-      transition: transform 0.3s ease;
+      border-radius: 24px; padding: 2rem;
+      text-align: center; position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .price-card:hover {
       transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
     }
     .price-card.featured {
       border: 1px solid var(--accent);
@@ -390,46 +497,36 @@
       padding: 6px 20px; border-radius: 50px;
       background: var(--fire-gradient);
       color: #fff; font-size: 0.7rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      white-space: nowrap;
+      letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap;
     }
     .price-tier {
       font-size: 0.85rem; font-weight: 600;
       color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      text-transform: uppercase; letter-spacing: 0.1em;
       margin-bottom: 12px;
     }
     .price-amount {
       font-size: 3rem; font-weight: 800;
-      color: var(--text);
-      letter-spacing: -0.03em;
+      color: var(--text); letter-spacing: -0.03em;
     }
     .price-amount span {
-      font-size: 1rem; font-weight: 500;
-      color: var(--muted);
+      font-size: 1rem; font-weight: 500; color: var(--muted);
     }
     .price-revenue {
-      margin: 16px 0 24px;
-      font-size: 0.85rem; font-weight: 500;
-      color: var(--accent-light);
+      margin: 12px 0 20px;
+      font-size: 0.85rem; font-weight: 500; color: var(--accent-light);
     }
     .price-features {
-      list-style: none; text-align: left;
-      margin-bottom: 28px;
+      list-style: none; text-align: left; margin-bottom: 24px;
     }
     .price-features li {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(42, 26, 30, 0.5);
+      font-size: 0.85rem; color: var(--text-secondary);
+      padding: 8px 0; border-bottom: 1px solid rgba(42, 26, 30, 0.5);
       display: flex; align-items: center; gap: 10px;
     }
     .price-features li::before {
-      content: '✓';
-      color: var(--accent);
-      font-weight: 700;
-      font-size: 0.8rem;
+      content: '\2713'; color: var(--accent);
+      font-weight: 700; font-size: 0.8rem;
     }
     .price-btn {
       display: block; width: 100%;
@@ -437,15 +534,13 @@
       font-size: 0.9rem; font-weight: 600;
       cursor: pointer; border: none;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
-      text-align: center;
+      text-align: center; font-family: var(--font);
     }
     .price-btn-primary {
-      background: var(--fire-gradient);
-      color: #fff;
+      background: var(--fire-gradient); color: #fff;
     }
     .price-btn-secondary {
-      background: transparent;
-      border: 1px solid var(--border);
+      background: transparent; border: 1px solid var(--border);
       color: var(--text-secondary);
     }
     .price-btn:hover {
@@ -456,95 +551,108 @@
       box-shadow: 0 4px 20px var(--accent-glow);
     }
 
-    /* ── CTA SECTION ── */
+    /* -- CTA SECTION -- */
     .cta-section {
-      padding: 120px 24px;
+      padding: 140px 24px;
       text-align: center;
       background: var(--bg);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
     .cta-section::before {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+      content: ''; position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: 600px; height: 600px;
       background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-      pointer-events: none;
-      opacity: 0.4;
+      pointer-events: none; opacity: 0.35;
     }
     .cta-title {
       font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.5rem;
-      position: relative; z-index: 1;
+      font-weight: 800; letter-spacing: -0.03em;
+      margin-bottom: 1rem; position: relative; z-index: 1;
     }
     .cta-sub {
-      font-size: 1.1rem;
-      color: var(--text-secondary);
+      font-size: 1.1rem; color: var(--text-secondary);
       max-width: 480px; margin: 0 auto 2.5rem;
       position: relative; z-index: 1;
     }
     .cta-buttons {
-      display: flex; gap: 12px;
-      justify-content: center;
+      display: flex; gap: 12px; justify-content: center;
       position: relative; z-index: 1;
     }
 
-    /* ── FOOTER ── */
-    .footer {
-      padding: 40px 24px;
-      text-align: center;
+    /* -- FOOTER -- */
+    .site-footer {
       border-top: 1px solid var(--border);
-      background: var(--surface);
+      padding: 40px 24px; background: var(--surface);
     }
-    .footer p {
-      font-size: 0.8rem;
-      color: var(--muted);
+    .footer-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-brand {
+      font-size: 1rem; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .footer-brand span {
+      background: var(--fire-gradient);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .footer-copy { font-size: 0.8rem; color: var(--muted); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: 0.8rem; color: var(--muted);
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    /* -- ANIMATIONS -- */
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    @keyframes float-up {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── RESPONSIVE ── */
+    /* -- RESPONSIVE -- */
     @media (max-width: 1024px) {
-      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero { flex-direction: column; text-align: center; padding: 120px 32px 60px; gap: 48px; }
+      .hero-content { align-items: center; display: flex; flex-direction: column; }
+      .hero-sub { margin: 0 auto; }
+      .hero-actions { justify-content: center; }
+      .hero-trust { justify-content: center; }
+      .bento-grid { grid-template-columns: repeat(2, 1fr); }
+      .bento-large { grid-column: span 2; }
       .pricing-grid { grid-template-columns: repeat(2, 1fr); }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .preview-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 768px) {
-      .navbar {
-        left: 12px; right: 12px; top: 10px;
-        padding: 0 16px; height: 50px;
-      }
+      .navbar { left: 12px; right: 12px; top: 10px; padding: 0 16px; height: 50px; }
       .nav-links a:not(.nav-cta) { display: none; }
       .nav-links { gap: 0; }
-      .features-grid { grid-template-columns: 1fr; }
+      .hero { padding: 100px 20px 40px; }
+      .hero h1 { font-size: 2.5rem; }
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-large { grid-column: span 1; }
+      .steps-grid { grid-template-columns: 1fr; max-width: 400px; }
       .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
-      .stats-grid { grid-template-columns: 1fr; max-width: 400px; }
-      .seq-title { margin-top: 40px; }
-      .trade-badge { padding: 8px 20px; font-size: 0.8rem; }
+      .preview-grid { grid-template-columns: 1fr 1fr; }
       .cta-buttons { flex-direction: column; align-items: center; }
-      .btn-cta, .btn-outline { width: 100%; max-width: 300px; }
+      .btn-cta, .btn-outline { width: 100%; max-width: 300px; text-align: center; }
+      .footer-inner { flex-direction: column; text-align: center; }
     }
     @media (max-width: 480px) {
-      .seq-badge { font-size: 0.65rem; padding: 6px 14px; }
-      .stat-number { font-size: 2rem; }
+      .preview-grid { grid-template-columns: 1fr; }
+      .hero-trust { flex-direction: column; gap: 8px; }
       .price-amount { font-size: 2.5rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── LOADER ── -->
-<div class="loader" id="loader">
-  <div class="loader-inner">
-    <div class="loader-logo">Fer<span>chaud</span></div>
-    <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
-    <div class="loader-pct" id="loader-pct">0%</div>
-  </div>
-</div>
-
-<!-- ── NAVBAR ── -->
+<!-- NAVBAR -->
 <nav class="navbar" id="navbar">
   <a href="/" class="nav-brand">
     <svg class="nav-flame" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -567,119 +675,232 @@
     <a href="#features">Features</a>
     <a href="#pricing">Pricing</a>
     <a href="/sources">Sources</a>
+    <a href="/legal">Legal</a>
     <a href="/login">Sign In</a>
-    <a href="/signup" class="nav-cta">Get Started</a>
+    <a href="/signup" class="nav-cta">Get Started &#8594;</a>
   </div>
 </nav>
 
-<!-- ── SCROLL SEQUENCE SECTION ── -->
-<section class="sequence-section">
-  <canvas id="sequence-canvas"></canvas>
-
-  <div class="seq-overlay" id="overlay-1">
-    <div class="seq-badge">&#9889; AI-POWERED MOMENTUM TRADING</div>
-    <h1 class="seq-title">Strike while the<br><span class="fire-text">market's hot.</span></h1>
-    <p class="seq-sub">Ferchaud scans 12,000+ stocks for explosive breakout opportunities.</p>
-  </div>
-
-  <div class="seq-overlay" id="overlay-2">
-    <h2 class="seq-h2">The iron becomes<br><span class="fire-text">the chart.</span></h2>
-    <p class="seq-sub">Watch raw momentum transform into profit signals.</p>
-  </div>
-
-  <div class="seq-overlay" id="overlay-3">
-    <div style="display:flex;gap:2rem;align-items:center;margin-bottom:2rem;">
-      <div class="trade-badge buy">BUY</div>
-      <div class="trade-badge sell">SELL</div>
-      <div class="trade-badge buy">BUY</div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      AI-Powered Trading
     </div>
-    <h2 class="seq-h2">AI executes.<br><span class="fire-text">Automatically.</span></h2>
-  </div>
-
-  <div class="seq-overlay" id="overlay-4">
-    <h2 class="seq-h2">Every trade.<br><span class="fire-text">Forged in data.</span></h2>
-    <p class="seq-sub">9 strategies. 24/7 automation. Your edge.</p>
-    <div style="display:flex;gap:12px;margin-top:2rem;">
+    <h1>
+      Strike while the<br>
+      <span class="fire-text">market's hot.</span>
+    </h1>
+    <p class="hero-sub">
+      Ferchaud scans 12,000+ stocks for explosive breakout opportunities
+      using 9 AI strategies and fully automated execution.
+    </p>
+    <div class="hero-actions">
       <a href="/signup" class="btn-cta">Start Free &#8594;</a>
-      <a href="#pricing" class="btn-outline">See Plans</a>
+      <a href="#how" class="btn-outline">See How It Works</a>
+    </div>
+    <div class="hero-trust">
+      <span class="trust-item">12,000+ stocks</span>
+      <span class="trust-dot"></span>
+      <span class="trust-item">9 strategies</span>
+      <span class="trust-dot"></span>
+      <span class="trust-item">24/7 automation</span>
+      <span class="trust-dot"></span>
+      <span class="trust-item">$5K cap</span>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-chart-card">
+      <div class="gain-badge">+12.4%</div>
+      <div class="chart-header">
+        <span class="chart-badge">Ferchaud AI</span>
+        <span class="chart-ticker">RKLB <span class="green">+12.4%</span></span>
+      </div>
+      <svg class="hero-chart" viewBox="0 0 400 200" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="chart-line-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ff4500"/>
+            <stop offset="100%" stop-color="#4ade80"/>
+          </linearGradient>
+          <linearGradient id="chart-fill-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(74,222,128,0.15)"/>
+            <stop offset="100%" stop-color="rgba(74,222,128,0)"/>
+          </linearGradient>
+        </defs>
+        <path class="chart-area" d="M0,160 C30,155 60,140 90,120 C120,100 140,110 160,90 C180,70 200,85 220,60 C240,35 260,50 280,40 C300,30 330,45 360,25 L400,15 L400,200 L0,200 Z"
+              fill="url(#chart-fill-grad)"/>
+        <path class="chart-line" d="M0,160 C30,155 60,140 90,120 C120,100 140,110 160,90 C180,70 200,85 220,60 C240,35 260,50 280,40 C300,30 330,45 360,25 L400,15"
+              fill="none" stroke="url(#chart-line-grad)" stroke-width="2.5"/>
+        <circle cx="90" cy="120" r="4" fill="#4ade80" class="chart-dot"/>
+        <circle cx="220" cy="60" r="4" fill="#4ade80" class="chart-dot"/>
+        <circle cx="160" cy="90" r="4" fill="#f87171" class="chart-dot"/>
+      </svg>
+      <div class="chart-footer">
+        <span class="chart-label">Today</span>
+        <span class="chart-gain">+$624.50</span>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ── STATS BAR ── -->
-<section class="stats-section">
-  <div class="stats-grid">
-    <div class="stat-card" data-aos="fade-up" data-aos-delay="0">
-      <div class="stat-number" data-count="12000">0</div>
-      <div class="stat-label">Stocks Scanned</div>
-    </div>
-    <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
-      <div class="stat-number" data-count="9">0</div>
-      <div class="stat-label">AI Strategies</div>
-    </div>
-    <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
-      <div class="stat-number" data-count="24">0</div>
-      <div class="stat-label">24/7 Trading</div>
-    </div>
-    <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
-      <div class="stat-number" data-count="98">0</div>
-      <div class="stat-label">Revenue Share</div>
+<!-- POWERED BY -->
+<section class="powered-section">
+  <div class="powered-inner">
+    <span class="powered-label">Powered by</span>
+    <div class="powered-logos">
+      <span class="powered-logo">Alpaca</span>
+      <div class="powered-sep"></div>
+      <span class="powered-logo">Grok AI</span>
+      <div class="powered-sep"></div>
+      <span class="powered-logo">Stripe</span>
     </div>
   </div>
 </section>
 
-<!-- ── FEATURES ── -->
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-header">
+    <div class="section-badge">HOW IT WORKS</div>
+    <h2 class="section-title">Three steps to<br><span class="fire-text">automated profits.</span></h2>
+    <p class="section-sub">No complex setup. No coding required. Get started in minutes.</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card" data-aos="fade-up" data-aos-delay="0">
+      <div class="step-num">1</div>
+      <span class="step-icon">&#128179;</span>
+      <h3 class="step-title">Fund Your Account</h3>
+      <p class="step-desc">Connect your brokerage through Alpaca and deposit funds. Start with as little as $100.</p>
+    </div>
+    <div class="step-card" data-aos="fade-up" data-aos-delay="100">
+      <div class="step-num">2</div>
+      <span class="step-icon">&#129504;</span>
+      <h3 class="step-title">AI Analyzes Markets</h3>
+      <p class="step-desc">Ferchaud's AI engine scans thousands of stocks, identifies momentum shifts, and finds high-probability setups.</p>
+    </div>
+    <div class="step-card" data-aos="fade-up" data-aos-delay="200">
+      <div class="step-num">3</div>
+      <span class="step-icon">&#128176;</span>
+      <h3 class="step-title">Profits, Automated</h3>
+      <p class="step-desc">Trades execute automatically with intelligent risk management. Track everything in your real-time dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES (BENTO GRID) -->
 <section class="features-section" id="features">
   <div class="section-header">
     <div class="section-badge">CAPABILITIES</div>
-    <h2 class="section-title">Everything you need to<br><span class="fire-text">dominate the market.</span></h2>
+    <h2 class="section-title">Built for<br><span class="fire-text">serious traders.</span></h2>
   </div>
-  <div class="features-grid">
-    <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
-      <span class="feature-icon">&#128293;</span>
-      <h3 class="feature-title">Full Market Scanner</h3>
-      <p class="feature-desc">Real-time scanning across 12,000+ stocks with custom filters for volume spikes, price breakouts, and momentum shifts.</p>
+  <div class="bento-grid">
+    <div class="bento-card bento-large" data-aos="fade-up" data-aos-delay="0">
+      <span class="bento-icon">&#128293;</span>
+      <h3 class="bento-title">Full Market Scanner</h3>
+      <p class="bento-desc">Real-time scanning across 12,000+ stocks with custom filters for volume spikes, price breakouts, and momentum shifts. Catch every opportunity before the crowd.</p>
+      <div class="bento-mini-chart">
+        <svg viewBox="0 0 300 60" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="mini-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#ff4500" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#4ade80" stop-opacity="0.4"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,50 C20,45 40,35 60,30 C80,25 100,40 120,20 C140,10 160,15 180,12 C200,8 220,18 240,10 C260,5 280,8 300,3"
+                fill="none" stroke="url(#mini-grad)" stroke-width="2"/>
+          <path d="M0,50 C20,45 40,35 60,30 C80,25 100,40 120,20 C140,10 160,15 180,12 C200,8 220,18 240,10 C260,5 280,8 300,3 L300,60 L0,60 Z"
+                fill="url(#mini-grad)" opacity="0.15"/>
+        </svg>
+      </div>
     </div>
-    <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
-      <span class="feature-icon">&#129504;</span>
-      <h3 class="feature-title">Grok AI Research</h3>
-      <p class="feature-desc">Deep AI-powered fundamental and sentiment analysis on every ticker before a trade is placed.</p>
+    <div class="bento-card" data-aos="fade-up" data-aos-delay="100">
+      <span class="bento-icon">&#129302;</span>
+      <h3 class="bento-title">Grok AI Research</h3>
+      <p class="bento-desc">Deep AI-powered fundamental and sentiment analysis on every ticker. Leverages X/Twitter real-time data for market-moving insights before trades execute.</p>
     </div>
-    <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
-      <span class="feature-icon">&#9889;</span>
-      <h3 class="feature-title">Breakout Detection</h3>
-      <p class="feature-desc">Proprietary algorithms identify breakout setups with precise entry points, stop losses, and profit targets.</p>
+    <div class="bento-card" data-aos="fade-up" data-aos-delay="200">
+      <span class="bento-icon">&#128200;</span>
+      <h3 class="bento-title">Options Trading</h3>
+      <p class="bento-desc">Automated options flow analysis with multi-leg strategy execution. Calls, puts, and spreads with smart strike selection and expiry optimization.</p>
     </div>
-    <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-      <span class="feature-icon">&#128200;</span>
-      <h3 class="feature-title">Options Trading</h3>
-      <p class="feature-desc">Automated options flow analysis with multi-leg strategy execution for calls, puts, and spreads.</p>
+    <div class="bento-card bento-large" data-aos="fade-up" data-aos-delay="0">
+      <span class="bento-icon">&#128737;</span>
+      <h3 class="bento-title">Risk Engine</h3>
+      <p class="bento-desc">Dynamic position sizing with VPIN flow toxicity and regime detection. Portfolio-level risk limits, automatic stop-loss management, and drawdown protection built into every trade.</p>
     </div>
-    <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
-      <span class="feature-icon">&#128737;</span>
-      <h3 class="feature-title">Risk Engine</h3>
-      <p class="feature-desc">Dynamic position sizing, portfolio-level risk limits, and automatic stop-loss management to protect your capital.</p>
+    <div class="bento-card" data-aos="fade-up" data-aos-delay="100">
+      <span class="bento-icon">&#127760;</span>
+      <h3 class="bento-title">24/7 Automation</h3>
+      <p class="bento-desc">Set your strategies and let Ferchaud handle execution across pre-market, regular, and after-hours sessions around the clock.</p>
     </div>
-    <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
-      <span class="feature-icon">&#127760;</span>
-      <h3 class="feature-title">24/7 Automation</h3>
-      <p class="feature-desc">Set your strategies and let Ferchaud handle execution around the clock across pre-market, regular, and after-hours sessions.</p>
+    <div class="bento-card" data-aos="fade-up" data-aos-delay="200">
+      <span class="bento-icon">&#128184;</span>
+      <h3 class="bento-title">Revenue Share</h3>
+      <p class="bento-desc">Keep up to 98% of your trading profits. Transparent fee structure with no hidden costs. You win, we win.</p>
     </div>
   </div>
 </section>
 
-<!-- ── PRICING ── -->
+<!-- DASHBOARD PREVIEW -->
+<section class="preview-section" id="preview">
+  <div class="section-header">
+    <div class="section-badge">LIVE PREVIEW</div>
+    <h2 class="section-title">See your portfolio<br><span class="fire-text">grow in real time.</span></h2>
+    <p class="section-sub">A beautiful, real-time dashboard that puts you in control.</p>
+  </div>
+  <div class="preview-card" data-aos="fade-up">
+    <div class="preview-header">
+      <div class="preview-dots">
+        <div class="preview-dot" style="background:#f87171;"></div>
+        <div class="preview-dot" style="background:#f59e0b;"></div>
+        <div class="preview-dot" style="background:#4ade80;"></div>
+      </div>
+      <span style="font-size:0.75rem;color:var(--muted);font-weight:600;letter-spacing:0.05em;">FERCHAUD DASHBOARD</span>
+      <span style="font-size:0.75rem;color:var(--green);font-weight:600;display:flex;align-items:center;gap:6px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>
+        LIVE
+      </span>
+    </div>
+    <div class="preview-grid">
+      <div class="preview-stat">
+        <div class="preview-stat-label">Portfolio Value</div>
+        <div class="preview-stat-val" style="color:var(--text);">$12,847</div>
+      </div>
+      <div class="preview-stat">
+        <div class="preview-stat-label">Today's P&L</div>
+        <div class="preview-stat-val" style="color:var(--green);">+$624</div>
+      </div>
+      <div class="preview-stat">
+        <div class="preview-stat-label">Win Rate</div>
+        <div class="preview-stat-val" style="color:var(--accent);">67.3%</div>
+      </div>
+      <div class="preview-stat">
+        <div class="preview-stat-label">Active Trades</div>
+        <div class="preview-stat-val" style="color:var(--text);">4</div>
+      </div>
+    </div>
+    <div class="preview-chart-area" id="preview-bars">
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
 <section class="pricing-section" id="pricing">
   <div class="section-header">
     <div class="section-badge">PRICING</div>
     <h2 class="section-title">Plans that scale<br><span class="fire-text">with your ambition.</span></h2>
   </div>
+  <div class="pricing-toggle">
+    <span class="toggle-label active" id="monthly-label">Monthly</span>
+    <div class="toggle-switch" id="pricing-toggle" onclick="togglePricing()"></div>
+    <span class="toggle-label" id="annual-label">Annual</span>
+    <span class="save-badge">Save 20%</span>
+  </div>
   <div class="pricing-grid">
-
     <!-- Free -->
     <div class="price-card" data-aos="fade-up" data-aos-delay="0">
       <div class="price-tier">Free</div>
-      <div class="price-amount">$0<span>/mo</span></div>
+      <div class="price-amount" data-monthly="0" data-annual="0">$0<span>/mo</span></div>
       <div class="price-revenue">70% revenue share</div>
       <ul class="price-features">
         <li>1 active strategy</li>
@@ -693,7 +914,7 @@
     <!-- Starter -->
     <div class="price-card" data-aos="fade-up" data-aos-delay="100">
       <div class="price-tier">Starter</div>
-      <div class="price-amount">$29<span>/mo</span></div>
+      <div class="price-amount" data-monthly="29" data-annual="23">$29<span>/mo</span></div>
       <div class="price-revenue">80% revenue share</div>
       <ul class="price-features">
         <li>3 active strategies</li>
@@ -709,7 +930,7 @@
     <div class="price-card featured" data-aos="fade-up" data-aos-delay="200">
       <div class="price-popular">MOST POPULAR</div>
       <div class="price-tier">Pro</div>
-      <div class="price-amount">$99<span>/mo</span></div>
+      <div class="price-amount" data-monthly="99" data-annual="79">$99<span>/mo</span></div>
       <div class="price-revenue">90% revenue share</div>
       <ul class="price-features">
         <li>All 9 strategies</li>
@@ -725,7 +946,7 @@
     <!-- Elite -->
     <div class="price-card" data-aos="fade-up" data-aos-delay="300">
       <div class="price-tier">Elite</div>
-      <div class="price-amount">$299<span>/mo</span></div>
+      <div class="price-amount" data-monthly="299" data-annual="239">$299<span>/mo</span></div>
       <div class="price-revenue">98% revenue share</div>
       <ul class="price-features">
         <li>Everything in Pro</li>
@@ -737,11 +958,10 @@
       </ul>
       <a href="/signup?plan=elite" class="price-btn price-btn-secondary">Choose Elite</a>
     </div>
-
   </div>
 </section>
 
-<!-- ── CTA SECTION ── -->
+<!-- CTA -->
 <section class="cta-section">
   <h2 class="cta-title">Ready to <span class="fire-text">strike?</span></h2>
   <p class="cta-sub">Join thousands of traders using AI-powered momentum strategies to find their edge.</p>
@@ -751,14 +971,20 @@
   </div>
 </section>
 
-<!-- ── FOOTER ── -->
-<footer class="footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-  <p>&copy; 2026 Ferchaud. All rights reserved.</p>
-  <div style="display:flex;gap:24px;">
-    <a href="/legal" style="color:var(--muted);font-size:13px;text-decoration:none;">Legal</a>
-    <a href="/pricing" style="color:var(--muted);font-size:13px;text-decoration:none;">Pricing</a>
-    <a href="/sources" style="color:var(--muted);font-size:13px;text-decoration:none;">Sources</a>
-    <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-size:13px;text-decoration:none;">Support</a>
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">Fer<span>chaud</span></div>
+      <p class="footer-copy">&copy; 2026 Ferchaud. All rights reserved.</p>
+    </div>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/sources">Sources</a>
+      <a href="/legal">Legal</a>
+      <a href="mailto:support@ferchaud.com">Support</a>
+    </div>
   </div>
 </footer>
 
@@ -766,159 +992,7 @@
 (function() {
   'use strict';
 
-  // ── FRAME SEQUENCE PLAYER ──
-  const frameCount = 150;
-  const frames = [];
-  let loadedCount = 0;
-  let framesReady = false;
-  const canvas = document.getElementById('sequence-canvas');
-  const ctx = canvas.getContext('2d');
-  const loaderEl = document.getElementById('loader');
-  const loaderFill = document.getElementById('loader-fill');
-  const loaderPct = document.getElementById('loader-pct');
-
-  function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-    // Redraw current frame on resize
-    if (framesReady) {
-      const scrollY = window.scrollY || window.pageYOffset;
-      const section = document.querySelector('.sequence-section');
-      const rect = section.getBoundingClientRect();
-      const sectionTop = scrollY + rect.top;
-      const sectionHeight = section.offsetHeight - window.innerHeight;
-      const progress = Math.max(0, Math.min(1, (scrollY - sectionTop) / sectionHeight));
-      const idx = Math.floor(progress * (frameCount - 1));
-      drawFrame(idx);
-    }
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  // Preload all frames
-  for (let i = 1; i <= frameCount; i++) {
-    const img = new Image();
-    img.src = '/static/frames/frame_' + String(i).padStart(4, '0') + '.jpg';
-    img.onload = function() {
-      loadedCount++;
-      updateLoader();
-    };
-    img.onerror = function() {
-      loadedCount++;
-      updateLoader();
-    };
-    frames.push(img);
-  }
-
-  function updateLoader() {
-    const pct = Math.round(loadedCount / frameCount * 100);
-    loaderPct.textContent = pct + '%';
-    loaderFill.style.width = pct + '%';
-    if (loadedCount === frameCount) {
-      framesReady = true;
-      setTimeout(function() {
-        loaderEl.classList.add('loaded');
-      }, 300);
-      drawFrame(0);
-      initScrollTrigger();
-    }
-  }
-
-  function drawFrame(index) {
-    var img = frames[Math.min(Math.max(index, 0), frameCount - 1)];
-    if (!img || !img.complete || img.naturalWidth === 0) return;
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-    ctx.clearRect(0, 0, w, h);
-    // Cover-fit the frame to the viewport
-    var scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-    var fw = img.naturalWidth * scale;
-    var fh = img.naturalHeight * scale;
-    ctx.drawImage(img, (w - fw) / 2, (h - fh) / 2, fw, fh);
-  }
-
-  function initScrollTrigger() {
-    gsap.registerPlugin(ScrollTrigger);
-
-    var overlays = [
-      { id: 'overlay-1', start: 0.0,  end: 0.18 },
-      { id: 'overlay-2', start: 0.22, end: 0.40 },
-      { id: 'overlay-3', start: 0.45, end: 0.65 },
-      { id: 'overlay-4', start: 0.72, end: 0.95 }
-    ];
-
-    ScrollTrigger.create({
-      trigger: '.sequence-section',
-      start: 'top top',
-      end: 'bottom bottom',
-      onUpdate: function(self) {
-        var frameIndex = Math.floor(self.progress * (frameCount - 1));
-        drawFrame(frameIndex);
-
-        // Show/hide overlays based on scroll progress
-        overlays.forEach(function(o) {
-          var el = document.getElementById(o.id);
-          if (!el) return;
-          if (self.progress >= o.start && self.progress <= o.end) {
-            el.classList.add('visible');
-          } else {
-            el.classList.remove('visible');
-          }
-        });
-      }
-    });
-  }
-
-  // ── FALLBACK: If frames fail to load after 10s, dismiss loader anyway ──
-  setTimeout(function() {
-    if (!framesReady) {
-      framesReady = true;
-      loaderEl.classList.add('loaded');
-      // Show first overlay as static fallback
-      var ov1 = document.getElementById('overlay-1');
-      if (ov1) ov1.classList.add('visible');
-      // Still try to init scroll trigger for any frames that did load
-      initScrollTrigger();
-    }
-  }, 10000);
-
-  // ── GSAP COUNTER ANIMATION ──
-  function animateCounters() {
-    gsap.registerPlugin(ScrollTrigger);
-
-    document.querySelectorAll('.stat-number').forEach(function(el) {
-      var target = parseInt(el.getAttribute('data-count'), 10);
-      var suffix = '';
-      var label = el.nextElementSibling ? el.nextElementSibling.textContent : '';
-      // Determine suffix based on content
-      if (label.indexOf('Stocks') !== -1) suffix = '+';
-      else if (label.indexOf('7') !== -1) suffix = '/7';
-      else if (label.indexOf('Revenue') !== -1) suffix = '%';
-
-      var obj = { val: 0 };
-      ScrollTrigger.create({
-        trigger: el,
-        start: 'top 85%',
-        once: true,
-        onEnter: function() {
-          gsap.to(obj, {
-            val: target,
-            duration: 2,
-            ease: 'power2.out',
-            onUpdate: function() {
-              var display = Math.round(obj.val).toLocaleString();
-              el.textContent = display + suffix;
-            }
-          });
-        }
-      });
-    });
-  }
-
-  // ── NAVBAR HIDE ON SCROLL DOWN, SHOW ON SCROLL UP ──
+  // -- NAVBAR HIDE/SHOW ON SCROLL --
   (function() {
     var lastScroll = 0;
     var navbar = document.getElementById('navbar');
@@ -933,7 +1007,53 @@
     }, { passive: true });
   })();
 
-  // ── INIT AOS + COUNTERS ON DOM READY ──
+  // -- PRICING TOGGLE --
+  window.togglePricing = function() {
+    var toggle = document.getElementById('pricing-toggle');
+    var isAnnual = toggle.classList.toggle('annual');
+    document.getElementById('monthly-label').classList.toggle('active', !isAnnual);
+    document.getElementById('annual-label').classList.toggle('active', isAnnual);
+    document.querySelectorAll('.price-amount').forEach(function(el) {
+      var price = isAnnual ? el.dataset.annual : el.dataset.monthly;
+      var suffix = isAnnual ? '/mo' : '/mo';
+      el.innerHTML = '$' + price + '<span>' + suffix + '</span>';
+    });
+  };
+
+  // -- PREVIEW BAR CHART ANIMATION --
+  function buildPreviewBars() {
+    var container = document.getElementById('preview-bars');
+    if (!container) return;
+    var heights = [35, 55, 40, 70, 50, 85, 45, 65, 90, 55, 75, 60, 80, 50, 95, 70, 45, 85, 60, 75, 55, 90, 65, 80];
+    var colors = ['var(--green)', 'var(--green)', 'var(--red)', 'var(--green)', 'var(--green)', 'var(--green)',
+                  'var(--red)', 'var(--green)', 'var(--green)', 'var(--red)', 'var(--green)', 'var(--green)',
+                  'var(--green)', 'var(--red)', 'var(--green)', 'var(--green)', 'var(--red)', 'var(--green)',
+                  'var(--green)', 'var(--green)', 'var(--red)', 'var(--green)', 'var(--green)', 'var(--green)'];
+    heights.forEach(function(h, i) {
+      var bar = document.createElement('div');
+      bar.className = 'preview-bar';
+      bar.style.background = colors[i];
+      bar.style.opacity = '0.6';
+      bar.style.height = '0%';
+      container.appendChild(bar);
+      setTimeout(function() {
+        bar.style.height = h + '%';
+      }, 100 + i * 50);
+    });
+  }
+
+  // -- SMOOTH SCROLL FOR ANCHOR LINKS --
+  document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+    anchor.addEventListener('click', function(e) {
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // -- INIT --
   document.addEventListener('DOMContentLoaded', function() {
     AOS.init({
       duration: 700,
@@ -941,7 +1061,7 @@
       once: true,
       offset: 80
     });
-    animateCounters();
+    buildPreviewBars();
   });
 
 })();

@@ -26,9 +26,9 @@
     .wizard { width: 100%; max-width: 560px; padding: 0 1.5rem; }
     /* Progress bar */
     .progress-bar { display: flex; gap: 8px; margin-bottom: 2.5rem; }
-    .progress-step { flex: 1; height: 3px; background: var(--border); border-radius: 50px; transition: background 0.4s; }
-    .progress-step.done { background: var(--accent); }
-    .progress-step.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+    .progress-step { flex: 1; height: 4px; background: var(--border); border-radius: 50px; transition: background 0.4s, box-shadow 0.4s; }
+    .progress-step.done { background: var(--fire-gradient); }
+    .progress-step.active { background: var(--fire-gradient); box-shadow: 0 0 12px var(--accent-glow); }
 
     /* Card */
     .card {
@@ -36,6 +36,8 @@
       padding: 2.5rem; animation: fadeIn 0.35s ease;
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .card { transition: opacity 0.3s ease, transform 0.3s ease; }
+    .card.fade-out { opacity: 0; transform: translateY(-10px); }
 
     .step-label {
       font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--accent);
@@ -50,11 +52,15 @@
       border: 1.5px solid var(--border); border-radius: 24px; padding: 1.25rem;
       cursor: pointer; transition: all 0.2s; position: relative;
     }
-    .tier-card:hover { border-color: var(--accent); background: rgba(255,107,43,0.04); }
+    .tier-card:hover, .hover-lift:hover { border-color: var(--accent); background: rgba(255,107,43,0.04); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
     .tier-card.selected {
-      border-color: transparent; background: var(--accent-glow);
-      background-image: var(--fire-gradient); background-clip: padding-box;
-      border: 1.5px solid var(--accent);
+      border-color: transparent;
+      background: rgba(255,107,43,0.06);
+      border: 1.5px solid transparent;
+      background-image: linear-gradient(var(--surface), var(--surface)), var(--fire-gradient);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      box-shadow: 0 0 20px rgba(255,107,43,0.12);
     }    .tier-card .badge {
       position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
       padding: 3px 10px; border-radius: 50px;
@@ -133,7 +139,7 @@
   </style>
 </head>
 <body>
-<div class="wizard">
+<div class="wizard page-enter">
   <div class="logo">Fer<span>chaud</span></div>
 
   <div class="progress-bar" id="progressBar">
@@ -149,26 +155,26 @@
     <div class="step-sub">Pick the plan that fits your trading goals. Lower monthly cost = higher revenue share taken by us. Higher cost = you keep almost everything.</div>
 
     <div class="tier-grid">
-      <div class="tier-card" onclick="selectTier('free', this)">
+      <div class="tier-card hover-lift" onclick="selectTier('free', this)">
         <div class="tier-name">Free</div>
         <div class="tier-price">$0<span>/mo</span></div>
         <div class="tier-share">You keep 70%</div>
         <div class="tier-desc">Great to start. We take 30% of profits.</div>
       </div>
-      <div class="tier-card" onclick="selectTier('starter', this)">
+      <div class="tier-card hover-lift" onclick="selectTier('starter', this)">
         <div class="tier-name">Starter</div>
         <div class="tier-price">$29<span>/mo</span></div>
         <div class="tier-share">You keep 80%</div>
         <div class="tier-desc">14-day free trial. We take 20% of profits.</div>
       </div>
-      <div class="tier-card selected" onclick="selectTier('pro', this)">
+      <div class="tier-card hover-lift selected" onclick="selectTier('pro', this)">
         <div class="badge">Popular</div>
         <div class="tier-name">Pro</div>
         <div class="tier-price">$99<span>/mo</span></div>
         <div class="tier-share">You keep 90%</div>
         <div class="tier-desc">Options trading + Grok AI. We take 10%.</div>
       </div>
-      <div class="tier-card" onclick="selectTier('elite', this)">
+      <div class="tier-card hover-lift" onclick="selectTier('elite', this)">
         <div class="tier-name">Elite</div>
         <div class="tier-price">$299<span>/mo</span></div>
         <div class="tier-share">You keep 98%</div>
@@ -257,15 +263,29 @@ function selectTier(tier, el) {
 }
 
 function goStep(n) {
-  [1,2,3,4].forEach(i => {
-    document.getElementById('step' + i).style.display = i === n ? 'block' : 'none';
-    const ps = document.getElementById('ps' + i);
-    if (ps) {
-      ps.className = 'progress-step';
-      if (i < n) ps.classList.add('done');
-      if (i === n) ps.classList.add('active');
-    }
-  });
+  // Fade out current visible card
+  var current = document.querySelector('.card[style*="display: block"], .card:not([style*="display: none"]):not([style])');
+  if (current && current.id !== 'step' + n) {
+    current.classList.add('fade-out');
+  }
+  setTimeout(function() {
+    [1,2,3,4].forEach(i => {
+      var el = document.getElementById('step' + i);
+      el.style.display = i === n ? 'block' : 'none';
+      el.classList.remove('fade-out');
+      const ps = document.getElementById('ps' + i);
+      if (ps) {
+        ps.className = 'progress-step';
+        if (i < n) ps.classList.add('done');
+        if (i === n) ps.classList.add('active');
+      }
+    });
+    // Re-trigger fadeIn animation on the new step
+    var newStep = document.getElementById('step' + n);
+    newStep.style.animation = 'none';
+    newStep.offsetHeight;
+    newStep.style.animation = '';
+  }, 250);
   if (n === 2) saveTier();
 }
 
@@ -330,8 +350,18 @@ async function finish() {
   window.location.href = '/dashboard';
 }
 </script>
-<div style="text-align:center;padding:24px 0 16px;font-size:11px;color:var(--muted);">
+<div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--muted);">
   By continuing you agree to our <a href="/legal" style="color:var(--accent-light);font-size:11px;">Terms &amp; Privacy Policy</a>
 </div>
+<footer style="text-align:center;padding:16px 24px 24px;font-size:12px;color:var(--muted);">
+  <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
+    <a href="/#features" style="color:var(--muted);font-size:12px;">Features</a>
+    <a href="/pricing" style="color:var(--muted);font-size:12px;">Pricing</a>
+    <a href="/sources" style="color:var(--muted);font-size:12px;">Sources</a>
+    <a href="/legal" style="color:var(--muted);font-size:12px;">Legal</a>
+    <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-size:12px;">Support</a>
+  </div>
+  <p>&copy; 2026 Ferchaud</p>
+</footer>
 </body>
 </html>

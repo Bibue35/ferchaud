@@ -61,15 +61,31 @@
       background: var(--surface); border: 1.5px solid var(--border); border-radius: 24px;
       padding: 2rem; position: relative; transition: all 0.3s;
     }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+    .card:hover, .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+    @keyframes fireRotate {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(255,107,43,0.3); }
+      50% { box-shadow: 0 4px 24px rgba(255,107,43,0.55), 0 0 40px rgba(255,107,43,0.15); }
+    }
     .card.popular {
-      border-color: var(--accent);
+      border: 2px solid transparent;
+      background-image: linear-gradient(var(--surface), var(--surface)),
+                        linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b, #ff4500);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      background-size: 100% 100%, 300% 300%;
+      animation: fireRotate 4s ease infinite;
       box-shadow: 0 0 40px rgba(255,107,43,0.12), 0 0 80px rgba(255,107,43,0.06);
     }
     .popular-badge {
       position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
       background: var(--fire-gradient); color: white; font-size: 11px; font-weight: 700;
       padding: 4px 18px; border-radius: 50px; letter-spacing: 0.5px; white-space: nowrap;
+      animation: glowPulse 2.5s ease-in-out infinite;
     }
     .tier-name {
       font-size: 14px; font-weight: 700; letter-spacing: 1px;
@@ -112,14 +128,15 @@
 <nav>
   <a href="/" class="logo">Fer<span>chaud</span></a>
   <div style="display:flex;gap:24px;align-items:center">
-    <a href="/dashboard" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Dashboard</a>
-    <a href="/feed" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Feed</a>
+    <a href="/#features" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
+    <a href="/pricing" style="color:var(--text);text-decoration:none;font-size:14px;font-weight:500;">Pricing</a>
     <a href="/sources" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Sources</a>
+    <a href="/feed" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Feed</a>
     <a href="/signup" style="background:var(--fire-gradient);color:white;padding:8px 20px;border-radius:50px;text-decoration:none;font-size:14px;font-weight:600">Get Started</a>
   </div>
 </nav>
 
-<div class="hero">
+<div class="hero page-enter">
   <h1>Simple, profit-aligned pricing</h1>
   <p>We only make money when you do. Choose the plan that matches how much you want us invested in your success.</p>
   <div class="toggle">
@@ -141,7 +158,7 @@
       <li><span class="check">&#10003;</span> Daily performance reports</li>
       <li><span class="check">&#10003;</span> Web dashboard</li>
     </ul>
-    <button class="btn btn-outline" onclick="subscribe('free')">Get Started Free</button>
+    <button class="btn btn-primary" onclick="subscribe('free')">Get Started Free</button>
   </div>
   <!-- Starter -->
   <div class="card">
@@ -156,7 +173,7 @@
       <li><span class="check">&#10003;</span> Email alerts</li>
       <li><span class="check">&#10003;</span> 14-day free trial</li>
     </ul>
-    <button class="btn btn-outline" onclick="subscribe('starter')">Start Free Trial</button>
+    <button class="btn btn-primary" onclick="subscribe('starter')">Start Free Trial</button>
   </div>
 
   <!-- Pro (Popular) -->
@@ -189,7 +206,7 @@
       <li><span class="check">&#10003;</span> Dedicated account manager</li>
       <li><span class="check">&#10003;</span> We take only 2% of profits</li>
     </ul>
-    <button class="btn btn-outline" onclick="subscribe('elite')">Contact Sales</button>
+    <button class="btn btn-primary" onclick="subscribe('elite')">Contact Sales</button>
   </div>
 </div>
 <div class="faq">
@@ -245,10 +262,12 @@ function toggleFaq(el) { el.classList.toggle('open'); }
 <!-- Footer -->
 <footer style="border-top:1px solid var(--border);padding:40px 24px;margin-top:60px;">
   <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-    <p style="font-size:13px;color:var(--muted);">&copy; 2026 Ferchaud. All rights reserved.</p>
+    <p style="font-size:13px;color:var(--muted);">&copy; 2026 Ferchaud</p>
     <div style="display:flex;gap:24px;">
-      <a href="/legal" style="font-size:13px;color:var(--muted);text-decoration:none;">Legal</a>
+      <a href="/#features" style="font-size:13px;color:var(--muted);text-decoration:none;">Features</a>
+      <a href="/pricing" style="font-size:13px;color:var(--muted);text-decoration:none;">Pricing</a>
       <a href="/sources" style="font-size:13px;color:var(--muted);text-decoration:none;">Sources</a>
+      <a href="/legal" style="font-size:13px;color:var(--muted);text-decoration:none;">Legal</a>
       <a href="mailto:support@ferchaud.com" style="font-size:13px;color:var(--muted);text-decoration:none;">Support</a>
     </div>
   </div>

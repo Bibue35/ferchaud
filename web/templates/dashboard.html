@@ -15,13 +15,41 @@
 /* ── Stat cards (Pill) ───────────────────────────── */
 .stat-card   {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; padding: 1.25rem 1.5rem;
+  border-radius: 24px; padding: 1.25rem 1.5rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
 }
 .stat-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
+/* Tooltip support */
+[data-tooltip] { position: relative; }
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1315; color: var(--text-secondary);
+  font-size: 11px; font-weight: 500;
+  padding: 6px 14px; border-radius: 50px;
+  border: 1px solid var(--border);
+  white-space: nowrap; z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  pointer-events: none;
+  animation: fadeIn 0.15s ease;
+}
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, rgba(42,26,30,0.6) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+/* Alternating trade rows */
+.tbl tbody tr:nth-child(even) td { background: rgba(21,16,18,0.5); }
+.tbl tbody tr:nth-child(odd) td { background: transparent; }
 .stat-label  {
   font-size: 11px; font-weight: 600; letter-spacing: .8px;
   text-transform: uppercase; color: var(--muted); margin-bottom: .5rem;
@@ -111,7 +139,11 @@
 .rev-fill    { height:100%; border-radius:50px; background:var(--fire-gradient); }
 
 /* ── Chart ───────────────────────────────────────── */
-#chart-container { height:280px; }
+#chart-container {
+  height:280px; border-radius:16px; overflow:hidden;
+  box-shadow: 0 0 30px rgba(255,107,43,0.04);
+  border: 1px solid var(--border);
+}
 </style>
 {% endblock %}
 {% block body %}
@@ -123,6 +155,7 @@
       <span class="badge badge-live">LIVE</span>
       <a href="/dashboard" class="nav-link active">Dashboard</a>
       <a href="/feed" class="nav-link">Feed</a>
+      <a href="/#features" class="nav-link">Features</a>
       <a href="/sources" class="nav-link">Sources</a>
       <a href="/pricing" class="nav-link">Pricing</a>
       <span class="nav-link muted" id="clock" style="font-family:var(--mono);font-size:13px;"></span>
@@ -168,9 +201,9 @@
       </div>
       <div class="bot-actions">
         {% if user.bot_enabled %}
-        <button class="btn btn-sm btn-danger" style="border-radius:50px;" onclick="toggleBot('stop')">Stop Bot</button>
+        <button class="btn btn-sm" style="border-radius:50px;background:transparent;border:1.5px solid var(--red);color:var(--red);" onclick="toggleBot('stop')">Stop Bot</button>
         {% else %}
-        <button class="btn btn-sm btn-primary" onclick="toggleBot('start')">Start Bot</button>
+        <button class="btn btn-sm" style="border-radius:50px;background:var(--fire-gradient);color:white;border:none;box-shadow:0 4px 20px rgba(255,107,43,0.3);" onclick="toggleBot('start')">Start Bot</button>
         {% endif %}
         <button class="btn btn-sm btn-ghost" style="border-radius:50px;" onclick="openDeposit()">+ Deposit</button>
       </div>
@@ -178,7 +211,7 @@
   </div>
   <!-- Stats Row 1: Portfolio Metrics -->
   <div class="grid-4" style="margin-bottom:1rem;">
-    <div class="stat-card">
+    <div class="stat-card hover-lift" data-tooltip="Total equity including cash and open positions">
       <div class="stat-label">Portfolio Value</div>
       <div class="stat-val" id="s-equity" style="color:var(--accent);">${{ "%.2f"|format(broker.equity if broker else 0) }}</div>
       <div class="stat-sub">
@@ -189,7 +222,7 @@
         <span>all time</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card hover-lift" data-tooltip="Profit/loss on currently open positions">
       <div class="stat-label">Unrealized P&L</div>
       {% set upl = namespace(val=0) %}
       {% if broker and broker.positions %}
@@ -202,7 +235,7 @@
       </div>
       <div class="stat-sub"><span>{{ (broker.positions or {})|length }} open positions</span></div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card hover-lift" data-tooltip="Percentage of closed trades with positive P&L">
       <div class="stat-label">Win Rate</div>
       <div class="stat-val" id="s-winrate" style="color:var(--amber);">
         {% set wins = trades|selectattr('pnl', 'gt', 0)|list|length %}
@@ -217,7 +250,7 @@
         {% endif %}
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card hover-lift" data-tooltip="Total funds deposited into your account">
       <div class="stat-label">Total Deposited</div>
       <div class="stat-val" style="color:var(--accent);">${{ "%.2f"|format(total_deposited or 0) }}</div>
       <div class="stat-sub">
@@ -227,7 +260,7 @@
   </div>
   <!-- Stats Row 2: Performance Metrics -->
   <div class="grid-3" style="margin-bottom:1.25rem;">
-    <div class="stat-card">
+    <div class="stat-card hover-lift" data-tooltip="Average dollar gain on wins vs losses">
       <div class="stat-label">Avg Win / Avg Loss</div>
       {% set win_pnls = trades|selectattr('pnl','gt',0)|map(attribute='pnl')|list %}
       {% set los_pnls = trades|selectattr('pnl','lt',0)|map(attribute='pnl')|list %}
@@ -238,7 +271,7 @@
         <div><div class="stat-val pnl-neg" style="font-size:1.2rem;">${{ "%.2f"|format(avg_los) }}</div><div style="font-size:11px;color:var(--muted);">avg loss</div></div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card hover-lift" data-tooltip="Your share of trading profits based on plan">
       <div class="stat-label">Revenue Share</div>
       {% set share_pct = ((user.revenue_share_pct or 0.8) * 100)|int %}
       <div class="stat-val" style="font-size:1.3rem;">You keep <span style="color:var(--green);">{{ share_pct }}%</span></div>
@@ -248,7 +281,7 @@
         <a href="/pricing" style="color:var(--accent);text-decoration:none;font-size:11px;">Upgrade</a>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card hover-lift" data-tooltip="Current status of each trading strategy">
       <div class="stat-label">Strategy Activity</div>
       <div style="display:flex;flex-direction:column;gap:6px;margin-top:.25rem;">
         {% set strats = ['breakout','momentum','mean_reversion','scalper','catalyst'] %}
@@ -484,11 +517,12 @@
 <!-- Footer -->
 <footer class="site-footer" style="margin-top:40px;">
   <div class="site-footer-inner">
-    <p>&copy; 2026 Ferchaud. All rights reserved.</p>
+    <p>&copy; 2026 Ferchaud</p>
     <div class="site-footer-links">
-      <a href="/legal">Legal</a>
+      <a href="/#features">Features</a>
       <a href="/pricing">Pricing</a>
       <a href="/sources">Sources</a>
+      <a href="/legal">Legal</a>
       <a href="mailto:support@ferchaud.com">Support</a>
     </div>
   </div>
