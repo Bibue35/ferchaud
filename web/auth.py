@@ -74,7 +74,7 @@ def require_user(request: Request, token: Optional[str] = None):
 
 
 def signup_user(email: str, username: str, password: str, full_name: str = "") -> dict:
-    """Create a new user with a default portfolio."""
+    """Create a new user."""
     db = SessionLocal()
     try:
         if db.query(User).filter(User.email == email).first():
@@ -85,13 +85,12 @@ def signup_user(email: str, username: str, password: str, full_name: str = "") -
         user = User(
             email=email, username=username,
             hashed_password=hash_password(password),
-            full_name=full_name,
         )
         db.add(user)
         db.flush()
 
         # Create default portfolio
-        portfolio = Portfolio(user_id=user.id, name="Main Portfolio", balance=0.0)
+        portfolio = Portfolio(user_id=user.id, value=0.0, cash=0.0)
         db.add(portfolio)
         db.commit()
 
@@ -117,22 +116,22 @@ def login_user(email: str, password: str) -> dict:
 
 
 def deposit_funds(user_id: int, amount: float) -> dict:
-    """Add funds to user's portfolio."""
+    """Add funds to user's virtual balance."""
     if amount <= 0:
         return {"error": "Amount must be positive"}
     if amount > 10000:
         return {"error": "Max deposit is $10,000 per transaction"}
     db = SessionLocal()
     try:
-        portfolio = db.query(Portfolio).filter(Portfolio.user_id == user_id).first()
-        if not portfolio:
-            return {"error": "No portfolio found"}
-        portfolio.balance += amount
-        portfolio.deposited += amount
-        deposit = Deposit(portfolio_id=portfolio.id, amount=amount, method="virtual")
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"error": "User not found"}
+        user.virtual_balance = (user.virtual_balance or 0) + amount
+        user.total_deposited = (user.total_deposited or 0) + amount
+        deposit = Deposit(user_id=user.id, amount=amount)
         db.add(deposit)
         db.commit()
-        return {"balance": portfolio.balance, "deposited": portfolio.deposited}
+        return {"balance": user.virtual_balance, "deposited": user.total_deposited}
     except Exception as e:
         db.rollback()
         return {"error": str(e)}
