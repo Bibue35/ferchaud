@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% block title %}Feed — Ferchaud{% endblock %}
+
+{% block head %}
+<style>
+/* ── Feed Layout ──────────────────────────────────── */
+.feed-page { padding-top: 88px; padding-bottom: 48px; }
+.feed-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.feed-stream { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.feed-sidebar { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Feed Header ──────────────────────────────────── */
+.feed-page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.feed-page-title {
+  font-size: 24px; font-weight: 700; letter-spacing: -0.8px;
+}
+</style>
+<style>
+.feed-page-title span {
+  background: var(--fire-gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.feed-live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); display: inline-block;
+  margin-right: 8px; animation: pulse 2s infinite;
+}
+.feed-status-pill {
+  display: inline-flex; align-items: center;
+  padding: 6px 16px; border-radius: 50px;
+  font-size: 12px; font-weight: 600;
+  background: rgba(74,222,128,0.1); color: var(--green);
+  font-family: var(--mono);
+}
+
+/* ── Feed Items ───────────────────────────────────── */
+.feed-item {
+  display: flex; gap: 14px; padding: 18px 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; transition: all 0.25s ease;
+  animation: fadeIn 0.35s ease;
+}
+</style>
+<style>
+.feed-item:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 20px rgba(255,107,43,0.06), 0 8px 32px rgba(0,0,0,0.2);
+}
+.feed-icon {
+  width: 40px; height: 40px; min-width: 40px;
+  border-radius: 50%; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+}
+.feed-icon.buy { background: rgba(74,222,128,0.12); color: var(--green); }
+.feed-icon.sell { background: rgba(248,113,113,0.12); color: var(--red); }
+.feed-icon.signal { background: rgba(255,107,43,0.12); color: var(--accent); }
+.feed-icon.alert { background: rgba(245,158,11,0.12); color: var(--amber); }
+.feed-icon.research { background: rgba(168,85,247,0.12); color: #a855f7; }
+
+.feed-content { flex: 1; min-width: 0; }
+.feed-header {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; margin-bottom: 4px;
+}
+.feed-action {
+  font-size: 14px; font-weight: 600; color: var(--text);
+}
+.feed-symbol {
+  font-size: 14px; font-weight: 700;
+  font-family: var(--mono); color: var(--accent-light);
+}
+</style>
+<style>
+.feed-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 50px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.4px; text-transform: uppercase;
+  font-family: var(--mono);
+}
+.feed-badge.strategy { background: rgba(255,107,43,0.12); color: var(--accent); }
+.feed-badge.reason { background: rgba(248,113,113,0.1); color: var(--red); }
+.feed-badge.scanner { background: rgba(245,158,11,0.1); color: var(--amber); }
+.feed-badge.grok { background: rgba(168,85,247,0.1); color: #a855f7; }
+
+.feed-detail {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.5; margin-bottom: 6px;
+  font-family: var(--mono);
+}
+.feed-meta {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12px; color: var(--muted);
+}
+.feed-time { font-family: var(--mono); }
+.feed-pnl {
+  font-family: var(--mono); font-weight: 600;
+  padding: 1px 8px; border-radius: 50px; font-size: 11px;
+}
+.feed-pnl.positive { background: rgba(74,222,128,0.1); color: var(--green); }
+.feed-pnl.negative { background: rgba(248,113,113,0.1); color: var(--red); }
+</style>
+<style>
+.feed-score {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  color: var(--accent); padding: 1px 8px;
+  border-radius: 50px; background: rgba(255,107,43,0.08);
+}
+
+/* ── Feed Empty State ─────────────────────────────── */
+.feed-empty {
+  text-align: center; padding: 64px 24px;
+  color: var(--muted);
+}
+.feed-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.feed-empty h3 { font-size: 18px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+.feed-empty p { font-size: 13px; max-width: 320px; margin: 0 auto; line-height: 1.6; }
+
+/* ── Sidebar Cards ────────────────────────────────── */
+.sidebar-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; padding: 20px;
+}
+.sidebar-card-title {
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 14px;
+}
+.sidebar-stat {
+  display: flex; justify-content: space-between;
+  align-items: center; padding: 6px 0;
+}
+</style>
+<style>
+.sidebar-stat-label { font-size: 13px; color: var(--text-secondary); }
+.sidebar-stat-value {
+  font-size: 14px; font-weight: 600;
+  font-family: var(--mono); color: var(--text);
+}
+.sidebar-bot-status {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; border-radius: 50px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.sidebar-bot-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.sidebar-bot-dot.running { background: var(--green); animation: pulse 2s infinite; }
+.sidebar-bot-dot.stopped { background: var(--red); }
+.sidebar-bot-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.sidebar-bot-mode {
+  margin-left: auto; font-size: 11px;
+  font-family: var(--mono); color: var(--muted);
+  text-transform: uppercase;
+}
+.sidebar-mover {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0; border-bottom: 1px solid rgba(42,26,30,0.4);
+}
+.sidebar-mover:last-child { border-bottom: none; }
+.sidebar-mover-sym { font-weight: 600; font-size: 13px; font-family: var(--mono); }
+.sidebar-mover-change { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+</style>
+<style>
+.strat-list { display: flex; flex-direction: column; gap: 4px; }
+.strat-list-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0; font-size: 13px; font-weight: 500;
+}
+.strat-list-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  display: inline-block;
+}
+
+/* ── Refresh Indicator ────────────────────────────── */
+.feed-refresh-bar {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 8px; font-size: 11px;
+  color: var(--muted); font-family: var(--mono);
+  opacity: 0; transition: opacity 0.3s;
+}
+.feed-refresh-bar.active { opacity: 1; }
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .feed-grid { grid-template-columns: 1fr; }
+  .feed-sidebar { order: -1; }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- ── Floating Pill Navbar ──────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/dashboard" class="logo">
+      <span class="logo-accent">F</span>erchaud
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/feed" class="nav-link" style="color:var(--text)">Feed</a>
+      <a href="/sources" class="nav-link">Sources</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+    </div>
+    <div class="nav-user">
+      <div class="avatar">{{ user.username[0]|upper }}</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Feed Page ─────────────────────────────────── -->
+<div class="feed-page">
+  <div class="feed-grid">
+    <!-- Left: Activity Stream -->
+    <div class="feed-stream">
+      <div class="feed-page-header">
+        <div>
+          <div class="feed-page-title">Activity <span>Feed</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;font-family:var(--mono)">Real-time bot trades, signals &amp; market events</div>
+        </div>
+        <div class="feed-status-pill">
+          <span class="feed-live-dot"></span> Live
+        </div>
+      </div>
+
+      <div class="feed-refresh-bar" id="refreshBar">
+        <span>&#8635;</span> Refreshing...
+      </div>
+
+      <div id="feed">
+        <div class="feed-empty">
+          <div class="feed-empty-icon">&#9889;</div>
+          <h3>Loading feed...</h3>
+          <p>Fetching latest bot activity, signals, and market events.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Sidebar -->
+    <div class="feed-sidebar">
+      <!-- Bot Status -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Bot Status</div>
+        <div class="sidebar-bot-status" id="botStatusPill">
+          <div class="sidebar-bot-dot stopped" id="botDot"></div>
+          <span class="sidebar-bot-label" id="botLabel">Loading...</span>
+          <span class="sidebar-bot-mode" id="botMode">--</span>
+        </div>
+      </div>
+
+      <!-- Today's Stats -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Today's Stats</div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Trades</span>
+          <span class="sidebar-stat-value" id="statTrades">--</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Win Rate</span>
+          <span class="sidebar-stat-value" id="statWinRate">--</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">P&amp;L</span>
+          <span class="sidebar-stat-value" id="statPnl">--</span>
+        </div>
+      </div>
+
+      <!-- Top Movers -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Top Movers</div>
+        <div id="topMovers">
+          <div style="font-size:12px;color:var(--muted);padding:8px 0">Loading scanner...</div>
+        </div>
+      </div>
+
+      <!-- Active Strategies -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Active Strategies</div>
+        <div class="strat-list">
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--green)"></span> Breakout</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--accent)"></span> Mean Reversion</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:#a855f7"></span> Grok Catalyst</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--amber)"></span> VWAP Scalp</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:#38bdf8"></span> Momentum</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--red)"></span> Reversal</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:#818cf8"></span> Options Flow</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:#fb923c"></span> News Spike</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:#2dd4bf"></span> Regime Adaptive</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ICONS = { buy: '\u2197', sell: '\u2198', signal: '\u26A1', alert: '\u26A0', research: '\uD83D\uDD0D' };
+const LABELS = {
+  buy: 'AI bought', sell: 'AI sold',
+  signal: 'Signal detected', alert: 'Market alert',
+  research: 'X research'
+};
+
+function timeAgo(iso) {
+  if (!iso) return 'just now';
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return Math.floor(diff) + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function formatMoney(v) {
+  if (v == null) return '';
+  const n = parseFloat(v);
+  return (n >= 0 ? '+' : '') + '$' + Math.abs(n).toFixed(2);
+}
+
+function formatPct(v) {
+  if (v == null) return '';
+  const n = parseFloat(v);
+  return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+}
+</script>
+<script>
+function renderFeedItem(item) {
+  const icon = ICONS[item.type] || '\u26A1';
+  const label = LABELS[item.type] || item.type;
+  const iconClass = item.type;
+
+  let badgeHtml = '';
+  if (item.strategy) {
+    badgeHtml = '<span class="feed-badge strategy">' + item.strategy + '</span>';
+  }
+  if (item.type === 'research') {
+    badgeHtml = '<span class="feed-badge grok">X / GROK</span>';
+  }
+  if (item.type === 'alert') {
+    badgeHtml = '<span class="feed-badge scanner">SCANNER</span>';
+  }
+
+  let detailHtml = '';
+  if (item.type === 'buy' || item.type === 'sell') {
+    const parts = [];
+    if (item.qty) parts.push(item.qty + ' shares');
+    if (item.price) parts.push('@ $' + parseFloat(item.price).toFixed(2));
+    detailHtml = parts.join(' ');
+  } else if (item.detail) {
+    detailHtml = item.detail;
+  }
+  if (item.score) {
+    detailHtml += ' <span class="feed-score">Score ' + item.score + '/10</span>';
+  }
+</script>
+<script>
+  let pnlHtml = '';
+  if (item.pnl != null && item.pnl !== 0) {
+    const pnlVal = parseFloat(item.pnl);
+    const cls = pnlVal >= 0 ? 'positive' : 'negative';
+    pnlHtml = '<span class="feed-pnl ' + cls + '">' + formatMoney(pnlVal) + '</span>';
+  }
+
+  return '<div class="feed-item">' +
+    '<div class="feed-icon ' + iconClass + '">' + icon + '</div>' +
+    '<div class="feed-content">' +
+      '<div class="feed-header">' +
+        '<span class="feed-action">' + label + '</span>' +
+        (item.symbol ? '<span class="feed-symbol">' + item.symbol + '</span>' : '') +
+        badgeHtml +
+      '</div>' +
+      (detailHtml ? '<div class="feed-detail">' + detailHtml + '</div>' : '') +
+      '<div class="feed-meta">' +
+        '<span class="feed-time">' + timeAgo(item.timestamp) + '</span>' +
+        pnlHtml +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+</script>
+<script>
+async function loadFeed() {
+  const bar = document.getElementById('refreshBar');
+  bar.classList.add('active');
+  try {
+    const items = await fetch('/api/feed').then(r => r.json());
+    const container = document.getElementById('feed');
+    if (!items.length) {
+      container.innerHTML =
+        '<div class="feed-empty">' +
+          '<div class="feed-empty-icon">&#9889;</div>' +
+          '<h3>No activity yet</h3>' +
+          '<p>Start the bot from your dashboard to see trades, signals, and market events here.</p>' +
+        '</div>';
+    } else {
+      container.innerHTML = items.map(renderFeedItem).join('');
+    }
+    updateSidebarStats(items);
+  } catch(e) {
+    console.error('Feed load error:', e);
+  }
+  setTimeout(function(){ bar.classList.remove('active'); }, 600);
+}
+
+function updateSidebarStats(items) {
+  const trades = items.filter(function(i){ return i.type==='buy'||i.type==='sell'; });
+  const buys = trades.filter(function(i){ return i.type==='buy'; });
+  const sells = trades.filter(function(i){ return i.type==='sell'; });
+  const wins = sells.filter(function(i){ return i.pnl && parseFloat(i.pnl) > 0; });
+</script>
+<script>
+  document.getElementById('statTrades').textContent = trades.length;
+  var wr = sells.length > 0 ? Math.round(wins.length / sells.length * 100) : 0;
+  document.getElementById('statWinRate').textContent = wr + '%';
+  var totalPnl = 0;
+  sells.forEach(function(i){ if(i.pnl) totalPnl += parseFloat(i.pnl); });
+  var pnlEl = document.getElementById('statPnl');
+  pnlEl.textContent = formatMoney(totalPnl);
+  pnlEl.className = 'sidebar-stat-value ' + (totalPnl >= 0 ? 'green' : 'red');
+}
+
+async function loadBotStatus() {
+  try {
+    var s = await fetch('/api/bot/status').then(function(r){ return r.json(); });
+    var dot = document.getElementById('botDot');
+    var lbl = document.getElementById('botLabel');
+    var mode = document.getElementById('botMode');
+    dot.className = 'sidebar-bot-dot ' + (s.running ? 'running' : 'stopped');
+    lbl.textContent = s.running ? 'Running' : 'Stopped';
+    mode.textContent = s.mode || 'passive';
+  } catch(e) {}
+}
+
+async function loadTopMovers() {
+  try {
+    var data = await fetch('/api/market').then(function(r){ return r.json(); });
+    var el = document.getElementById('topMovers');
+    var movers = (data.hot || []).slice(0, 6);
+</script>
+<script>
+    if (!movers.length) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">No scanner data</div>';
+      return;
+    }
+    el.innerHTML = movers.map(function(m) {
+      var pct = m.change_pct ? parseFloat(m.change_pct) : 0;
+      var cls = pct >= 0 ? 'green' : 'red';
+      var sign = pct >= 0 ? '+' : '';
+      return '<div class="sidebar-mover">' +
+        '<span class="sidebar-mover-sym">' + (m.symbol || '--') + '</span>' +
+        '<span class="sidebar-mover-change ' + cls + '">' + sign + pct.toFixed(1) + '%</span>' +
+      '</div>';
+    }).join('');
+  } catch(e) {}
+}
+
+// ── Init ──
+loadFeed();
+loadBotStatus();
+loadTopMovers();
+setInterval(loadFeed, 10000);
+setInterval(loadBotStatus, 15000);
+setInterval(loadTopMovers, 30000);
+</script>
+{% endblock %}

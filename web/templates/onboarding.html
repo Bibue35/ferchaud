@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Ferchaud</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0608; --surface: #151012; --surface-2: #1a1315;
+      --border: #2a1a1e; --border-hover: #3d2228;
+      --accent: #ff6b2b; --accent-light: #ff8c5a;
+      --accent-glow: rgba(255,107,43,0.25);
+      --fire-gradient: linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b);
+      --text: #f5e6d3; --text-secondary: #c4a88e;
+      --muted: #8a7068; --green: #4ade80; --red: #f87171;
+    }
+    body {
+      background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background-image: radial-gradient(ellipse at 50% 20%, rgba(255,107,43,0.04) 0%, transparent 60%);
+    }
+    .wizard { width: 100%; max-width: 560px; padding: 0 1.5rem; }
+    /* Progress bar */
+    .progress-bar { display: flex; gap: 8px; margin-bottom: 2.5rem; }
+    .progress-step { flex: 1; height: 3px; background: var(--border); border-radius: 50px; transition: background 0.4s; }
+    .progress-step.done { background: var(--accent); }
+    .progress-step.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+
+    /* Card */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+      padding: 2.5rem; animation: fadeIn 0.35s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .step-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--accent);
+      text-transform: uppercase; margin-bottom: 0.75rem;
+    }
+    .step-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text); }
+    .step-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
+
+    /* Tier cards */
+    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+    .tier-card {
+      border: 1.5px solid var(--border); border-radius: 24px; padding: 1.25rem;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .tier-card:hover { border-color: var(--accent); background: rgba(255,107,43,0.04); }
+    .tier-card.selected {
+      border-color: transparent; background: var(--accent-glow);
+      background-image: var(--fire-gradient); background-clip: padding-box;
+      border: 1.5px solid var(--accent);
+    }    .tier-card .badge {
+      position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 50px;
+      background: var(--fire-gradient); color: white;
+    }
+    .tier-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+    .tier-price { font-size: 1.4rem; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+    .tier-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+    .tier-share { font-size: 12px; color: var(--green); font-weight: 600; }
+    .tier-desc { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    /* Input / button */
+    input {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 50px; color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 0.9rem; padding: 0.8rem 1.25rem; margin-bottom: 1rem;
+      outline: none; transition: border 0.2s;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input::placeholder { color: var(--muted); }
+
+    .btn {
+      width: 100%; padding: 0.875rem; border-radius: 50px; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700;
+      transition: all 0.2s; margin-top: 0.5rem;
+    }
+    .btn-primary {
+      background: var(--fire-gradient); color: white;
+      box-shadow: 0 4px 20px rgba(255,107,43,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,107,43,0.45); }    .btn-outline {
+      background: transparent; color: var(--text); border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-green { background: #16a34a; color: white; }
+    .btn-green:hover { background: #15803d; }
+
+    /* Wallet buttons */
+    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+    .wallet-btn {
+      background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 24px;
+      padding: 1rem; display: flex; flex-direction: column; align-items: center;
+      gap: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .wallet-btn:hover { border-color: var(--accent); background: rgba(255,107,43,0.05); }
+    .wallet-btn img { width: 36px; height: 36px; border-radius: 50px; }
+    .wallet-btn span { font-size: 12px; font-weight: 600; color: var(--text); }
+    .wallet-btn.connected { border-color: var(--green); }
+    .wallet-connected {
+      background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25);
+      border-radius: 50px; padding: 0.75rem 1rem; font-size: 13px;
+      color: var(--green); display: flex; align-items: center; gap: 8px;
+      margin-bottom: 1rem; display: none;
+    }
+    .wallet-connected .dot {
+      width: 8px; height: 8px; background: var(--green); border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .skip-link {
+      text-align: center; margin-top: 1rem; font-size: 13px;
+      color: var(--muted); cursor: pointer;
+    }
+    .skip-link:hover { color: var(--text); }
+
+    .logo {
+      text-align: center; font-size: 1.3rem; font-weight: 900;
+      letter-spacing: -0.5px; margin-bottom: 2rem; color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+
+    .success-icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+    .feature-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
+    .feature-list li::before { content: "\2713"; color: var(--green); font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="wizard">
+  <div class="logo">Fer<span>chaud</span></div>
+
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-step active" id="ps1"></div>
+    <div class="progress-step" id="ps2"></div>
+    <div class="progress-step" id="ps3"></div>
+    <div class="progress-step" id="ps4"></div>
+  </div>
+  <!-- STEP 1: Welcome + choose plan -->
+  <div class="card" id="step1">
+    <div class="step-label">Step 1 of 4</div>
+    <div class="step-title">Choose your plan</div>
+    <div class="step-sub">Pick the plan that fits your trading goals. Lower monthly cost = higher revenue share taken by us. Higher cost = you keep almost everything.</div>
+
+    <div class="tier-grid">
+      <div class="tier-card" onclick="selectTier('free', this)">
+        <div class="tier-name">Free</div>
+        <div class="tier-price">$0<span>/mo</span></div>
+        <div class="tier-share">You keep 70%</div>
+        <div class="tier-desc">Great to start. We take 30% of profits.</div>
+      </div>
+      <div class="tier-card" onclick="selectTier('starter', this)">
+        <div class="tier-name">Starter</div>
+        <div class="tier-price">$29<span>/mo</span></div>
+        <div class="tier-share">You keep 80%</div>
+        <div class="tier-desc">14-day free trial. We take 20% of profits.</div>
+      </div>
+      <div class="tier-card selected" onclick="selectTier('pro', this)">
+        <div class="badge">Popular</div>
+        <div class="tier-name">Pro</div>
+        <div class="tier-price">$99<span>/mo</span></div>
+        <div class="tier-share">You keep 90%</div>
+        <div class="tier-desc">Options trading + Grok AI. We take 10%.</div>
+      </div>
+      <div class="tier-card" onclick="selectTier('elite', this)">
+        <div class="tier-name">Elite</div>
+        <div class="tier-price">$299<span>/mo</span></div>
+        <div class="tier-share">You keep 98%</div>
+        <div class="tier-desc">Maximum returns. We take only 2%.</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goStep(2)">Continue</button>
+  </div>
+  <!-- STEP 2: Connect wallet -->
+  <div class="card" id="step2" style="display:none">
+    <div class="step-label">Step 2 of 4</div>
+    <div class="step-title">Connect a wallet</div>
+    <div class="step-sub">Link your crypto wallet to deposit funds instantly. Your keys remain yours — we only read your address.</div>
+
+    <div class="wallet-connected" id="walletConnected">
+      <div class="dot"></div>
+      <span id="walletAddr">Connected</span>
+    </div>
+
+    <div class="wallet-grid">
+      <div class="wallet-btn" onclick="connectWallet('metamask')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
+        <span>MetaMask</span>
+      </div>
+      <div class="wallet-btn" onclick="connectWallet('coinbase')">
+        <img src="https://altcoinsbox.com/wp-content/uploads/2023/01/coinbase-wallet-logo.png" alt="Coinbase">
+        <span>Coinbase</span>
+      </div>
+      <div class="wallet-btn" onclick="connectWallet('phantom')">
+        <img src="https://cryptologos.cc/logos/solana-sol-logo.png" alt="Phantom">
+        <span>Phantom (SOL)</span>
+      </div>
+      <div class="wallet-btn" onclick="connectWallet('walletconnect')">
+        <img src="https://avatars.githubusercontent.com/u/37784886" alt="WalletConnect">
+        <span>WalletConnect</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="step2Next" onclick="goStep(3)">Continue</button>
+    <div class="skip-link" onclick="goStep(3)">Skip for now</div>
+  </div>
+  <!-- STEP 3: Fund account -->
+  <div class="card" id="step3" style="display:none">
+    <div class="step-label">Step 3 of 4</div>
+    <div class="step-title">Fund your account</div>
+    <div class="step-sub">Add funds to start trading. Minimum $50. Your balance is virtual — the bot trades on your behalf using Alpaca paper trading.</div>
+
+    <input type="number" id="depositAmount" placeholder="Amount in USD (min $50)" min="50" value="100">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.2rem">
+      <button class="btn btn-outline" onclick="setAmt(50)" style="margin:0;padding:0.55rem;border-radius:50px">$50</button>
+      <button class="btn btn-outline" onclick="setAmt(100)" style="margin:0;padding:0.55rem;border-radius:50px">$100</button>
+      <button class="btn btn-outline" onclick="setAmt(500)" style="margin:0;padding:0.55rem;border-radius:50px">$500</button>
+      <button class="btn btn-outline" onclick="setAmt(1000)" style="margin:0;padding:0.55rem;border-radius:50px">$1K</button>
+    </div>
+
+    <div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:6px">
+      <span>🔒</span> Secured by Stripe. Card data never touches our servers.
+    </div>
+
+    <button class="btn btn-primary" onclick="submitDeposit()">Add Funds</button>
+    <div class="skip-link" onclick="goStep(4)">Skip — I'll fund later</div>
+  </div>
+  <!-- STEP 4: All done -->
+  <div class="card" id="step4" style="display:none">
+    <div class="success-icon">🔥</div>
+    <div class="step-label">You're all set!</div>
+    <div class="step-title">Welcome to Ferchaud</div>
+    <div class="step-sub">Your bot is running 24/7 scanning thousands of stocks for breakout opportunities.</div>
+
+    <ul class="feature-list">
+      <li>Full market scanner — 12,000+ stocks monitored</li>
+      <li>Grok AI research — live X (Twitter) signals</li>
+      <li>Options trading on high-conviction plays</li>
+      <li>Real-time P&L dashboard</li>
+    </ul>
+
+    <button class="btn btn-primary" onclick="finish()">Open Dashboard</button>
+  </div>
+</div>
+<script>
+let selectedTier = 'pro';
+
+function selectTier(tier, el) {
+  selectedTier = tier;
+  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function goStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('step' + i).style.display = i === n ? 'block' : 'none';
+    const ps = document.getElementById('ps' + i);
+    if (ps) {
+      ps.className = 'progress-step';
+      if (i < n) ps.classList.add('done');
+      if (i === n) ps.classList.add('active');
+    }
+  });
+  if (n === 2) saveTier();
+}
+
+function saveTier() {
+  fetch('/api/onboarding/tier', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({tier: selectedTier})
+  });
+}
+async function connectWallet(type) {
+  if (type === 'metamask') {
+    if (!window.ethereum) { alert('MetaMask not found. Install it at metamask.io'); return; }
+    try {
+      const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+      const addr = accounts[0];
+      await fetch('/api/onboarding/wallet', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({wallet_address: addr, wallet_type: 'metamask'})
+      });
+      showWalletConnected(addr);
+    } catch(e) { alert('Connection rejected'); }
+  } else if (type === 'phantom') {
+    if (!window.solana) { alert('Phantom not found. Install it at phantom.app'); return; }
+    try {
+      const resp = await window.solana.connect();
+      const addr = resp.publicKey.toString();
+      await fetch('/api/onboarding/wallet', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({wallet_address: addr, wallet_type: 'phantom'})
+      });
+      showWalletConnected(addr);
+    } catch(e) { alert('Connection rejected'); }
+  } else {
+    alert(type + ' integration coming soon. Use MetaMask or Phantom for now.');
+  }
+}
+function showWalletConnected(addr) {
+  const short = addr.slice(0, 6) + '...' + addr.slice(-4);
+  document.getElementById('walletAddr').textContent = short + ' connected';
+  document.getElementById('walletConnected').style.display = 'flex';
+}
+
+function setAmt(v) { document.getElementById('depositAmount').value = v; }
+
+async function submitDeposit() {
+  const amount = parseFloat(document.getElementById('depositAmount').value);
+  if (!amount || amount < 50) { alert('Minimum deposit is $50'); return; }
+  const resp = await fetch('/api/deposit', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({amount})
+  });
+  if (resp.ok) { goStep(4); }
+  else { alert('Deposit failed. Please try again.'); }
+}
+
+async function finish() {
+  await fetch('/api/onboarding/complete', {method: 'POST'});
+  window.location.href = '/dashboard';
+}
+</script>
+</body>
+</html>

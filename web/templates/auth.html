@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'signup' %}Sign Up{% else %}Log In{% endif %} — Ferchaud{% endblock %}
+{% block head %}
+<style>
+  .auth-page {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 50% 30%, rgba(255,107,43,0.06) 0%, transparent 60%);
+  }
+  .auth-card {
+    width: 100%; max-width: 440px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 28px;
+    padding: 2.5rem 2.25rem;
+    box-shadow: 0 0 60px rgba(255,107,43,0.06), 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .auth-logo {
+    text-align: center; font-size: 1.6rem; font-weight: 900;
+    letter-spacing: -1px; margin-bottom: 2rem; color: var(--text);
+  }
+  .auth-logo span { color: var(--accent); }
+  .auth-title { text-align: center; margin-bottom: 0.5rem; }
+  .auth-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+  .auth-title p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .auth-form { display: flex; flex-direction: column; gap: 16px; margin-top: 1.75rem; }
+  .auth-input-group { display: flex; flex-direction: column; gap: 5px; }
+  .auth-input-group label {
+    font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    letter-spacing: 0.3px; padding-left: 8px;
+  }  .auth-input-group input {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 50px; color: var(--text); font-family: 'Inter', sans-serif;
+    font-size: 14px; padding: 12px 20px; outline: none; transition: border-color 0.2s;
+  }
+  .auth-input-group input:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .auth-input-group input::placeholder { color: var(--muted); }
+  .auth-submit {
+    width: 100%; padding: 14px; border-radius: 50px; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+    background: var(--fire-gradient); color: white;
+    box-shadow: 0 4px 20px rgba(255,107,43,0.3);
+    transition: all 0.2s; margin-top: 0.5rem;
+  }
+  .auth-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(255,107,43,0.45);
+  }
+  .auth-submit:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+  .auth-footer {
+    text-align: center; margin-top: 1.5rem; font-size: 13px; color: var(--muted);
+  }
+  .auth-footer a { color: var(--accent); font-weight: 600; }
+  .auth-error-msg {
+    background: rgba(248,113,113,0.1); color: var(--red);
+    padding: 10px 18px; border-radius: 50px; font-size: 13px;
+    text-align: center; display: none;
+  }
+</style>
+{% endblock %}
+{% block body %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">Fer<span>chaud</span></div>
+
+    <div class="auth-title">
+      {% if mode == 'signup' %}
+      <h1>Create your account</h1>
+      <p>Start trading with AI-powered market intelligence</p>
+      {% else %}
+      <h1>Welcome back</h1>
+      <p>Log in to your trading dashboard</p>
+      {% endif %}
+    </div>
+
+    <div id="auth-error" class="auth-error-msg"></div>
+
+    <form class="auth-form" id="auth-form" onsubmit="return handleAuth(event)">
+      {% if mode == 'signup' %}
+      <div class="auth-input-group">
+        <label>Full Name</label>
+        <input type="text" name="full_name" placeholder="John Doe" required>
+      </div>
+      <div class="auth-input-group">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="johndoe" required>
+      </div>
+      {% endif %}
+      <div class="auth-input-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="auth-input-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Min 6 characters" minlength="6" required>
+      </div>
+
+      <button type="submit" class="auth-submit" id="auth-btn">
+        {% if mode == 'signup' %}Create Account{% else %}Log In{% endif %}
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      {% if mode == 'signup' %}
+      Already have an account? <a href="/login">Log in</a>
+      {% else %}
+      Don't have an account? <a href="/signup">Sign up</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function handleAuth(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+  const isSignup = '{{ mode }}' === 'signup';
+  const url = isSignup ? '/api/auth/signup' : '/api/auth/login';
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-btn');
+
+  btn.textContent = 'Loading...';
+  btn.disabled = true;
+  errEl.style.display = 'none';
+
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
+    const result = await resp.json();
+    if (result.error) {
+      errEl.textContent = result.error;
+      errEl.style.display = 'block';
+      btn.textContent = isSignup ? 'Create Account' : 'Log In';
+      btn.disabled = false;
+    } else {
+      window.location.href = '/dashboard';
+    }
+  } catch (err) {
+    errEl.textContent = 'Network error. Please try again.';
+    errEl.style.display = 'block';
+    btn.textContent = isSignup ? 'Create Account' : 'Log In';
+    btn.disabled = false;
+  }
+  return false;
+}
+</script>
+{% endblock %}

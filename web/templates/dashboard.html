@@ -1,0 +1,647 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Ferchaud{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+/* ── Layout ─────────────────────────────────────── */
+.dash-wrap   { padding: 5.5rem 2rem 1.5rem; max-width: 1400px; margin: 0 auto; }
+.grid-4      { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+.grid-3      { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+.grid-2      { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.dash-cols   { display: grid; grid-template-columns: 1fr 380px; gap: 1.25rem; margin-top:1.25rem; }
+@media(max-width:1100px){ .dash-cols{grid-template-columns:1fr;} .grid-4{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:600px) { .grid-4{grid-template-columns:1fr;} .grid-3{grid-template-columns:1fr;} }
+
+/* ── Stat cards (Pill) ───────────────────────────── */
+.stat-card   {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 1.25rem 1.5rem;
+}
+.stat-label  {
+  font-size: 11px; font-weight: 600; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: .5rem;
+}
+.stat-val    {
+  font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1; color: var(--text);
+}.stat-sub    { font-size:12px; color:var(--muted); margin-top:.4rem; display:flex; align-items:center; gap:6px; }
+.stat-delta  { font-size:12px; font-weight:600; padding:2px 8px; border-radius:50px; }
+.delta-up    { color:var(--green); background:rgba(74,222,128,.12); }
+.delta-dn    { color:var(--red); background:rgba(248,113,113,.12); }
+.delta-neu   { color:var(--muted); background:var(--border); }
+
+/* ── Panel cards (Pill) ──────────────────────────── */
+.panel       { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:1.25rem; }
+.panel-title {
+  font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
+  color:var(--muted); margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between;
+}
+.panel-title span { color:var(--text); }
+
+/* ── Bot control (Pill) ──────────────────────────── */
+.bot-bar {
+  background:var(--surface); border:1px solid var(--border); border-radius:50px;
+  padding:.9rem 1.75rem; display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:1.25rem; gap:1rem; flex-wrap:wrap;
+}
+.bot-status  { display:flex; align-items:center; gap:.75rem; }
+.status-dot  {
+  width:10px; height:10px; border-radius:50%; background:var(--green);
+  box-shadow:0 0 10px var(--green); animation:pulse 1.5s infinite;
+}
+.status-dot.off { background:#6b7280; box-shadow:none; animation:none; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+.status-text { font-size:14px; font-weight:600; color:var(--text); }.mode-toggle { display:flex; gap:6px; background:var(--surface-2); border-radius:50px; padding:4px; }
+.mode-btn    {
+  padding:.4rem 1rem; border-radius:50px; border:none; cursor:pointer;
+  font-family:inherit; font-size:13px; font-weight:600; transition:all .2s;
+  background:transparent; color:var(--muted);
+}
+.mode-btn.active {
+  background:var(--fire-gradient); color:#fff;
+  box-shadow:0 2px 12px rgba(255,107,43,0.3);
+}
+.mode-btn.passive-active { background:var(--green); color:#0a0608; }
+.bot-actions { display:flex; gap:.6rem; }
+
+/* ── Table (Warm) ────────────────────────────────── */
+.tbl         { width:100%; border-collapse:collapse; font-size:13px; }
+.tbl th      {
+  color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase;
+  letter-spacing:.5px; padding:.5rem .75rem; border-bottom:1px solid var(--border); text-align:left;
+}
+.tbl td      { padding:.6rem .75rem; border-bottom:1px solid rgba(42,26,30,.4); }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:var(--surface-2); }
+.side-buy    { color:var(--green); font-weight:700; }
+.side-sell   { color:var(--red); font-weight:700; }
+.pnl-pos     { color:var(--green); }
+.pnl-neg     { color:var(--red); }
+
+/* ── Ticker rows ─────────────────────────────────── */
+.ticker-row  { display:flex; align-items:center; justify-content:space-between;
+               padding:.6rem 0; border-bottom:1px solid rgba(42,26,30,.4); }
+.ticker-row:last-child { border-bottom:none; }.ticker-sym  { font-weight:700; font-size:14px; color:var(--text); }
+.ticker-chg  { font-size:13px; font-weight:700; }
+
+/* ── Subscription badge ──────────────────────────── */
+.tier-badge  {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:3px 12px; border-radius:50px; font-size:11px; font-weight:700;
+}
+
+/* ── Bank connect ────────────────────────────────── */
+.bank-card   {
+  border:1.5px dashed var(--border); border-radius:20px; padding:1.25rem;
+  text-align:center; cursor:pointer; transition:all .2s;
+}
+.bank-card:hover { border-color:var(--accent); background:rgba(255,107,43,.04); }
+.bank-icon   { font-size:2rem; margin-bottom:.5rem; }
+.bank-name   { font-weight:600; font-size:14px; color:var(--text); }
+.bank-sub    { font-size:12px; color:var(--muted); margin-top:4px; }
+.bank-connected { border-color:var(--green); background:rgba(74,222,128,.04); cursor:default; }
+
+/* ── Revenue share bar ───────────────────────────── */
+.rev-bar     { background:var(--surface-2); border-radius:50px; overflow:hidden; height:8px; margin:.5rem 0; }
+.rev-fill    { height:100%; border-radius:50px; background:var(--fire-gradient); }
+
+/* ── Chart ───────────────────────────────────────── */
+#chart-container { height:280px; }
+</style>
+{% endblock %}
+{% block body %}
+<!-- Floating Pill Navbar -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/dashboard" class="logo">Fer<span class="logo-accent">chaud</span></a>
+    <div class="nav-links">
+      <span class="badge badge-live">LIVE</span>
+      <a href="/pricing" style="font-size:13px;color:var(--muted);text-decoration:none;padding:.3rem .75rem;">Plans</a>
+      <span class="nav-link muted" id="clock" style="font-family:var(--mono);font-size:13px;"></span>
+      <div class="nav-user">
+        <div class="avatar">{{ user.username[0]|upper }}</div>
+        <div style="display:flex;flex-direction:column;gap:1px;">
+          <span style="font-size:13px;font-weight:600;color:var(--text);">{{ user.username }}</span>
+          {% set tier = user.subscription_tier or 'free' %}
+          <span class="tier-badge" style="background:{{ {'free':'rgba(138,112,104,.15)','starter':'rgba(255,140,90,.15)','pro':'rgba(255,107,43,.2)','elite':'rgba(245,158,11,.2)'}[tier] }};color:{{ {'free':'#8a7068','starter':'#ff8c5a','pro':'#ff6b2b','elite':'#f59e0b'}[tier] }}">
+            {{ tier|upper }}
+          </span>
+        </div>
+        <a href="/api/auth/logout" class="btn btn-ghost btn-sm" style="border-radius:50px;">Logout</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-wrap">
+  <!-- Bot Control Bar (Pill) -->
+  <div class="bot-bar">
+    <div class="bot-status">
+      <div class="status-dot {% if not user.bot_enabled %}off{% endif %}" id="botDot"></div>
+      <div>
+        <div class="status-text" id="botStatusText">
+          {% if user.bot_enabled %}Bot Running{% else %}Bot Stopped{% endif %}
+        </div>
+        <div style="font-size:12px;color:var(--muted);" id="botModeText">
+          {{ (user.trading_mode or 'passive')|capitalize }} mode
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Trading Mode</div>
+        <div class="mode-toggle">
+          <button class="mode-btn {% if (user.trading_mode or 'passive') == 'passive' %}passive-active{% endif %}"
+                  id="modePassive" onclick="setMode('passive')">Passive</button>
+          <button class="mode-btn {% if user.trading_mode == 'aggressive' %}active{% endif %}"
+                  id="modeAggressive" onclick="setMode('aggressive')">Aggressive</button>
+        </div>
+      </div>
+      <div class="bot-actions">
+        {% if user.bot_enabled %}
+        <button class="btn btn-sm btn-danger" style="border-radius:50px;" onclick="toggleBot('stop')">Stop Bot</button>
+        {% else %}
+        <button class="btn btn-sm btn-primary" onclick="toggleBot('start')">Start Bot</button>
+        {% endif %}
+        <button class="btn btn-sm btn-ghost" style="border-radius:50px;" onclick="openDeposit()">+ Deposit</button>
+      </div>
+    </div>
+  </div>
+  <!-- Stats Row 1: Portfolio Metrics -->
+  <div class="grid-4" style="margin-bottom:1rem;">
+    <div class="stat-card">
+      <div class="stat-label">Portfolio Value</div>
+      <div class="stat-val" id="s-equity" style="color:var(--accent);">${{ "%.2f"|format(broker.equity if broker else 0) }}</div>
+      <div class="stat-sub">
+        <span class="stat-delta {% if (broker.equity or 0) >= (total_deposited or 0) %}delta-up{% else %}delta-dn{% endif %}" id="s-pnl-pct">
+          {% set pnl = (broker.equity or 0) - (total_deposited or 1) %}
+          {% if pnl >= 0 %}+{% endif %}{{ "%.1f"|format(pnl / (total_deposited or 1) * 100) }}%
+        </span>
+        <span>all time</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Unrealized P&L</div>
+      {% set upl = namespace(val=0) %}
+      {% if broker and broker.positions %}
+        {% for p in broker.positions.values() %}
+          {% set upl.val = upl.val + (p.unrealized_pl|float if p.unrealized_pl else 0) %}
+        {% endfor %}
+      {% endif %}
+      <div class="stat-val {% if upl.val >= 0 %}pnl-pos{% else %}pnl-neg{% endif %}" id="s-upl">
+        {{ '+' if upl.val >= 0 else '' }}${{ "%.2f"|format(upl.val) }}
+      </div>
+      <div class="stat-sub"><span>{{ (broker.positions or {})|length }} open positions</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-val" id="s-winrate" style="color:var(--amber);">
+        {% set wins = trades|selectattr('pnl', 'gt', 0)|list|length %}
+        {% set total = trades|length %}
+        {{ "%.0f"|format(wins / total * 100 if total > 0 else 0) }}%
+      </div>      <div class="stat-sub">
+        <span>{{ wins }}/{{ total }} trades</span>
+        {% if total > 0 %}
+        <span class="stat-delta {% if wins/total >= 0.5 %}delta-up{% else %}delta-dn{% endif %}">
+          {{ 'Profitable' if wins/total >= 0.5 else 'Improving' }}
+        </span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Deposited</div>
+      <div class="stat-val" style="color:var(--accent);">${{ "%.2f"|format(total_deposited or 0) }}</div>
+      <div class="stat-sub">
+        <button class="btn btn-green btn-sm" style="border-radius:50px;" onclick="openDeposit()">+ Add Funds</button>
+      </div>
+    </div>
+  </div>
+  <!-- Stats Row 2: Performance Metrics -->
+  <div class="grid-3" style="margin-bottom:1.25rem;">
+    <div class="stat-card">
+      <div class="stat-label">Avg Win / Avg Loss</div>
+      {% set win_pnls = trades|selectattr('pnl','gt',0)|map(attribute='pnl')|list %}
+      {% set los_pnls = trades|selectattr('pnl','lt',0)|map(attribute='pnl')|list %}
+      {% set avg_win = (win_pnls|sum / win_pnls|length) if win_pnls|length > 0 else 0 %}
+      {% set avg_los = (los_pnls|sum / los_pnls|length) if los_pnls|length > 0 else 0 %}
+      <div style="display:flex;gap:1.5rem;margin-top:.25rem;">
+        <div><div class="stat-val pnl-pos" style="font-size:1.2rem;">${{ "%.2f"|format(avg_win) }}</div><div style="font-size:11px;color:var(--muted);">avg win</div></div>
+        <div><div class="stat-val pnl-neg" style="font-size:1.2rem;">${{ "%.2f"|format(avg_los) }}</div><div style="font-size:11px;color:var(--muted);">avg loss</div></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Revenue Share</div>
+      {% set share_pct = ((user.revenue_share_pct or 0.8) * 100)|int %}
+      <div class="stat-val" style="font-size:1.3rem;">You keep <span style="color:var(--green);">{{ share_pct }}%</span></div>
+      <div class="rev-bar"><div class="rev-fill" style="width:{{ share_pct }}%;"></div></div>
+      <div class="stat-sub">
+        <span>Platform takes {{ 100 - share_pct }}% of profits</span>
+        <a href="/pricing" style="color:var(--accent);text-decoration:none;font-size:11px;">Upgrade</a>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Strategy Activity</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:.25rem;">
+        {% set strats = ['breakout','momentum','mean_reversion','scalper','catalyst'] %}
+        {% for s in strats %}
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:{% if loop.index <= 3 %}var(--green){% else %}#6b7280{% endif %};"></div>
+          <span style="font-size:12px;color:var(--muted);text-transform:capitalize;">{{ s }}</span>          <span style="margin-left:auto;font-size:11px;color:{% if loop.index <= 3 %}var(--green){% else %}var(--muted){% endif %};">
+            {% if loop.index <= 3 %}active{% else %}idle{% endif %}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Columns -->
+  <div class="dash-cols">
+
+    <!-- LEFT: Chart + Trades -->
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+      <!-- Equity Curve -->
+      <div class="panel">
+        <div class="panel-title"><span>Equity Curve</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" style="border-radius:50px;padding:4px 12px;" onclick="setChartRange('1D')">1D</button>
+            <button class="btn btn-ghost btn-sm" style="border-radius:50px;padding:4px 12px;" onclick="setChartRange('1W')">1W</button>
+            <button class="btn btn-ghost btn-sm" style="border-radius:50px;padding:4px 12px;" onclick="setChartRange('1M')">1M</button>
+          </div>
+        </div>
+        <div id="chart-container"></div>
+        <div style="display:flex;gap:1.5rem;margin-top:.75rem;font-size:12px;color:var(--muted);">
+          <span>Start: <b style="color:var(--text);" id="chart-start">—</b></span>
+          <span>Now: <b style="color:var(--text);" id="chart-now">—</b></span>
+          <span>Change: <b id="chart-chg">—</b></span>
+        </div>
+      </div>
+      <!-- Positions -->
+      <div class="panel">
+        <div class="panel-title"><span>Open Positions</span>
+          <span style="font-size:12px;font-weight:400;" id="pos-count">{{ (broker.positions or {})|length }} positions</span>
+        </div>
+        {% if broker and broker.positions %}
+        <table class="tbl">
+          <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Avg Entry</th><th>Current</th><th>P&L</th><th>%</th></tr></thead>
+          <tbody>
+          {% for sym, p in broker.positions.items() %}
+          <tr>
+            <td><b style="color:var(--text);">{{ sym }}</b></td>
+            <td class="{{ 'side-buy' if p.side == 'long' else 'side-sell' }}">{{ p.side|upper }}</td>
+            <td>{{ "%.4g"|format(p.qty|float) }}</td>
+            <td>${{ "%.2f"|format(p.avg_entry_price|float if p.avg_entry_price else 0) }}</td>
+            <td>${{ "%.2f"|format(p.current_price|float if p.current_price else 0) }}</td>
+            <td class="{{ 'pnl-pos' if (p.unrealized_pl|float) >= 0 else 'pnl-neg' }}">
+              ${{ "%.2f"|format(p.unrealized_pl|float if p.unrealized_pl else 0) }}</td>
+            <td class="{{ 'pnl-pos' if (p.unrealized_plpc|float) >= 0 else 'pnl-neg' }}">
+              {{ "%.2f"|format((p.unrealized_plpc|float)*100 if p.unrealized_plpc else 0) }}%</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center;padding:2rem;color:var(--muted);">No open positions</div>
+        {% endif %}
+      </div>
+      <!-- Trade History -->
+      <div class="panel">
+        <div class="panel-title"><span>Trade History</span>
+          <span style="font-size:11px;font-weight:400;color:var(--muted);" id="trade-count"></span>
+        </div>
+        <div style="max-height:360px;overflow-y:auto;">
+          <table class="tbl">
+            <thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>P&L</th><th>Strategy</th></tr></thead>
+            <tbody id="trades-table">
+              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+      <!-- Funding -->
+      <div class="panel">
+        <div class="panel-title"><span>Funding</span></div>
+        {% if user.bank_name %}
+        <div class="bank-card bank-connected">
+          <div class="bank-icon">🏦</div>
+          <div class="bank-name" style="color:var(--green);">{{ user.bank_name }} connected</div>
+          <div class="bank-sub">{{ user.bank_mask }}</div>
+        </div>
+        {% else %}        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;">
+          <div class="bank-card" onclick="connectBank('plaid')">
+            <div class="bank-icon">🏦</div>
+            <div class="bank-name">Bank Account</div>
+            <div class="bank-sub">ACH transfer</div>
+          </div>
+          <div class="bank-card" onclick="connectBank('stripe')">
+            <div class="bank-icon">💳</div>
+            <div class="bank-name">Debit / Credit</div>
+            <div class="bank-sub">Instant via Stripe</div>
+          </div>
+          <div class="bank-card" onclick="connectBank('crypto')">
+            <div class="bank-icon">🔗</div>
+            <div class="bank-name">Crypto Wallet</div>
+            <div class="bank-sub">
+              {% if user.wallet_address %}
+                {{ user.wallet_address[:6] }}...{{ user.wallet_address[-4:] }}
+              {% else %}Connect wallet{% endif %}
+            </div>
+          </div>
+          <div class="bank-card" onclick="openDeposit()">
+            <div class="bank-icon">➕</div>
+            <div class="bank-name">Quick Deposit</div>
+            <div class="bank-sub">Add funds now</div>
+          </div>
+        </div>
+        {% endif %}
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:.5rem 0;">
+          <span style="color:var(--muted);">Available balance</span>
+          <span style="font-weight:700;color:var(--accent);">${{ "%.2f"|format(broker.cash if broker else 0) }}</span>
+        </div>
+      </div>
+      <!-- Market Scanner -->
+      <div class="panel">
+        <div class="panel-title"><span>Hot Movers</span>
+          <span style="font-size:11px;color:var(--accent);">live scanner</span>
+        </div>
+        <div id="scanner-list">
+          {% if scanner and scanner.hot %}
+            {% for s in scanner.hot[:10] %}
+            <div class="ticker-row">
+              <div>
+                <span class="ticker-sym">{{ s.symbol }}</span>
+                <span style="font-size:11px;color:var(--muted);margin-left:6px;">${{ "%.2f"|format(s.price|float if s.price else 0) }}</span>
+              </div>
+              <span class="ticker-chg {% if (s.change_pct|float) >= 0 %}pnl-pos{% else %}pnl-neg{% endif %}">
+                {{ '+' if (s.change_pct|float) >= 0 else '' }}{{ "%.1f"|format(s.change_pct|float if s.change_pct else 0) }}%
+              </span>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:13px;">Scanning market...</div>
+          {% endif %}
+        </div>
+      </div>
+      <!-- X Research / Grok -->
+      <div class="panel">
+        <div class="panel-title"><span>X Research</span>
+          <span style="font-size:11px;color:var(--accent);">Grok AI</span>
+        </div>
+        <div id="xresearch-list">
+          {% if scanner and scanner.trending %}
+            {% for t in scanner.trending[:8] %}
+            <div class="ticker-row">
+              <div>
+                <span class="ticker-sym">{{ t.symbol if t.symbol else t }}</span>
+                {% if t.catalyst %}<div style="font-size:11px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.catalyst[:50] }}</div>{% endif %}
+              </div>
+              {% if t.score %}
+              <span style="font-size:11px;font-weight:700;color:var(--accent);">{{ t.score }}/10</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+          {% else %}
+          <div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:13px;">No signals yet</div>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Subscription -->
+      <div class="panel">
+        <div class="panel-title"><span>Your Plan</span></div>
+        {% set tier = user.subscription_tier or 'free' %}
+        {% set tinfo = tiers[tier] %}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--text);">{{ tinfo.name }}</div>
+            <div style="font-size:12px;color:var(--muted);">${{ tinfo.price_monthly }}/month</div>
+          </div>
+          <span class="tier-badge" style="font-size:13px;padding:5px 16px;background:{{ {'free':'rgba(138,112,104,.15)','starter':'rgba(255,140,90,.15)','pro':'rgba(255,107,43,.2)','elite':'rgba(245,158,11,.2)'}[tier] }};color:{{ {'free':'#8a7068','starter':'#ff8c5a','pro':'#ff6b2b','elite':'#f59e0b'}[tier] }}">
+            {{ (tinfo.revenue_share * 100)|int }}% yours
+          </span>
+        </div>
+        {% if tier != 'elite' %}
+        <a href="/pricing" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;text-decoration:none;">Upgrade Plan</a>
+        {% else %}
+        <div style="text-align:center;font-size:13px;color:var(--green);">Maximum tier</div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- Deposit Modal (Pill) -->
+<div id="depositModal" style="display:none;position:fixed;inset:0;background:rgba(10,6,8,.8);backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:2rem;width:400px;max-width:calc(100vw - 2rem);">
+    <div style="font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;color:var(--text);">Add Funds</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;">
+      {% for amt in [50,100,250,500,1000,2500] %}
+      <button class="btn btn-outline btn-sm" style="border-radius:50px;" onclick="setDepAmt({{ amt }})">
+        ${{ amt if amt < 1000 else (amt//1000|string + 'K') }}
+      </button>
+      {% endfor %}
+    </div>
+    <input type="number" id="depAmount" placeholder="Custom amount" min="50"
+           style="width:100%;margin-bottom:1rem;background:var(--surface-2);border:1px solid var(--border);border-radius:50px;padding:12px 20px;color:var(--text);font-family:inherit;font-size:14px;outline:none;">
+    <button class="btn btn-primary" style="width:100%;" onclick="submitDeposit()">Add Funds</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:.5rem;border-radius:50px;" onclick="closeDeposit()">Cancel</button>
+  </div>
+</div>
+<!-- Bank Connect Modal (Pill) -->
+<div id="bankModal" style="display:none;position:fixed;inset:0;background:rgba(10,6,8,.8);backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:2rem;width:440px;max-width:calc(100vw - 2rem);">
+    <div style="font-size:1.2rem;font-weight:700;margin-bottom:.5rem;color:var(--text);" id="bankModalTitle">Connect Bank</div>
+    <div style="color:var(--muted);font-size:14px;margin-bottom:1.5rem;" id="bankModalSub">Link your bank account for ACH transfers</div>
+    <div id="bankModalContent">
+      <div style="background:var(--surface-2);border-radius:20px;padding:1.5rem;text-align:center;margin-bottom:1rem;">
+        <div style="font-size:2rem;margin-bottom:.75rem;">🏦</div>
+        <div style="font-weight:600;margin-bottom:.5rem;color:var(--text);">Plaid Bank Link</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Securely connect 12,000+ banks via Plaid. Your credentials are never stored by us.</div>
+        <button class="btn btn-primary" onclick="launchPlaid()" style="width:100%;">Connect with Plaid</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;">
+        🔒 Bank-level encryption · Powered by Plaid · Funds available in 1-3 business days
+      </div>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:1rem;border-radius:50px;" onclick="closeBankModal()">Cancel</button>
+  </div>
+</div>
+<script>
+// ── Clock ──────────────────────────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+tick(); setInterval(tick, 1000);
+
+// ── Equity Chart ───────────────────────────────────────────────────────────
+let chart, lineSeries, chartData = [];
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('chart-container');
+  chart = LightweightCharts.createChart(el, {
+    layout:      { background: { color: '#151012' }, textColor: '#8a7068' },
+    grid:        { vertLines: { color: '#2a1a1e' }, horzLines: { color: '#2a1a1e' } },
+    crosshair:   { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: '#2a1a1e' },
+    timeScale:   { borderColor: '#2a1a1e', timeVisible: true },
+    handleScroll: true, handleScale: true,
+  });
+  lineSeries = chart.addAreaSeries({
+    lineColor: '#ff6b2b', topColor: 'rgba(255,107,43,0.25)',
+    bottomColor: 'rgba(255,107,43,0)', lineWidth: 2,
+  });
+  new ResizeObserver(e => chart.applyOptions({width: e[0].contentRect.width}))
+    .observe(el);
+  loadPortfolio();
+});
+function setChartRange(r) {
+  if (!chartData.length) return;
+  const now = chartData[chartData.length-1].time;
+  const cutoff = { '1D': now - 86400, '1W': now - 604800, '1M': now - 2592000 }[r] || 0;
+  const filtered = chartData.filter(d => d.value !== undefined && d.time >= cutoff);
+  if (filtered.length) lineSeries.setData(filtered);
+}
+
+// ── Portfolio refresh ──────────────────────────────────────────────────────
+async function loadPortfolio() {
+  try {
+    const d = await fetch('/api/portfolio').then(r => r.json());
+    document.getElementById('s-equity').textContent = '$' + d.equity.toFixed(2);
+    if (d.history && d.history.length) {
+      chartData = d.history.map(p => ({
+        time: Math.floor(new Date(p.t).getTime() / 1000),
+        value: p.v
+      }));
+      lineSeries.setData(chartData);
+      const start = d.history[0].v, end = d.equity;
+      document.getElementById('chart-start').textContent = '$' + start.toFixed(2);
+      document.getElementById('chart-now').textContent   = '$' + end.toFixed(2);
+      const chg = end - start, pct = start > 0 ? chg/start*100 : 0;
+      const el = document.getElementById('chart-chg');
+      el.textContent = (chg >= 0 ? '+' : '') + '$' + chg.toFixed(2) + ' (' + pct.toFixed(1) + '%)';
+      el.style.color = chg >= 0 ? '#4ade80' : '#f87171';
+    }
+  } catch(e) {}
+}
+// ── Trades refresh ─────────────────────────────────────────────────────────
+async function loadTrades() {
+  try {
+    const trades = await fetch('/api/trades').then(r => r.json());
+    document.getElementById('trade-count').textContent = trades.length + ' trades';
+    const tbody = document.getElementById('trades-table');
+    if (!trades.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);">No trades yet — start the bot to begin</td></tr>';
+      return;
+    }
+    tbody.innerHTML = trades.slice(0,50).map(t => {
+      const pnl = t.pnl || 0;
+      const ts  = new Date(t.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      return '<tr>' +
+        '<td style="color:var(--muted);font-size:12px;">' + ts + '</td>' +
+        '<td><b style="color:var(--text);">' + t.symbol + '</b></td>' +
+        '<td class="' + (t.side==='buy'?'side-buy':'side-sell') + '">' + t.side.toUpperCase() + '</td>' +
+        '<td>' + parseFloat(t.qty).toFixed(4) + '</td>' +
+        '<td>$' + parseFloat(t.price).toFixed(2) + '</td>' +
+        '<td class="' + (pnl>=0?'pnl-pos':'pnl-neg') + '">' + (pnl>=0?'+':'') + '$' + pnl.toFixed(2) + '</td>' +
+        '<td style="color:var(--muted);font-size:11px;">' + (t.strategy||'—') + '</td>' +
+        '</tr>';
+    }).join('');
+  } catch(e) {}
+}
+
+loadTrades();
+setInterval(function() { loadPortfolio(); loadTrades(); }, 15000);
+// ── Bot control ────────────────────────────────────────────────────────────
+async function toggleBot(action) {
+  var mode = document.getElementById('modePassive').classList.contains('passive-active') ? 'passive' : 'aggressive';
+  var r = await fetch('/api/bot/' + action, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({mode: mode})
+  });
+  if (r.ok) location.reload();
+}
+
+async function setMode(mode) {
+  document.getElementById('modePassive').className    = 'mode-btn' + (mode==='passive'?' passive-active':'');
+  document.getElementById('modeAggressive').className = 'mode-btn' + (mode==='aggressive'?' active':'');
+  document.getElementById('botModeText').textContent  = mode.charAt(0).toUpperCase()+mode.slice(1)+' mode';
+  await fetch('/api/bot/mode', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({mode: mode})
+  });
+}
+
+// ── Deposit modal ──────────────────────────────────────────────────────────
+function openDeposit()  { document.getElementById('depositModal').style.display='flex'; }
+function closeDeposit() { document.getElementById('depositModal').style.display='none'; }
+function setDepAmt(v)   { document.getElementById('depAmount').value = v; }
+async function submitDeposit() {
+  var amt = parseFloat(document.getElementById('depAmount').value);
+  if (!amt || amt < 50) { alert('Minimum $50'); return; }
+  var r = await fetch('/api/deposit', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({amount: amt})
+  });
+  if (r.ok) { closeDeposit(); loadPortfolio(); alert('$' + amt + ' added!'); }
+  else alert('Deposit failed');
+}
+// ── Bank connect ───────────────────────────────────────────────────────────
+function connectBank(type) {
+  var modal = document.getElementById('bankModal');
+  if (type === 'stripe') {
+    document.getElementById('bankModalTitle').textContent = 'Add Card';
+    document.getElementById('bankModalSub').textContent   = 'Pay instantly with debit or credit';
+    document.getElementById('bankModalContent').innerHTML =
+      '<div style="background:var(--surface-2);border-radius:20px;padding:1.5rem;text-align:center;margin-bottom:1rem;">' +
+        '<div style="font-size:2rem;margin-bottom:.75rem;">💳</div>' +
+        '<div style="font-weight:600;margin-bottom:.5rem;color:var(--text);">Stripe Checkout</div>' +
+        '<div style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Secure card processing by Stripe. PCI compliant.</div>' +
+        '<button class="btn btn-primary" onclick="openDeposit();closeBankModal();" style="width:100%;">Add Funds via Card</button>' +
+      '</div>';
+  } else if (type === 'crypto') {
+    document.getElementById('bankModalTitle').textContent = 'Crypto Wallet';
+    document.getElementById('bankModalSub').textContent   = 'Connect MetaMask or Phantom';
+    document.getElementById('bankModalContent').innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">' +
+        '<div class="bank-card" onclick="connectMetaMask()"><div class="bank-icon">🦊</div><div class="bank-name">MetaMask</div></div>' +
+        '<div class="bank-card" onclick="connectPhantom()"><div class="bank-icon">👻</div><div class="bank-name">Phantom</div></div>' +
+      '</div>';
+  }
+  modal.style.display = 'flex';
+}
+function closeBankModal() { document.getElementById('bankModal').style.display='none'; }
+async function launchPlaid() {
+  alert('Plaid integration requires a Plaid API key.\nVisit plaid.com to get your keys, then add PLAID_CLIENT_ID and PLAID_SECRET to your .env file.');
+}
+
+async function connectMetaMask() {
+  if (!window.ethereum) { alert('MetaMask not installed. Get it at metamask.io'); return; }
+  var accounts = await window.ethereum.request({method:'eth_requestAccounts'});
+  var addr = accounts[0];
+  await fetch('/api/onboarding/wallet', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({wallet_address: addr, wallet_type: 'metamask'})
+  });
+  closeBankModal(); location.reload();
+}
+async function connectPhantom() {
+  if (!window.solana) { alert('Phantom not installed. Get it at phantom.app'); return; }
+  var resp = await window.solana.connect();
+  var pubKey = resp.publicKey.toString();
+  await fetch('/api/onboarding/wallet', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({wallet_address: pubKey, wallet_type: 'phantom'})
+  });
+  closeBankModal(); location.reload();
+}
+</script>
+{% endblock %}

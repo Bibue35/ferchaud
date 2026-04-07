@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.git/
+.gitignore
+*.md
+OpenStock/
+render/
+logs/*.log
+data/quantbot.db
+.vercel/
+node_modules/
+venv/
+.venv/

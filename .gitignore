@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+logs/*.log
+data/quantbot.db
+OpenStock/node_modules/
+OpenStock/.next/
+venv/
+.venv/
+.vercel/
+render/
+*.dmg
+web/static/frames/frame_*.png
+OpenStock/
+web/static/frames/
+render/

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sources — Ferchaud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── Ferchaud Hot Iron Design System (standalone) ─── */
+:root {
+  --bg: #0a0608;
+  --surface: #151012;
+  --surface-2: #1a1315;
+  --border: #2a1a1e;
+  --border-hover: #3d2228;
+  --accent: #ff6b2b;
+  --accent-light: #ff8c5a;
+  --accent-glow: rgba(255, 107, 43, 0.25);
+  --amber: #f59e0b;
+  --fire-gradient: linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b);
+  --text: #f5e6d3;
+  --text-secondary: #c4a88e;
+  --muted: #8a7068;
+  --green: #4ade80;
+  --red: #f87171;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+}
+</style>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); -webkit-font-smoothing: antialiased;
+  line-height: 1.5; min-height: 100vh;
+}
+a { color: var(--accent-light); text-decoration: none; }
+a:hover { color: var(--accent); }
+
+/* ── Floating Pill Navbar ─────────────────────────── */
+.navbar {
+  position: fixed; top: 16px; left: 24px; right: 24px;
+  height: 56px; border-radius: 50px;
+  background: rgba(10, 6, 8, 0.85);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 107, 43, 0.12);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 1000; padding: 0 28px;
+}
+.navbar-inner {
+  max-width: 1280px; margin: 0 auto; height: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text); text-decoration: none;
+}
+</style>
+<style>
+.logo-accent { color: var(--accent); }
+.nav-links { display: flex; gap: 24px; align-items: center; }
+.nav-link {
+  color: var(--muted); font-size: 14px; font-weight: 500;
+  transition: color 0.15s;
+}
+.nav-link:hover { color: var(--text); }
+
+/* ── Buttons (pill) ───────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border-radius: 50px; font-size: 14px;
+  font-weight: 600; border: none; cursor: pointer;
+  transition: all 0.2s; font-family: var(--font);
+}
+.btn-primary {
+  background: var(--fire-gradient); color: white;
+  box-shadow: 0 4px 20px rgba(255,107,43,0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255,107,43,0.45);
+}
+.btn-outline {
+  background: transparent; border: 1.5px solid var(--border);
+  color: var(--text);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-lg { padding: 16px 32px; font-size: 16px; }
+</style>
+<style>
+/* ── Hero Section ─────────────────────────────────── */
+.sources-hero {
+  padding-top: 120px; padding-bottom: 64px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.sources-hero::before {
+  content: ''; position: absolute; top: -200px;
+  left: 50%; transform: translateX(-50%);
+  width: 900px; height: 900px;
+  background: radial-gradient(ellipse, rgba(255,107,43,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.sources-hero h1 {
+  font-size: 56px; font-weight: 800; letter-spacing: -2.5px;
+  line-height: 1.08; max-width: 700px; margin: 0 auto;
+  position: relative;
+}
+.fire-text {
+  background: var(--fire-gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.sources-hero .subtitle {
+  font-size: 17px; color: var(--muted); max-width: 560px;
+  margin: 20px auto 0; line-height: 1.6; position: relative;
+}
+.source-count {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 28px; font-size: 12px; font-weight: 600;
+  color: var(--accent); font-family: var(--mono);
+}
+</style>
+<style>
+.source-count .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); animation: pulse 2s infinite;
+}
+
+/* ── Sources Grid ─────────────────────────────────── */
+.sources-section {
+  max-width: 1080px; margin: 0 auto;
+  padding: 0 24px 80px;
+}
+.sources-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.source-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; padding: 28px;
+  transition: all 0.3s ease; position: relative;
+  overflow: hidden;
+}
+.source-card::before {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  background: transparent; transition: background 0.3s;
+  border-radius: 24px 0 0 24px;
+}
+.source-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 24px rgba(255,107,43,0.06), 0 12px 40px rgba(0,0,0,0.25);
+}
+</style>
+<style>
+.source-card:hover::before {
+  background: var(--fire-gradient);
+}
+.source-icon {
+  font-size: 28px; margin-bottom: 16px;
+  width: 52px; height: 52px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.source-name {
+  font-size: 17px; font-weight: 700; letter-spacing: -0.3px;
+  margin-bottom: 8px; color: var(--text);
+}
+.source-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 50px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.6px; text-transform: uppercase;
+  font-family: var(--mono); margin-bottom: 12px;
+}
+.source-badge.execution { background: rgba(74,222,128,0.1); color: var(--green); }
+.source-badge.social { background: rgba(168,85,247,0.1); color: #a855f7; }
+.source-badge.technical { background: rgba(255,107,43,0.1); color: var(--accent); }
+.source-badge.risk { background: rgba(248,113,113,0.1); color: var(--red); }
+.source-badge.regime { background: rgba(56,189,248,0.1); color: #38bdf8; }
+.source-badge.discovery { background: rgba(245,158,11,0.1); color: var(--amber); }
+.source-badge.news { background: rgba(129,140,248,0.1); color: #818cf8; }
+.source-badge.options { background: rgba(45,212,191,0.1); color: #2dd4bf; }
+</style>
+<style>
+.source-desc {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ── Bottom CTA Section ───────────────────────────── */
+.sources-cta {
+  text-align: center; padding: 80px 24px 40px;
+  position: relative;
+}
+.sources-cta::before {
+  content: ''; position: absolute;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 500px;
+  background: radial-gradient(ellipse, rgba(255,107,43,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+.sources-cta h2 {
+  font-size: 36px; font-weight: 800; letter-spacing: -1.5px;
+  line-height: 1.15; max-width: 550px; margin: 0 auto;
+  position: relative;
+}
+.sources-cta p {
+  font-size: 15px; color: var(--muted); margin-top: 16px;
+  position: relative;
+}
+.sources-cta .btn { margin-top: 28px; position: relative; }
+</style>
+<style>
+/* ── Footer ───────────────────────────────────────── */
+.sources-footer {
+  text-align: center; padding: 40px 24px;
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+}
+.sources-footer p {
+  font-size: 12px; color: var(--muted);
+  font-family: var(--mono);
+}
+
+/* ── Animations ───────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  opacity: 0; animation: fadeUp 0.5s ease forwards;
+}
+.animate-in:nth-child(1) { animation-delay: 0.05s; }
+.animate-in:nth-child(2) { animation-delay: 0.10s; }
+.animate-in:nth-child(3) { animation-delay: 0.15s; }
+.animate-in:nth-child(4) { animation-delay: 0.20s; }
+.animate-in:nth-child(5) { animation-delay: 0.25s; }
+.animate-in:nth-child(6) { animation-delay: 0.30s; }
+.animate-in:nth-child(7) { animation-delay: 0.35s; }
+.animate-in:nth-child(8) { animation-delay: 0.40s; }
+</style>
+<style>
+/* ── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .sources-hero h1 { font-size: 36px; }
+  .sources-grid { grid-template-columns: 1fr; }
+  .sources-cta h2 { font-size: 28px; }
+  .navbar { left: 12px; right: 12px; top: 10px; border-radius: 28px; padding: 0 18px; height: 50px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Floating Pill Navbar ──────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="logo">
+      <span class="logo-accent">F</span>erchaud
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/feed" class="nav-link">Feed</a>
+      <a href="/sources" class="nav-link" style="color:var(--text)">Sources</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/signup" class="btn btn-primary" style="padding:8px 20px;font-size:13px">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ──────────────────────────────────────── -->
+<section class="sources-hero">
+  <h1>Powered by real-time<br><span class="fire-text">market intelligence</span></h1>
+  <p class="subtitle">Ferchaud aggregates data from 8+ institutional-grade sources to make trading decisions in milliseconds.</p>
+  <div class="source-count">
+    <span class="dot"></span>
+    All sources active &mdash; last sync &lt; 1s ago
+  </div>
+</section>
+
+<!-- ── Sources Grid ──────────────────────────────── -->
+<section class="sources-section">
+  <div class="sources-grid">
+
+    <!-- 1. Alpaca Markets -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#128200;</div>
+      <div class="source-name">Alpaca Markets</div>
+      <div class="source-badge execution">Execution &amp; Data</div>
+      <p class="source-desc">Real-time market data for 12,000+ US equities. Sub-second price feeds, level 2 data, and direct order execution through commission-free brokerage API.</p>
+    </div>
+
+    <!-- 2. Grok AI -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#129302;</div>
+      <div class="source-name">Grok AI (xAI)</div>
+      <div class="source-badge social">Social Intelligence</div>
+      <p class="source-desc">Live X/Twitter search powered by Grok. Scans social sentiment, trending tickers, and breaking catalysts in real-time to find alpha before the crowd.</p>
+    </div>
+
+    <!-- 3. Technical Analysis Engine -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#128202;</div>
+      <div class="source-name">Technical Analysis Engine</div>
+      <div class="source-badge technical">Technical Signals</div>
+      <p class="source-desc">10+ indicators including EMA (8/21/50), MACD, RSI, Bollinger Bands, ATR, and Volume Profile. Custom signal scoring system rates setups 1-10.</p>
+    </div>
+
+    <!-- 4. VPIN Toxicity Monitor -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#128737;</div>
+      <div class="source-name">VPIN Toxicity Monitor</div>
+      <div class="source-badge risk">Risk Detection</div>
+      <p class="source-desc">Volume-synchronized probability of informed trading. Detects toxic order flow before price moves. Institutional-grade risk filter that protects capital.</p>
+    </div>
+
+    <!-- 5. Regime Detection (HMM) -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#127919;</div>
+      <div class="source-name">Regime Detection (HMM)</div>
+      <div class="source-badge regime">Market Regime</div>
+      <p class="source-desc">Hidden Markov Model identifies market regimes &mdash; bull, bear, or sideways. Dynamically adjusts strategy allocation and risk parameters in real-time.</p>
+    </div>
+
+    <!-- 6. Full Market Scanner -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#128225;</div>
+      <div class="source-name">Full Market Scanner</div>
+      <div class="source-badge discovery">Stock Discovery</div>
+      <p class="source-desc">Screens all 12,000+ US equities every 3 minutes. Filters by price ($0.50-$50), volume, and momentum. Finds explosive movers before they trend.</p>
+    </div>
+
+    <!-- 7. News Aggregation -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#128240;</div>
+      <div class="source-name">News Aggregation</div>
+      <div class="source-badge news">News &amp; Catalysts</div>
+      <p class="source-desc">Finnhub news API for earnings, FDA approvals, partnerships, and sector catalysts. Cross-references with price action to validate trading signals.</p>
+    </div>
+
+    <!-- 8. Options Chain Analysis -->
+    <div class="source-card animate-in">
+      <div class="source-icon">&#9878;</div>
+      <div class="source-name">Options Chain Analysis</div>
+      <div class="source-badge options">Options Data</div>
+      <p class="source-desc">Real-time options data for high-conviction plays. ATM calls on breakouts, puts on reversals. Only deployed on liquid names with tight spreads.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Bottom CTA ────────────────────────────────── -->
+<section class="sources-cta">
+  <h2>9 strategies. 24/7 automation.<br><span class="fire-text">One AI.</span></h2>
+  <p>Ferchaud combines institutional-grade data with autonomous execution to trade while you sleep.</p>
+  <a href="/signup" class="btn btn-primary btn-lg">See it in action &#8594;</a>
+</section>
+
+<!-- ── Footer ────────────────────────────────────── -->
+<footer class="sources-footer">
+  <p>&copy; 2026 Ferchaud. Autonomous trading intelligence.</p>
+</footer>
+
+</body>
+</html>

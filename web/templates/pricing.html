@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing — Ferchaud</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0608; --surface: #151012; --surface-2: #1a1315;
+      --border: #2a1a1e; --border-hover: #3d2228;
+      --accent: #ff6b2b; --accent-light: #ff8c5a;
+      --accent-glow: rgba(255,107,43,0.25);
+      --fire-gradient: linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b);
+      --text: #f5e6d3; --text-secondary: #c4a88e;
+      --muted: #8a7068; --green: #4ade80;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+    /* Floating pill nav */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 2rem;
+      background: rgba(10,6,8,0.9); backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,107,43,0.1);
+      box-shadow: 0 1px 20px rgba(0,0,0,0.5);
+    }    .logo { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.5px; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--accent); }
+
+    .hero { text-align: center; padding: 5rem 2rem 3rem; }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: 1rem;
+      background: var(--fire-gradient); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--muted); font-size: 1.1rem; max-width: 540px; margin: 0 auto 2.5rem; line-height: 1.7; }
+
+    .toggle {
+      display: inline-flex; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 50px;
+      padding: 4px; gap: 4px; margin-bottom: 3rem;
+    }
+    .toggle-btn {
+      padding: 0.5rem 1.2rem; border-radius: 50px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+      background: transparent; color: var(--muted); transition: all 0.2s;
+    }
+    .toggle-btn.active { background: var(--fire-gradient); color: white; }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem; max-width: 1100px; margin: 0 auto; padding: 0 2rem 6rem;
+    }
+    .card {
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 24px;
+      padding: 2rem; position: relative; transition: all 0.3s;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+    .card.popular {
+      border-color: var(--accent);
+      box-shadow: 0 0 40px rgba(255,107,43,0.12), 0 0 80px rgba(255,107,43,0.06);
+    }
+    .popular-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--fire-gradient); color: white; font-size: 11px; font-weight: 700;
+      padding: 4px 18px; border-radius: 50px; letter-spacing: 0.5px; white-space: nowrap;
+    }
+    .tier-name {
+      font-size: 14px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem;
+    }
+    .price { font-size: 3rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .price sub { font-size: 1rem; font-weight: 400; color: var(--muted); vertical-align: baseline; }
+    .revenue-share {
+      font-size: 13px; color: var(--green); font-weight: 700; margin-bottom: 1.5rem;
+      padding: 6px 14px; background: rgba(74,222,128,0.08); border-radius: 50px;
+      display: inline-block;
+    }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+    .features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 2rem; }
+    .features li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+    .features li .check { color: var(--green); font-weight: 700; }
+    .btn {
+      width: 100%; padding: 0.85rem; border-radius: 50px; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700; transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--fire-gradient); color: white;
+      box-shadow: 0 4px 20px rgba(255,107,43,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,107,43,0.45); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .faq { max-width: 700px; margin: 0 auto; padding: 0 2rem 5rem; }
+    .faq h2 { text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 2rem; color: var(--text); }
+    .faq-item { border-bottom: 1px solid var(--border); padding: 1.25rem 0; cursor: pointer; }
+    .faq-q { font-weight: 600; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+    .faq-a { color: var(--muted); font-size: 14px; line-height: 1.7; margin-top: 0.75rem; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .chevron { transform: rotate(180deg); }
+    .chevron { transition: transform 0.2s; color: var(--muted); }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">Fer<span>chaud</span></a>
+  <div style="display:flex;gap:1rem;align-items:center">
+    <a href="/" style="color:var(--muted);text-decoration:none;font-size:14px">Back</a>
+    <a href="/dashboard" style="background:var(--fire-gradient);color:white;padding:0.45rem 1.1rem;border-radius:50px;text-decoration:none;font-size:14px;font-weight:600">Dashboard</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Simple, profit-aligned pricing</h1>
+  <p>We only make money when you do. Choose the plan that matches how much you want us invested in your success.</p>
+  <div class="toggle">
+    <button class="toggle-btn active" id="monthlyBtn" onclick="setBilling('monthly')">Monthly</button>
+    <button class="toggle-btn" id="annualBtn" onclick="setBilling('annual')">Annual <span style="color:var(--green)">-20%</span></button>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- Free -->
+  <div class="card">
+    <div class="tier-name">Free</div>
+    <div class="price">$0<sub>/mo</sub></div>
+    <div class="revenue-share">You keep 70% of profits</div>
+    <hr class="divider">
+    <ul class="features">
+      <li><span class="check">&#10003;</span> Up to $500 deployed capital</li>
+      <li><span class="check">&#10003;</span> Basic momentum strategy</li>
+      <li><span class="check">&#10003;</span> Daily performance reports</li>
+      <li><span class="check">&#10003;</span> Web dashboard</li>
+    </ul>
+    <button class="btn btn-outline" onclick="subscribe('free')">Get Started Free</button>
+  </div>
+  <!-- Starter -->
+  <div class="card">
+    <div class="tier-name">Starter</div>
+    <div class="price" id="starterPrice">$29<sub>/mo</sub></div>
+    <div class="revenue-share">You keep 80% of profits</div>
+    <hr class="divider">
+    <ul class="features">
+      <li><span class="check">&#10003;</span> Up to $2,000 deployed capital</li>
+      <li><span class="check">&#10003;</span> All 9 trading strategies</li>
+      <li><span class="check">&#10003;</span> Live signals</li>
+      <li><span class="check">&#10003;</span> Email alerts</li>
+      <li><span class="check">&#10003;</span> 14-day free trial</li>
+    </ul>
+    <button class="btn btn-outline" onclick="subscribe('starter')">Start Free Trial</button>
+  </div>
+
+  <!-- Pro (Popular) -->
+  <div class="card popular">
+    <div class="popular-badge">Most Popular</div>
+    <div class="tier-name">Pro</div>
+    <div class="price" id="proPrice">$99<sub>/mo</sub></div>
+    <div class="revenue-share">You keep 90% of profits</div>
+    <hr class="divider">
+    <ul class="features">
+      <li><span class="check">&#10003;</span> Up to $10,000 deployed capital</li>
+      <li><span class="check">&#10003;</span> Options trading (calls &amp; puts)</li>
+      <li><span class="check">&#10003;</span> Grok AI / X research signals</li>
+      <li><span class="check">&#10003;</span> Full market scanner (12K+ stocks)</li>
+      <li><span class="check">&#10003;</span> API access</li>
+      <li><span class="check">&#10003;</span> Priority support</li>
+    </ul>
+    <button class="btn btn-primary" onclick="subscribe('pro')">Start Free Trial</button>
+  </div>
+  <!-- Elite -->
+  <div class="card">
+    <div class="tier-name">Elite</div>
+    <div class="price" id="elitePrice">$299<sub>/mo</sub></div>
+    <div class="revenue-share">You keep 98% of profits</div>
+    <hr class="divider">
+    <ul class="features">
+      <li><span class="check">&#10003;</span> Unlimited deployed capital</li>
+      <li><span class="check">&#10003;</span> Custom strategy configuration</li>
+      <li><span class="check">&#10003;</span> White-glove onboarding</li>
+      <li><span class="check">&#10003;</span> Dedicated account manager</li>
+      <li><span class="check">&#10003;</span> We take only 2% of profits</li>
+    </ul>
+    <button class="btn btn-outline" onclick="subscribe('elite')">Contact Sales</button>
+  </div>
+</div>
+<div class="faq">
+  <h2>Frequently asked questions</h2>
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">What does "revenue share" mean? <span class="chevron">&#9660;</span></div>
+    <div class="faq-a">When the bot makes a profitable trade, we take a small percentage of the gains. For example, on the Pro plan: if the bot earns $1,000, you keep $900 and we keep $100. On losing trades, we take nothing.</div>
+  </div>
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">Is my money safe? <span class="chevron">&#9660;</span></div>
+    <div class="faq-a">Your funds are held at Alpaca Markets (FINRA-member broker). We never have direct custody of your money. The bot trades on your behalf via API.</div>
+  </div>
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">Can I cancel anytime? <span class="chevron">&#9660;</span></div>
+    <div class="faq-a">Yes. Cancel anytime from your dashboard billing settings. No cancellation fees. You keep your remaining balance.</div>
+  </div>
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">What stocks does the bot trade? <span class="chevron">&#9660;</span></div>
+    <div class="faq-a">The bot scans 12,000+ US equities and targets stocks priced $0.50-$50 with strong momentum and volume signals. It avoids mega-caps and focuses on explosive small/mid-cap movers.</div>
+  </div>
+</div>
+<script>
+let billing = 'monthly';
+const prices = { starter: [29, 23], pro: [99, 79], elite: [299, 239] };
+
+function setBilling(b) {
+  billing = b;
+  document.getElementById('monthlyBtn').className = 'toggle-btn' + (b === 'monthly' ? ' active' : '');
+  document.getElementById('annualBtn').className = 'toggle-btn' + (b === 'annual' ? ' active' : '');
+  ['starter','pro','elite'].forEach(t => {
+    const idx = b === 'annual' ? 1 : 0;
+    document.getElementById(t + 'Price').innerHTML = '$' + prices[t][idx] + '<sub>/mo</sub>';
+  });
+}
+
+function subscribe(tier) {
+  if (tier === 'free') { window.location.href = '/signup'; return; }
+  if (tier === 'elite') { window.location.href = 'mailto:sales@ferchaud.com?subject=Elite Plan'; return; }
+  fetch('/api/subscription/checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({tier, billing})
+  }).then(r => r.json()).then(d => {
+    if (d.url) window.location.href = d.url;
+    else if (d.error === 'not_logged_in') window.location.href = '/signup';
+    else alert(d.error || 'Something went wrong');
+  });
+}
+
+function toggleFaq(el) { el.classList.toggle('open'); }
+</script>
+</body>
+</html>
