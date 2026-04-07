@@ -671,45 +671,7 @@ body {
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 })();
 
-/* Pricing stacking cards */
-let stackActive = 2; const stackCards = document.querySelectorAll(');
-  stackDots.forEach((d, i) => d.classList.toggle('active', i === stackActive));
-}
 
-
-
-
-
-// Click a card to bring it to front
-stackCards.forEach(card => {
-  card.addEventListener('click', () => {
-    const idx = parseInt(card.getAttribute('data-index'));
-    stackGoTo(idx);
-  });
-});
-
-// Scroll-driven cycling within pricing section
-const pricingSection = document.getElementById('pricing');
-if (pricingSection) {
-  let lastScrollY = 0;
-  const scrollHandler = () => {
-    const rect = pricingSection.getBoundingClientRect();
-    const inView = rect.top < window.innerHeight * 0.7 && rect.bottom > window.innerHeight * 0.3;
-    if (inView) {
-      const scrollDelta = window.scrollY - lastScrollY;
-      if (Math.abs(scrollDelta) > 60) {
-        stackNav(scrollDelta > 0 ? 1 : -1);
-        lastScrollY = window.scrollY;
-      }
-    } else {
-      lastScrollY = window.scrollY;
-    }
-  };
-  window.addEventListener('scroll', scrollHandler, { passive: true });
-}
-
-// Initialize stack positions
-updateStack();
 </script>
 </body>
 </html>
