@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support — Ferchaud</title>
+<meta name="description" content="Get help with Ferchaud AI trading platform. FAQs, guides, and contact support.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --surface-2: #f5f5f5;
+  --border: #e5e5e5;
+  --border-hover: #d4d4d4;
+  --text: #0a0a0a;
+  --text-secondary: #525252;
+  --muted: #a3a3a3;
+  --black: #000000;
+  --page-bg: #ffffff;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--page-bg);
+  background-image: radial-gradient(circle, #e5e5e5 0.8px, transparent 0.8px);
+  background-size: 20px 20px;  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Navbar ── */
+.navbar {
+  position: fixed; top: 12px; left: 16px; right: 16px;
+  height: 58px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+}
+.navbar-logo {
+  font-size: 20px; font-weight: 700; color: var(--black);
+  text-decoration: none; letter-spacing: -0.5px;
+}
+.navbar-links { display: flex; align-items: center; gap: 32px; }
+.navbar-links a {
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  text-decoration: none; transition: color 0.15s;
+}
+.navbar-links a:hover { color: var(--black); }.navbar-cta {
+  background: var(--black); color: #fff;
+  padding: 8px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: opacity 0.15s;
+}
+.navbar-cta:hover { opacity: 0.85; }
+.navbar-mobile-toggle { display: none; background: none; border: none; cursor: pointer; }
+
+/* ── Support Layout ── */
+.support-shell {
+  max-width: 720px;
+  margin: 100px auto 60px;
+  padding: 0 24px;
+}
+.support-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.support-hero h1 {
+  font-size: 42px; font-weight: 800; letter-spacing: -1.5px;
+  color: var(--black); margin-bottom: 16px;
+}
+.support-hero p {
+  font-size: 16px; color: var(--text-secondary);
+}
+/* ── Search Bar ── */
+.support-search {
+  position: relative; margin-bottom: 48px;
+}
+.support-search input {
+  width: 100%; padding: 16px 20px 16px 48px;
+  border: 1px solid var(--border); border-radius: 14px;
+  font-size: 15px; font-family: 'Inter', sans-serif;
+  background: #fff; color: var(--text); outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.support-search input:focus {
+  border-color: var(--black);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+}
+.support-search input::placeholder { color: var(--muted); }
+.support-search-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--muted);
+}
+
+/* ── FAQ Accordion ── */
+.faq-section { margin-bottom: 48px; }
+.faq-section h2 {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+  color: var(--black); margin-bottom: 24px;
+}.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.faq-item:hover { border-color: var(--border-hover); }
+.faq-question {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px; cursor: pointer;
+  font-size: 15px; font-weight: 600; color: var(--text);
+  user-select: none;
+}
+.faq-question:hover { color: var(--black); }
+.faq-chevron {
+  transition: transform 0.3s ease;
+  flex-shrink: 0; margin-left: 16px;
+}
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+.faq-answer {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+  padding: 0 20px;
+}
+.faq-item.open .faq-answer {
+  max-height: 300px;
+  padding: 0 20px 18px;
+}.faq-answer p {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.7;
+}
+
+/* ── Contact Section ── */
+.contact-section {
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px 32px;
+  margin-bottom: 48px;
+}
+.contact-section h2 {
+  font-size: 22px; font-weight: 700; color: var(--black);
+  margin-bottom: 12px;
+}
+.contact-section p {
+  font-size: 15px; color: var(--text-secondary); margin-bottom: 20px;
+}
+.contact-email {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--black); color: #fff;
+  padding: 12px 28px; border-radius: 12px;
+  font-size: 15px; font-weight: 600;
+  text-decoration: none; transition: opacity 0.15s;
+}
+.contact-email:hover { opacity: 0.85; color: #fff; }
+/* ── Footer ── */
+.footer-shell {
+  background: var(--bg);
+  margin: 0 24px 24px 24px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 32px 64px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-brand { font-size: 14px; color: var(--muted); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 13px; color: var(--muted); text-decoration: none;
+  transition: color 0.15s;
+}
+.footer-links a:hover { color: var(--text-secondary); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .navbar { padding: 0 16px; }
+  .navbar-links { display: none; }
+  .navbar-mobile-toggle { display: block; }
+  .support-shell { margin: 80px auto 40px; }
+  .support-hero h1 { font-size: 28px; }
+  .footer-shell {
+    margin: 0 12px 12px 12px;
+    flex-direction: column; gap: 16px; padding: 24px;
+    text-align: center;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ NAVBAR ════ -->
+<nav class="navbar">
+  <a href="/" class="navbar-logo">Ferchaud</a>
+  <div class="navbar-links">
+    <a href="/#how">Features</a>
+    <a href="/#pricing">Pricing</a>
+    <a href="/sources">Sources</a>
+    <a href="/support">Support</a>
+    <a href="/login">Sign In</a>
+    <a href="/signup" class="navbar-cta">Get Started</a>
+  </div>
+  <button class="navbar-mobile-toggle" onclick="document.querySelector('.navbar-links').style.display=document.querySelector('.navbar-links').style.display==='flex'?'none':'flex'" aria-label="Menu">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</nav>
+<!-- ════ SUPPORT CONTENT ════ -->
+<div class="support-shell">
+
+  <div class="support-hero">
+    <h1>How can we help?</h1>
+    <p>Find answers to common questions about Ferchaud AI trading.</p>
+  </div>
+
+  <div class="support-search">
+    <svg class="support-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" placeholder="Search for answers..." id="faqSearch" oninput="filterFAQ(this.value)">
+  </div>
+
+  <div class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item" data-q="what is ferchaud">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        What is Ferchaud?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>Ferchaud is an AI-powered stock trading platform. Our algorithms monitor over 12,000 stocks in real time, identifying optimal entry and exit points. The AI executes trades automatically through your connected brokerage account.</p></div>
+    </div>
+    <div class="faq-item" data-q="how does the ai decide when to buy or sell">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How does the AI decide when to buy or sell?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>Our AI uses a combination of technical analysis, momentum signals, volume patterns, and sentiment data from sources like X (formerly Twitter). It identifies dips to buy and peaks to sell using 9 distinct strategies that have been backtested across thousands of historical trades.</p></div>
+    </div>
+
+    <div class="faq-item" data-q="is my money safe">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Is my money safe?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>Your funds remain in your brokerage account at all times. Ferchaud never holds your money directly. We connect via secure API keys with trade-only permissions. Your brokerage provides SIPC insurance coverage up to $500,000.</p></div>
+    </div>
+
+    <div class="faq-item" data-q="what broker do you use">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        What broker do you use?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>Ferchaud currently integrates with Alpaca, a commission-free brokerage with API support. Alpaca accounts are SIPC-insured and regulated by FINRA. We plan to add support for additional brokerages in the future.</p></div>
+    </div>
+    <div class="faq-item" data-q="can i lose money">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Can I lose money?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>Yes. All trading involves risk, and past performance does not guarantee future results. AI reduces emotional decision-making but cannot eliminate market risk. We strongly recommend starting with paper trading to understand how the system works before committing real capital.</p></div>
+    </div>
+
+    <div class="faq-item" data-q="how do i cancel my subscription">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How do I cancel my subscription?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>You can cancel anytime from your dashboard under Settings, or by contacting support@ferchaud.app. Your subscription remains active until the end of the current billing period. No cancellation fees, no questions asked.</p></div>
+    </div>
+
+    <div class="faq-item" data-q="what is paper trading">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        What is paper trading?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>Paper trading is simulated trading with virtual money. It lets you test the AI strategies in real market conditions without risking any real capital. All Free tier accounts use paper trading by default. It is the best way to evaluate Ferchaud before upgrading.</p></div>
+    </div>
+    <div class="faq-item" data-q="how does revenue share work">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How does revenue share work?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-answer"><p>When the AI generates a profitable trade, a small percentage of that profit goes to Ferchaud as a platform fee. The exact split depends on your tier: Free keeps 100%, Starter keeps 80%, Pro keeps 90%, and Elite keeps 98%. You only pay when you profit.</p></div>
+    </div>
+
+  </div>
+
+  <!-- ── Contact ── -->
+  <div class="contact-section">
+    <h2>Still need help?</h2>
+    <p>Our team typically responds within 24 hours on business days.</p>
+    <a href="mailto:support@ferchaud.app" class="contact-email">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      support@ferchaud.app
+    </a>
+  </div>
+
+</div>
+<!-- ════ FOOTER ════ -->
+<footer class="footer-shell">
+  <div class="footer-brand">&copy; 2026 Ferchaud. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/docs">Docs</a>
+    <a href="mailto:support@ferchaud.app">Contact</a>
+  </div>
+</footer>
+
+<script>
+function toggleFAQ(el) {
+  const item = el.closest('.faq-item');
+  const wasOpen = item.classList.contains('open');
+  // Close all others
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+function filterFAQ(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const text = item.getAttribute('data-q') + ' ' + item.querySelector('.faq-answer p').textContent.toLowerCase();
+    item.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

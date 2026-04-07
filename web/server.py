@@ -109,7 +109,14 @@ async def onboarding_page(request: Request):
 
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing_page(request: Request):
-    return templates.TemplateResponse("pricing.html", {"request": request})
+    return RedirectResponse("/#pricing")
+
+
+@app.get("/support", response_class=HTMLResponse)
+async def support_page(request: Request):
+    landing_path = BASE_DIR / "templates" / "support.html"
+    with open(landing_path, "r") as f:
+        return HTMLResponse(f.read())
 
 
 @app.get("/legal", response_class=HTMLResponse)

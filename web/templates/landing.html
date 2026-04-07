@@ -39,10 +39,10 @@ body {
 /* ── Navbar ── */
 .navbar {
   position: fixed; top: 12px; left: 16px; right: 16px;
-  height: 52px;
+  height: 58px;
   background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 50px;
+  border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
@@ -69,7 +69,7 @@ body {
 
 /* ── Page Shell ── */
 .page-shell {
-  margin: 80px 16px 16px 16px;
+  margin: 76px 24px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -166,20 +166,31 @@ body {
   font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
 }
 .pricing-header p { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
-/* Pricing carousel */
-.pricing-carousel { position: relative; overflow: hidden; padding: 0 0 32px; }
-.pricing-track {
-  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
-  padding: 16px 48px; -ms-overflow-style: none; scrollbar-width: none;
+/* Pricing stacking cards */
+.pricing-stack {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
+  height: 500px;
+  perspective: 1000px;
 }
-.pricing-track::-webkit-scrollbar { display: none; }
-.price-card {
-  flex: 0 0 260px; scroll-snap-align: center;
-  background: #fff; border: 1px solid var(--border); border-radius: 16px;
-  padding: 32px 24px; position: relative; transition: all 0.2s;
+.stack-card {
+  position: absolute;
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 24px;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
-.price-card:hover { border-color: #a3a3a3; }
-.price-card-active { border: 2px solid var(--black); }
+.stack-card:hover { border-color: #a3a3a3; }
+.stack-card[data-pos="-2"] { transform: translateY(-16px) scale(0.92); opacity: 0.4; z-index: 1; }
+.stack-card[data-pos="-1"] { transform: translateY(-8px) scale(0.96); opacity: 0.7; z-index: 2; }
+.stack-card[data-pos="0"]  { transform: translateY(0) scale(1); opacity: 1; z-index: 4; }
+.stack-card[data-pos="1"]  { transform: translateY(8px) scale(0.96); opacity: 0.7; z-index: 2; }
+.stack-card[data-pos="2"]  { transform: translateY(16px) scale(0.92); opacity: 0.4; z-index: 1; }
+.stack-card-active { border: 2px solid var(--black); }
 .price-badge {
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
   background: var(--black); color: #fff; font-size: 11px; font-weight: 600;
@@ -190,7 +201,7 @@ body {
 .price-amount span { font-size: 15px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
 .price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
 .price-features li { font-size: 13px; color: var(--text-secondary); padding-left: 20px; position: relative; }
-.price-features li::before { content: "✓"; position: absolute; left: 0; color: var(--black); font-weight: 700; }
+.price-features li::before { content: "\2713"; position: absolute; left: 0; color: var(--black); font-weight: 700; }
 .price-btn {
   display: block; width: 100%; text-align: center; padding: 12px; border-radius: 10px;
   font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.15s;
@@ -199,7 +210,16 @@ body {
 .price-btn:hover { border-color: var(--black); }
 .price-btn-active { background: var(--black); color: #fff; border-color: var(--black); }
 .price-btn-active:hover { opacity: 0.85; }
-.pricing-dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+.pricing-nav {
+  display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 24px;
+}
+.pricing-nav-btn {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border);
+  background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; font-size: 18px; color: var(--black);
+}
+.pricing-nav-btn:hover { border-color: var(--black); background: var(--surface); }
+.pricing-dots { display: flex; gap: 8px; }
 .pricing-dots .dot {
   width: 8px; height: 8px; border-radius: 50%; background: var(--border);
   border: none; cursor: pointer; transition: background 0.2s; padding: 0;
@@ -218,7 +238,7 @@ body {
 /* ── Footer Shell ── */
 .footer-shell {
   background: var(--bg);
-  margin: 0 16px 16px 16px;
+  margin: 0 24px 24px 24px;
   border-radius: 20px;
   border: 1px solid var(--border);
   padding: 32px 64px;
@@ -248,7 +268,7 @@ body {
   .navbar { padding: 0 16px; }
   .navbar-links { display: none; }
   .navbar-mobile-toggle { display: block; }
-  .page-shell { margin: 68px 8px 8px 8px; border-radius: 14px; }
+  .page-shell { margin: 68px 12px 12px 12px; border-radius: 14px; }
   .section { padding: 48px 24px; }
   .section-sm { padding: 32px 24px; }
   .hero {
@@ -263,7 +283,7 @@ body {
   .strategy-chart-container { height: 280px; }
   .pricing-table-wrap { overflow-x: auto; }
   .footer-shell {
-    margin: 0 8px 8px 8px; border-radius: 14px;
+    margin: 0 12px 12px 12px; border-radius: 14px;
     flex-direction: column; gap: 16px; padding: 24px;
     text-align: center;
   }
@@ -279,10 +299,12 @@ body {
 <nav class="navbar">
   <a href="/" class="navbar-logo">Ferchaud</a>
   <div class="navbar-links">
-    <a href="#how">How It Works</a>
-    <a href="#strategy">Strategy</a>
+    <a href="#how">Features</a>
     <a href="#pricing">Pricing</a>
-    <a href="/login" class="navbar-cta">Get Started</a>
+    <a href="/sources">Sources</a>
+    <a href="/support">Support</a>
+    <a href="/login">Sign In</a>
+    <a href="/signup" class="navbar-cta">Get Started</a>
   </div>
   <button class="navbar-mobile-toggle" onclick="document.querySelector('.navbar-links').style.display=document.querySelector('.navbar-links').style.display==='flex'?'none':'flex'" aria-label="Menu">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -371,68 +393,70 @@ body {
       <h2>Simple Pricing</h2>
       <p>Start free. Upgrade when you're ready. Cancel anytime.</p>
     </div>
-    <div class="pricing-carousel" id="pricingCarousel">
-      <div class="pricing-track" id="pricingTrack">
-        <!-- Free -->
-        <div class="price-card">
-          <div class="price-tier">Free</div>
-          <div class="price-amount">$0<span>/mo</span></div>
-          <ul class="price-features">
-            <li>Paper trading only</li>
-            <li>3 AI strategies</li>
-            <li>Basic market scanner</li>
-            <li>You keep 100% of gains</li>
-          </ul>
-          <a href="/signup" class="price-btn">Start Free</a>
-        </div>
-        <!-- Starter -->
-        <div class="price-card">
-          <div class="price-tier">Starter</div>
-          <div class="price-amount">$29<span>/mo</span></div>
-          <ul class="price-features">
-            <li>Live trading enabled</li>
-            <li>5 AI strategies</li>
-            <li>Full market scanner</li>
-            <li>Email alerts</li>
-            <li>You keep 80% of profits</li>
-          </ul>
-          <a href="/signup" class="price-btn">Get Started</a>
-        </div>
-        <!-- Pro (default/centered) -->
-        <div class="price-card price-card-active">
-          <div class="price-badge">Recommended</div>
-          <div class="price-tier">Pro</div>
-          <div class="price-amount">$99<span>/mo</span></div>
-          <ul class="price-features">
-            <li>Live trading enabled</li>
-            <li>All 9 AI strategies</li>
-            <li>Options trading (calls/puts)</li>
-            <li>Grok AI research signals</li>
-            <li>Priority execution</li>
-            <li>You keep 90% of profits</li>
-          </ul>
-          <a href="/signup" class="price-btn price-btn-active">Get Started</a>
-        </div>
-        <!-- Elite -->
-        <div class="price-card">
-          <div class="price-tier">Elite</div>
-          <div class="price-amount">$299<span>/mo</span></div>
-          <ul class="price-features">
-            <li>Everything in Pro</li>
-            <li>Custom strategy config</li>
-            <li>Dedicated support</li>
-            <li>API access</li>
-            <li>You keep 98% of profits</li>
-          </ul>
-          <a href="/signup" class="price-btn">Contact Us</a>
-        </div>
+    <div class="pricing-stack" id="pricingStack">
+      <!-- Free -->
+      <div class="stack-card" data-index="0">
+        <div class="price-tier">Free</div>
+        <div class="price-amount">$0<span>/mo</span></div>
+        <ul class="price-features">
+          <li>Paper trading only</li>
+          <li>3 AI strategies</li>
+          <li>Basic market scanner</li>
+          <li>You keep 100% of gains</li>
+        </ul>
+        <a href="/signup" class="price-btn">Start Free</a>
       </div>
+      <!-- Starter -->
+      <div class="stack-card" data-index="1">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount">$29<span>/mo</span></div>
+        <ul class="price-features">
+          <li>Live trading enabled</li>
+          <li>5 AI strategies</li>
+          <li>Full market scanner</li>
+          <li>Email alerts</li>
+          <li>You keep 80% of profits</li>
+        </ul>
+        <a href="/signup" class="price-btn">Get Started</a>
+      </div>
+      <!-- Pro (default active) -->
+      <div class="stack-card stack-card-active" data-index="2">
+        <div class="price-badge">Recommended</div>
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">$99<span>/mo</span></div>
+        <ul class="price-features">
+          <li>Live trading enabled</li>
+          <li>All 9 AI strategies</li>
+          <li>Options trading (calls/puts)</li>
+          <li>Grok AI research signals</li>
+          <li>Priority execution</li>
+          <li>You keep 90% of profits</li>
+        </ul>
+        <a href="/signup" class="price-btn price-btn-active">Get Started</a>
+      </div>
+      <!-- Elite -->
+      <div class="stack-card" data-index="3">
+        <div class="price-tier">Elite</div>
+        <div class="price-amount">$299<span>/mo</span></div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>Custom strategy config</li>
+          <li>Dedicated support</li>
+          <li>API access</li>
+          <li>You keep 98% of profits</li>
+        </ul>
+        <a href="/signup" class="price-btn">Contact Us</a>
+      </div>
+    </div>
+    <div class="pricing-nav">
+      <button class="pricing-nav-btn" onclick="stackNav(-1)" aria-label="Previous">&larr;</button>
       <div class="pricing-dots">
-        <button class="dot" onclick="scrollToCard(0)"></button>
-        <button class="dot" onclick="scrollToCard(1)"></button>
-        <button class="dot active" onclick="scrollToCard(2)"></button>
-        <button class="dot" onclick="scrollToCard(3)"></button>
+        <button class="dot" onclick="stackGoTo(0)"></button>
+        <button class="dot" onclick="stackGoTo(1)"></button>
+        <button class="dot active" onclick="stackGoTo(2)"></button>
+        <button class="dot" onclick="stackGoTo(3)"></button>
       </div>
+      <button class="pricing-nav-btn" onclick="stackNav(1)" aria-label="Next">&rarr;</button>
     </div>
   </section>
   <!-- ── Final CTA ── -->
@@ -677,16 +701,60 @@ body {
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 })();
 
-/* Pricing carousel */
-function scrollToCard(idx) {
-  const track = document.getElementById('pricingTrack');
-  if (!track) return;
-  const cards = track.querySelectorAll('.price-card');
-  if (cards[idx]) cards[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  document.querySelectorAll('.pricing-dots .dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+/* Pricing stacking cards */
+let stackActive = 2; // Default to Pro
+const stackCards = document.querySelectorAll('.stack-card');
+const stackDots = document.querySelectorAll('.pricing-dots .dot');
+
+function updateStack() {
+  stackCards.forEach((card, i) => {
+    const pos = i - stackActive;
+    const clamped = Math.max(-2, Math.min(2, pos));
+    card.setAttribute('data-pos', clamped);
+  });
+  stackDots.forEach((d, i) => d.classList.toggle('active', i === stackActive));
 }
-// Default to Pro card (index 2)
-setTimeout(() => scrollToCard(2), 600);
+
+function stackNav(dir) {
+  stackActive = Math.max(0, Math.min(stackCards.length - 1, stackActive + dir));
+  updateStack();
+}
+
+function stackGoTo(idx) {
+  stackActive = idx;
+  updateStack();
+}
+
+// Click a card to bring it to front
+stackCards.forEach(card => {
+  card.addEventListener('click', () => {
+    const idx = parseInt(card.getAttribute('data-index'));
+    stackGoTo(idx);
+  });
+});
+
+// Scroll-driven cycling within pricing section
+const pricingSection = document.getElementById('pricing');
+if (pricingSection) {
+  let lastScrollY = 0;
+  const scrollHandler = () => {
+    const rect = pricingSection.getBoundingClientRect();
+    const inView = rect.top < window.innerHeight * 0.7 && rect.bottom > window.innerHeight * 0.3;
+    if (inView) {
+      const scrollDelta = window.scrollY - lastScrollY;
+      if (Math.abs(scrollDelta) > 60) {
+        stackNav(scrollDelta > 0 ? 1 : -1);
+        lastScrollY = window.scrollY;
+      }
+    } else {
+      lastScrollY = window.scrollY;
+    }
+  };
+  window.addEventListener('scroll', scrollHandler, { passive: true });
+}
+
+// Initialize stack positions
+updateStack();
 </script>
 </body>
 </html>

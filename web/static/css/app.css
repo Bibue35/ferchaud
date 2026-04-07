@@ -51,6 +51,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5; min-height: 100vh;
+  background-image: radial-gradient(circle, #e5e5e5 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
 }
 a { color: var(--text-secondary); text-decoration: none; transition: color 0.15s; }
 a:hover { color: var(--text); }
@@ -79,9 +81,10 @@ button { font-family: var(--font); }
 .navbar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 56px;
+  height: 58px;
   background: #ffffff;
   border-bottom: 1px solid var(--border);
+  border-radius: 16px;
   z-index: 1000;
   padding: 0 32px;
 }
@@ -430,7 +433,7 @@ select:focus, textarea:focus { border-color: rgba(255,255,255,0.2); box-shadow: 
   .grid-4 { grid-template-columns: 1fr 1fr; }
   .dash-grid { grid-template-columns: 1fr; }
   .hero-stats { flex-direction: column; gap: 24px; }
-  .navbar { left: 12px; right: 12px; top: 10px; border-radius: 28px; padding: 0 18px; height: 50px; }
+  .navbar { left: 12px; right: 12px; top: 10px; border-radius: 16px; padding: 0 18px; height: 54px; }
   .site-footer-inner { flex-direction: column; text-align: center; }
 }
 @media (max-width: 600px) {
