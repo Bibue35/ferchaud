@@ -6,11 +6,11 @@
 
 /* -- Design Tokens ---------------------------------- */
 :root {
-  /* Backgrounds */
-  --bg: #08090a;
-  --surface: #111213;
-  --surface-2: #191a1b;
-  --surface-3: #28282c;
+  /* Backgrounds — Mercury/Ramp inspired deep navy */
+  --bg: #020617;
+  --surface: #0F172A;
+  --surface-2: #1E293B;
+  --surface-3: #334155;
 
   /* Borders */
   --border: rgba(255,255,255,0.06);
@@ -23,18 +23,18 @@
   --muted: #6b6f76;
   --text-dim: #4a4d52;
 
-  /* Accent — subtle cool white/silver */
-  --accent: #e8e8e8;
-  --accent-hover: #ffffff;
-  --accent-glow: rgba(255,255,255,0.06);
+  /* Accent — green for fintech (Mercury/Robinhood) */
+  --accent: #22C55E;
+  --accent-hover: #16A34A;
+  --accent-glow: rgba(34,197,94,0.15);
 
-  /* Status only */
-  --green: #00d26a;
-  --red: #ff4d4f;
-  --amber: #f5a623;
+  /* Status */
+  --green: #22C55E;
+  --red: #EF4444;
+  --amber: #F59E0B;
 
-  /* Gradients — white/gray, NO fire */
-  --gradient-primary: linear-gradient(135deg, #e8e8e8, #ffffff);
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #22C55E, #16A34A);
   --gradient-subtle: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
 
   /* Fonts */
