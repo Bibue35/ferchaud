@@ -27,7 +27,24 @@ try:
 except Exception:
     pass  # Static files served by CDN on Vercel
 
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+from jinja2 import Environment, FileSystemLoader
+_jinja_env = Environment(
+    loader=FileSystemLoader(str(BASE_DIR / "templates")),
+    auto_reload=True,
+    cache_size=0,  # Disable LRU cache — fixes unhashable dict bug in Jinja2 3.1.6
+)
+
+class SafeTemplates:
+    """Wrapper that avoids Starlette's broken Jinja2 cache."""
+    def __init__(self, env):
+        self.env = env
+    def TemplateResponse(self, name, context, status_code=200):
+        from starlette.responses import HTMLResponse
+        tpl = self.env.get_template(name)
+        html = tpl.render(**context)
+        return HTMLResponse(html, status_code=status_code)
+
+templates = SafeTemplates(_jinja_env)
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,7 +85,10 @@ async def root(request: Request):
     user = get_current_user(request)
     if user:
         return RedirectResponse("/dashboard")
-    return templates.TemplateResponse("landing.html", {"request": request})
+    # Serve landing as static HTML (no Jinja2 variables needed)
+    landing_path = BASE_DIR / "templates" / "landing.html"
+    with open(landing_path, "r") as f:
+        return HTMLResponse(f.read())
 
 
 @app.get("/login", response_class=HTMLResponse)
