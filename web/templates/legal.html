@@ -10,17 +10,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0608;
-  --surface: #151012;
-  --surface-2: #1a1315;
-  --border: #2a1a1e;
-  --border-hover: #3d2228;
-  --accent: #ff6b2b;
-  --accent-light: #ff8c5a;
-  --accent-glow: rgba(255, 107, 43, 0.25);
-  --text: #f5e6d3;
-  --text-secondary: #c4a88e;
-  --muted: #8a7068;
+  --bg: #08090a;
+  --surface: #111213;
+  --surface-2: #191a1b;
+  --surface-3: #28282c;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.1);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #e8e8e8;
+  --accent-light: #f0f0f0;
+  --accent-glow: rgba(255,255,255,0.06);
+  --text: #f7f8f8;
+  --text-secondary: #b4b4b4;
+  --muted: #6b6f76;
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 15px; scroll-behavior: smooth; }
@@ -29,15 +31,15 @@ body {
   font-family: var(--font); -webkit-font-smoothing: antialiased;
   line-height: 1.7; min-height: 100vh;
 }
-a { color: var(--accent-light); text-decoration: none; transition: color 0.15s; }
-a:hover { color: var(--accent); }
+a { color: var(--text-secondary); text-decoration: none; transition: color 0.15s; }
+a:hover { color: var(--text); }
 
 /* Navbar */
 .navbar {
   position: fixed; top: 16px; left: 24px; right: 24px; height: 56px;
   border-radius: 50px; background: rgba(10,6,8,0.85);
   backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255,107,43,0.12);
+  border: 1px solid var(--border);
   box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 1000; padding: 0 28px;
 }
 .navbar-inner {
@@ -48,7 +50,7 @@ a:hover { color: var(--accent); }
   font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
   color: var(--text); text-decoration: none;
 }
-.logo span { color: var(--accent); }
+.logo span { color: var(--text); }
 .nav-links { display: flex; gap: 24px; align-items: center; }
 .nav-link { color: var(--muted); font-size: 14px; font-weight: 500; transition: color 0.15s; }.nav-link:hover { color: var(--text); }
 
@@ -70,7 +72,7 @@ a:hover { color: var(--accent); }
 }
 .toc-section { margin-bottom: 20px; }
 .toc-section-title {
-  font-size: 13px; font-weight: 700; color: var(--accent);
+  font-size: 13px; font-weight: 700; color: var(--text-secondary);
   margin-bottom: 8px; display: block;
 }
 .toc-link {
@@ -79,7 +81,7 @@ a:hover { color: var(--accent); }
   transition: all 0.15s;
 }
 .toc-link:hover { color: var(--text); border-left-color: var(--border-hover); }
-.toc-link.active { color: var(--accent-light); border-left-color: var(--accent); }
+.toc-link.active { color: var(--text); border-left-color: var(--text); }
 /* Content */
 .legal-content { min-width: 0; }
 .legal-updated {
@@ -92,7 +94,7 @@ a:hover { color: var(--accent); }
 .legal-section h2 {
   font-size: 28px; font-weight: 800; letter-spacing: -0.8px;
   color: var(--text); margin-bottom: 8px;
-  background: linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b);
+  background: linear-gradient(135deg, #e8e8e8, #ffffff);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
@@ -154,11 +156,11 @@ a:hover { color: var(--accent); }
 <!-- Navbar -->
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/" class="logo">Fer<span>chaud</span></a>
+    <a href="/" class="logo">Ferchaud</a>
     <div class="nav-links">
       <a href="/pricing" class="nav-link">Pricing</a>
       <a href="/login" class="nav-link">Log In</a>
-      <a href="/signup" class="nav-link" style="background:var(--fire-gradient);color:#fff;padding:8px 20px;border-radius:50px;font-weight:600;">Sign Up</a>
+      <a href="/signup" class="nav-link" style="background:#fff;color:#08090a;padding:8px 20px;border-radius:50px;font-weight:600;">Sign Up</a>
     </div>
   </div>
 </nav>

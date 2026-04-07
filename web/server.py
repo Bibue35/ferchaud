@@ -149,6 +149,24 @@ async def api_login(request: Request, body: dict = Body(...)):
     return response
 
 
+@app.get("/api/auth/google")
+async def auth_google():
+    # TODO: Implement Google OAuth
+    return RedirectResponse("/login?error=oauth_coming_soon")
+
+
+@app.get("/api/auth/apple")
+async def auth_apple():
+    # TODO: Implement Apple OAuth
+    return RedirectResponse("/login?error=oauth_coming_soon")
+
+
+@app.get("/api/auth/x")
+async def auth_x():
+    # TODO: Implement X OAuth
+    return RedirectResponse("/login?error=oauth_coming_soon")
+
+
 @app.post("/api/auth/logout")
 async def api_logout():
     response = JSONResponse({"ok": True})

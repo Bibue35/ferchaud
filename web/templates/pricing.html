@@ -8,13 +8,13 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0608; --surface: #151012; --surface-2: #1a1315;
-      --border: #2a1a1e; --border-hover: #3d2228;
-      --accent: #ff6b2b; --accent-light: #ff8c5a;
-      --accent-glow: rgba(255,107,43,0.25);
-      --fire-gradient: linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b);
-      --text: #f5e6d3; --text-secondary: #c4a88e;
-      --muted: #8a7068; --green: #4ade80;
+      --bg: #08090a; --surface: #111213; --surface-2: #191a1b; --surface-3: #28282c;
+      --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.14);
+      --accent: #e8e8e8; --accent-light: #f0f0f0;
+      --accent-glow: rgba(255,255,255,0.06);
+      --gradient-primary: linear-gradient(135deg, #e8e8e8, #ffffff);
+      --text: #f7f8f8; --text-secondary: #b4b4b4;
+      --muted: #6b6f76; --green: #00d26a;
     }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
 
@@ -26,18 +26,18 @@
       padding: 0 28px;
       background: rgba(10,6,8,0.85); backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255,107,43,0.12);
+      border: 1px solid var(--border);
       border-radius: 50px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
     .logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); text-decoration: none; }
-    .logo span { color: var(--accent); }
+    .logo span { color: var(--text); }
 
     .hero { text-align: center; padding: 7rem 2rem 3rem; }
     .hero h1 {
       font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: 1rem;
-      background: var(--fire-gradient); -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      background: var(--gradient-primary); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
     }
     .hero p { color: var(--muted); font-size: 1.1rem; max-width: 540px; margin: 0 auto 2.5rem; line-height: 1.7; }
 
@@ -51,7 +51,7 @@
       font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
       background: transparent; color: var(--muted); transition: all 0.2s;
     }
-    .toggle-btn.active { background: var(--fire-gradient); color: white; }
+    .toggle-btn.active { background: #fff; color: #08090a; }
 
     .grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -62,28 +62,28 @@
       padding: 2rem; position: relative; transition: all 0.3s;
     }
     .card:hover, .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-    @keyframes fireRotate {
+    @keyframes whiteGlow {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
     @keyframes glowPulse {
-      0%, 100% { box-shadow: 0 4px 16px rgba(255,107,43,0.3); }
-      50% { box-shadow: 0 4px 24px rgba(255,107,43,0.55), 0 0 40px rgba(255,107,43,0.15); }
+      0%, 100% { box-shadow: 0 4px 16px rgba(255,255,255,0.06); }
+      50% { box-shadow: 0 4px 24px rgba(255,255,255,0.1), 0 0 40px rgba(255,255,255,0.04); }
     }
     .card.popular {
       border: 2px solid transparent;
       background-image: linear-gradient(var(--surface), var(--surface)),
-                        linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b, #ff4500);
+                        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06), rgba(255,255,255,0.14));
       background-origin: border-box;
       background-clip: padding-box, border-box;
       background-size: 100% 100%, 300% 300%;
-      animation: fireRotate 4s ease infinite;
-      box-shadow: 0 0 40px rgba(255,107,43,0.12), 0 0 80px rgba(255,107,43,0.06);
+      animation: whiteGlow 4s ease infinite;
+      box-shadow: 0 0 40px rgba(255,255,255,0.04), 0 0 80px rgba(255,255,255,0.02);
     }
     .popular-badge {
       position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: var(--fire-gradient); color: white; font-size: 11px; font-weight: 700;
+      background: #fff; color: #08090a; font-size: 11px; font-weight: 700;
       padding: 4px 18px; border-radius: 50px; letter-spacing: 0.5px; white-space: nowrap;
       animation: glowPulse 2.5s ease-in-out infinite;
     }
@@ -107,12 +107,12 @@
       font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700; transition: all 0.2s;
     }
     .btn-primary {
-      background: var(--fire-gradient); color: white;
-      box-shadow: 0 4px 20px rgba(255,107,43,0.3);
+      background: #fff; color: #08090a;
+      box-shadow: 0 2px 8px rgba(255,255,255,0.06);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,107,43,0.45); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,255,255,0.1); }
     .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-outline:hover { border-color: var(--border-strong); color: var(--text); }
 
     .faq { max-width: 700px; margin: 0 auto; padding: 0 2rem 5rem; }
     .faq h2 { text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 2rem; color: var(--text); }
@@ -126,13 +126,13 @@
 </head>
 <body>
 <nav>
-  <a href="/" class="logo">Fer<span>chaud</span></a>
+  <a href="/" class="logo">Ferchaud</a>
   <div style="display:flex;gap:24px;align-items:center">
     <a href="/#features" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
     <a href="/pricing" style="color:var(--text);text-decoration:none;font-size:14px;font-weight:500;">Pricing</a>
     <a href="/sources" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Sources</a>
     <a href="/feed" style="color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;">Feed</a>
-    <a href="/signup" style="background:var(--fire-gradient);color:white;padding:8px 20px;border-radius:50px;text-decoration:none;font-size:14px;font-weight:600">Get Started</a>
+    <a href="/signup" style="background:#fff;color:#08090a;padding:8px 20px;border-radius:50px;text-decoration:none;font-size:14px;font-weight:600">Get Started</a>
   </div>
 </nav>
 

@@ -27,8 +27,8 @@
 </style>
 <style>
 .feed-page-title span {
-  background: var(--fire-gradient);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, #e8e8e8, #ffffff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .feed-live-dot {
   width: 8px; height: 8px; border-radius: 50%;
@@ -53,9 +53,9 @@
 }
 .feed-item.type-buy { border-left-color: var(--green); }
 .feed-item.type-sell { border-left-color: var(--red); }
-.feed-item.type-signal { border-left-color: var(--accent); }
+.feed-item.type-signal { border-left-color: var(--text-secondary); }
 .feed-item.type-research { border-left-color: #a855f7; }
-.feed-item.type-alert { border-left-color: #f59e0b; }
+.feed-item.type-alert { border-left-color: #f5a623; }
 @keyframes feedSlideIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -64,7 +64,7 @@
 <style>
 .feed-item:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 0 20px rgba(255,107,43,0.06), 0 8px 32px rgba(0,0,0,0.2);
+  box-shadow: 0 0 20px rgba(255,255,255,0.02), 0 8px 32px rgba(0,0,0,0.2);
 }
 .feed-icon {
   width: 40px; height: 40px; min-width: 40px;
@@ -74,7 +74,7 @@
 }
 .feed-icon.buy { background: rgba(74,222,128,0.12); color: var(--green); }
 .feed-icon.sell { background: rgba(248,113,113,0.12); color: var(--red); }
-.feed-icon.signal { background: rgba(255,107,43,0.12); color: var(--accent); }
+.feed-icon.signal { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
 .feed-icon.alert { background: rgba(245,158,11,0.12); color: var(--amber); }
 .feed-icon.research { background: rgba(168,85,247,0.12); color: #a855f7; }
 
@@ -88,7 +88,7 @@
 }
 .feed-symbol {
   font-size: 14px; font-weight: 700;
-  font-family: var(--mono); color: var(--accent-light);
+  font-family: var(--mono); color: var(--text-secondary);
 }
 </style>
 <style>
@@ -99,7 +99,7 @@
   letter-spacing: 0.4px; text-transform: uppercase;
   font-family: var(--mono);
 }
-.feed-badge.strategy { background: rgba(255,107,43,0.12); color: var(--accent); }
+.feed-badge.strategy { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
 .feed-badge.reason { background: rgba(248,113,113,0.1); color: var(--red); }
 .feed-badge.scanner { background: rgba(245,158,11,0.1); color: var(--amber); }
 .feed-badge.grok { background: rgba(168,85,247,0.1); color: #a855f7; }
@@ -124,8 +124,8 @@
 <style>
 .feed-score {
   font-family: var(--mono); font-size: 11px; font-weight: 600;
-  color: var(--accent); padding: 1px 8px;
-  border-radius: 50px; background: rgba(255,107,43,0.08);
+  color: var(--text-secondary); padding: 1px 8px;
+  border-radius: 50px; background: rgba(255,255,255,0.06);
 }
 
 /* ── Feed Empty State ─────────────────────────────── */
@@ -220,7 +220,7 @@
 <!-- ── Floating Pill Navbar ──────────────────────── -->
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/dashboard" class="logo">Fer<span class="logo-accent">chaud</span></a>
+    <a href="/dashboard" class="logo">Ferchaud</a>
     <div class="nav-links">
       <a href="/dashboard" class="nav-link">Dashboard</a>
       <a href="/feed" class="nav-link active">Feed</a>
@@ -304,7 +304,7 @@
         <div class="sidebar-card-title">Active Strategies</div>
         <div class="strat-list">
           <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--green)"></span> Breakout</div>
-          <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--accent)"></span> Mean Reversion</div>
+          <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--text-secondary)"></span> Mean Reversion</div>
           <div class="strat-list-item"><span class="strat-list-dot" style="background:#a855f7"></span> Grok Catalyst</div>
           <div class="strat-list-item"><span class="strat-list-dot" style="background:var(--amber)"></span> VWAP Scalp</div>
           <div class="strat-list-item"><span class="strat-list-dot" style="background:#38bdf8"></span> Momentum</div>

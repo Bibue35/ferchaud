@@ -7,24 +7,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ── Ferchaud Hot Iron Design System (standalone) ─── */
+/* ── Ferchaud Monochrome Design System (standalone) ── */
 :root {
-  --bg: #0a0608;
-  --surface: #151012;
-  --surface-2: #1a1315;
-  --border: #2a1a1e;
-  --border-hover: #3d2228;
-  --accent: #ff6b2b;
-  --accent-light: #ff8c5a;
-  --accent-glow: rgba(255, 107, 43, 0.25);
-  --amber: #f59e0b;
-  --fire-gradient: linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b);
-  --text: #f5e6d3;
-  --text-secondary: #c4a88e;
-  --muted: #8a7068;
-  --green: #4ade80;
-  --red: #f87171;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --bg: #08090a;
+  --surface: #111213;
+  --surface-2: #191a1b;
+  --surface-3: #28282c;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.1);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #e8e8e8;
+  --accent-light: #f0f0f0;
+  --accent-glow: rgba(255,255,255,0.06);
+  --amber: #f5a623;
+  --gradient-primary: linear-gradient(135deg, #e8e8e8, #ffffff);
+  --text: #f7f8f8;
+  --text-secondary: #b4b4b4;
+  --muted: #6b6f76;
+  --green: #00d26a;
+  --red: #ff4d4f;
+  --font: 'Inter', -apple-system, system-ui, sans-serif;
   --mono: 'SF Mono', 'Fira Code', ui-monospace, monospace;
 }
 </style>
@@ -36,8 +38,8 @@ body {
   font-family: var(--font); -webkit-font-smoothing: antialiased;
   line-height: 1.5; min-height: 100vh;
 }
-a { color: var(--accent-light); text-decoration: none; }
-a:hover { color: var(--accent); }
+a { color: var(--text-secondary); text-decoration: none; }
+a:hover { color: var(--text); }
 
 /* ── Floating Pill Navbar ─────────────────────────── */
 .navbar {
@@ -45,7 +47,7 @@ a:hover { color: var(--accent); }
   height: 56px; border-radius: 50px;
   background: rgba(10, 6, 8, 0.85);
   backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 107, 43, 0.12);
+  border: 1px solid var(--border);
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   z-index: 1000; padding: 0 28px;
 }
@@ -60,7 +62,7 @@ a:hover { color: var(--accent); }
 }
 </style>
 <style>
-.logo-accent { color: var(--accent); }
+.logo-accent { color: var(--text); }
 .nav-links { display: flex; gap: 24px; align-items: center; }
 .nav-link {
   color: var(--muted); font-size: 14px; font-weight: 500;
@@ -76,18 +78,18 @@ a:hover { color: var(--accent); }
   transition: all 0.2s; font-family: var(--font);
 }
 .btn-primary {
-  background: var(--fire-gradient); color: white;
-  box-shadow: 0 4px 20px rgba(255,107,43,0.3);
+  background: #fff; color: #08090a;
+  box-shadow: 0 2px 8px rgba(255,255,255,0.06);
 }
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(255,107,43,0.45);
+  box-shadow: 0 4px 16px rgba(255,255,255,0.1);
 }
 .btn-outline {
   background: transparent; border: 1.5px solid var(--border);
   color: var(--text);
 }
-.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-outline:hover { border-color: var(--border-strong); color: var(--text); }
 .btn-lg { padding: 16px 32px; font-size: 16px; }
 </style>
 <style>
@@ -100,7 +102,7 @@ a:hover { color: var(--accent); }
   content: ''; position: absolute; top: -200px;
   left: 50%; transform: translateX(-50%);
   width: 900px; height: 900px;
-  background: radial-gradient(ellipse, rgba(255,107,43,0.07) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%);
   pointer-events: none;
 }
 .sources-hero h1 {
@@ -109,7 +111,7 @@ a:hover { color: var(--accent); }
   position: relative;
 }
 .fire-text {
-  background: var(--fire-gradient);
+  background: var(--gradient-primary);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 .sources-hero .subtitle {
@@ -119,13 +121,13 @@ a:hover { color: var(--accent); }
 .source-count {
   display: inline-flex; align-items: center; gap: 6px;
   margin-top: 28px; font-size: 12px; font-weight: 600;
-  color: var(--accent); font-family: var(--mono);
+  color: var(--text); font-family: var(--mono);
 }
 </style>
 <style>
 .source-count .dot {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent); animation: pulse 2s infinite;
+  background: var(--green); animation: pulse 2s infinite;
 }
 
 /* ── Sources Grid ─────────────────────────────────── */
@@ -151,12 +153,12 @@ a:hover { color: var(--accent); }
 }
 .source-card:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 0 24px rgba(255,107,43,0.06), 0 12px 40px rgba(0,0,0,0.25);
+  box-shadow: 0 0 24px rgba(255,255,255,0.03), 0 12px 40px rgba(0,0,0,0.25);
 }
 </style>
 <style>
 .source-card:hover::before {
-  background: var(--fire-gradient);
+  background: #fff; color: #08090a;
 }
 /* Tooltip */
 [data-tooltip] { position: relative; cursor: help; }
@@ -164,7 +166,7 @@ a:hover { color: var(--accent); }
   content: attr(data-tooltip);
   position: absolute; bottom: calc(100% + 6px); left: 50%;
   transform: translateX(-50%);
-  background: #1a1315; color: var(--text-secondary);
+  background: var(--surface-2); color: var(--text-secondary);
   font-size: 11px; font-weight: 500;
   padding: 5px 12px; border-radius: 50px;
   border: 1px solid var(--border);
@@ -202,7 +204,7 @@ a:hover { color: var(--accent); }
 }
 .source-badge.execution { background: rgba(74,222,128,0.1); color: var(--green); }
 .source-badge.social { background: rgba(168,85,247,0.1); color: #a855f7; }
-.source-badge.technical { background: rgba(255,107,43,0.1); color: var(--accent); }
+.source-badge.technical { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
 .source-badge.risk { background: rgba(248,113,113,0.1); color: var(--red); }
 .source-badge.regime { background: rgba(56,189,248,0.1); color: #38bdf8; }
 .source-badge.discovery { background: rgba(245,158,11,0.1); color: var(--amber); }
@@ -224,7 +226,7 @@ a:hover { color: var(--accent); }
   content: ''; position: absolute;
   bottom: 0; left: 50%; transform: translateX(-50%);
   width: 800px; height: 500px;
-  background: radial-gradient(ellipse, rgba(255,107,43,0.05) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%);
   pointer-events: none;
 }
 .sources-cta h2 {
@@ -292,7 +294,7 @@ a:hover { color: var(--accent); }
 <!-- ── Floating Pill Navbar ──────────────────────── -->
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/" class="logo">Fer<span class="logo-accent">chaud</span></a>
+    <a href="/" class="logo">Ferchaud</a>
     <div class="nav-links">
       <a href="/#features" class="nav-link">Features</a>
       <a href="/pricing" class="nav-link">Pricing</a>

@@ -29,7 +29,7 @@
   content: attr(data-tooltip);
   position: absolute; bottom: calc(100% + 8px); left: 50%;
   transform: translateX(-50%);
-  background: #1a1315; color: var(--text-secondary);
+  background: var(--surface-2); color: var(--text-secondary);
   font-size: 11px; font-weight: 500;
   padding: 6px 14px; border-radius: 50px;
   border: 1px solid var(--border);
@@ -40,7 +40,7 @@
 }
 /* Skeleton loading */
 .skeleton {
-  background: linear-gradient(90deg, var(--surface-2) 25%, rgba(42,26,30,0.6) 50%, var(--surface-2) 75%);
+  background: linear-gradient(90deg, var(--surface-2) 25%, rgba(255,255,255,0.04) 50%, var(--surface-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
@@ -48,7 +48,7 @@
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 /* Alternating trade rows */
-.tbl tbody tr:nth-child(even) td { background: rgba(21,16,18,0.5); }
+.tbl tbody tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
 .tbl tbody tr:nth-child(odd) td { background: transparent; }
 .stat-label  {
   font-size: 11px; font-weight: 600; letter-spacing: .8px;
@@ -91,10 +91,10 @@
   background:transparent; color:var(--muted);
 }
 .mode-btn.active {
-  background:var(--fire-gradient); color:#fff;
-  box-shadow:0 2px 12px rgba(255,107,43,0.3);
+  background:#fff; color:#08090a;
+  box-shadow:0 2px 8px rgba(255,255,255,0.06);
 }
-.mode-btn.passive-active { background:var(--green); color:#0a0608; }
+.mode-btn.passive-active { background:var(--green); color:#08090a; }
 .bot-actions { display:flex; gap:.6rem; }
 
 /* ── Table (Warm) ────────────────────────────────── */
@@ -128,7 +128,7 @@
   border:1.5px dashed var(--border); border-radius:20px; padding:1.25rem;
   text-align:center; cursor:pointer; transition:all .2s;
 }
-.bank-card:hover { border-color:var(--accent); background:rgba(255,107,43,.04); }
+.bank-card:hover { border-color:var(--border-hover); background:rgba(255,255,255,.02); }
 .bank-icon   { font-size:2rem; margin-bottom:.5rem; }
 .bank-name   { font-weight:600; font-size:14px; color:var(--text); }
 .bank-sub    { font-size:12px; color:var(--muted); margin-top:4px; }
@@ -136,12 +136,12 @@
 
 /* ── Revenue share bar ───────────────────────────── */
 .rev-bar     { background:var(--surface-2); border-radius:50px; overflow:hidden; height:8px; margin:.5rem 0; }
-.rev-fill    { height:100%; border-radius:50px; background:var(--fire-gradient); }
+.rev-fill    { height:100%; border-radius:50px; background:#fff; }
 
 /* ── Chart ───────────────────────────────────────── */
 #chart-container {
   height:280px; border-radius:16px; overflow:hidden;
-  box-shadow: 0 0 30px rgba(255,107,43,0.04);
+  box-shadow: 0 0 30px rgba(255,255,255,0.02);
   border: 1px solid var(--border);
 }
 </style>
@@ -150,7 +150,7 @@
 <!-- Floating Pill Navbar -->
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/dashboard" class="logo">Fer<span class="logo-accent">chaud</span></a>
+    <a href="/dashboard" class="logo">Ferchaud</a>
     <div class="nav-links">
       <span class="badge badge-live">LIVE</span>
       <a href="/dashboard" class="nav-link active">Dashboard</a>
@@ -164,7 +164,7 @@
         <div style="display:flex;flex-direction:column;gap:1px;">
           <span style="font-size:13px;font-weight:600;color:var(--text);">{{ user.username }}</span>
           {% set tier = user.subscription_tier or 'free' %}
-          <span class="tier-badge" style="background:{{ {'free':'rgba(138,112,104,.15)','starter':'rgba(255,140,90,.15)','pro':'rgba(255,107,43,.2)','elite':'rgba(245,158,11,.2)'}[tier] }};color:{{ {'free':'#8a7068','starter':'#ff8c5a','pro':'#ff6b2b','elite':'#f59e0b'}[tier] }}">
+          <span class="tier-badge" style="background:{{ {'free':'rgba(255,255,255,.06)','starter':'rgba(255,255,255,.08)','pro':'rgba(255,255,255,.1)','elite':'rgba(255,255,255,.12)'}[tier] }};color:{{ {'free':'#6b6f76','starter':'#b4b4b4','pro':'#e8e8e8','elite':'#ffffff'}[tier] }}">
             {{ tier|upper }}
           </span>
         </div>
@@ -203,7 +203,7 @@
         {% if user.bot_enabled %}
         <button class="btn btn-sm" style="border-radius:50px;background:transparent;border:1.5px solid var(--red);color:var(--red);" onclick="toggleBot('stop')">Stop Bot</button>
         {% else %}
-        <button class="btn btn-sm" style="border-radius:50px;background:var(--fire-gradient);color:white;border:none;box-shadow:0 4px 20px rgba(255,107,43,0.3);" onclick="toggleBot('start')">Start Bot</button>
+        <button class="btn btn-sm" style="border-radius:50px;background:#fff;color:#08090a;border:none;box-shadow:0 2px 8px rgba(255,255,255,0.06);" onclick="toggleBot('start')">Start Bot</button>
         {% endif %}
         <button class="btn btn-sm btn-ghost" style="border-radius:50px;" onclick="openDeposit()">+ Deposit</button>
       </div>
@@ -213,7 +213,7 @@
   <div class="grid-4" style="margin-bottom:1rem;">
     <div class="stat-card hover-lift" data-tooltip="Total equity including cash and open positions">
       <div class="stat-label">Portfolio Value</div>
-      <div class="stat-val" id="s-equity" style="color:var(--accent);">${{ "%.2f"|format(broker.equity if broker else 0) }}</div>
+      <div class="stat-val" id="s-equity" style="color:var(--text);">${{ "%.2f"|format(broker.equity if broker else 0) }}</div>
       <div class="stat-sub">
         <span class="stat-delta {% if (broker.equity or 0) >= (total_deposited or 0) %}delta-up{% else %}delta-dn{% endif %}" id="s-pnl-pct">
           {% set pnl = (broker.equity or 0) - (total_deposited or 1) %}
@@ -252,7 +252,7 @@
     </div>
     <div class="stat-card hover-lift" data-tooltip="Total funds deposited into your account">
       <div class="stat-label">Total Deposited</div>
-      <div class="stat-val" style="color:var(--accent);">${{ "%.2f"|format(total_deposited or 0) }}</div>
+      <div class="stat-val" style="color:var(--text);">${{ "%.2f"|format(total_deposited or 0) }}</div>
       <div class="stat-sub">
         <button class="btn btn-green btn-sm" style="border-radius:50px;" onclick="openDeposit()">+ Add Funds</button>
       </div>
@@ -278,7 +278,7 @@
       <div class="rev-bar"><div class="rev-fill" style="width:{{ share_pct }}%;"></div></div>
       <div class="stat-sub">
         <span>Platform takes {{ 100 - share_pct }}% of profits</span>
-        <a href="/pricing" style="color:var(--accent);text-decoration:none;font-size:11px;">Upgrade</a>
+        <a href="/pricing" style="color:var(--text-secondary);text-decoration:none;font-size:11px;">Upgrade</a>
       </div>
     </div>
     <div class="stat-card hover-lift" data-tooltip="Current status of each trading strategy">
@@ -404,13 +404,13 @@
         {% endif %}
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:.5rem 0;">
           <span style="color:var(--muted);">Available balance</span>
-          <span style="font-weight:700;color:var(--accent);">${{ "%.2f"|format(broker.cash if broker else 0) }}</span>
+          <span style="font-weight:700;color:var(--text);">${{ "%.2f"|format(broker.cash if broker else 0) }}</span>
         </div>
       </div>
       <!-- Market Scanner -->
       <div class="panel">
         <div class="panel-title"><span>Hot Movers</span>
-          <span style="font-size:11px;color:var(--accent);">live scanner</span>
+          <span style="font-size:11px;color:var(--text-secondary);">live scanner</span>
         </div>
         <div id="scanner-list">
           {% if scanner and scanner.hot %}
@@ -433,7 +433,7 @@
       <!-- X Research / Grok -->
       <div class="panel">
         <div class="panel-title"><span>X Research</span>
-          <span style="font-size:11px;color:var(--accent);">Grok AI</span>
+          <span style="font-size:11px;color:var(--text-secondary);">Grok AI</span>
         </div>
         <div id="xresearch-list">
           {% if scanner and scanner.trending %}
@@ -444,7 +444,7 @@
                 {% if t.catalyst %}<div style="font-size:11px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.catalyst[:50] }}</div>{% endif %}
               </div>
               {% if t.score %}
-              <span style="font-size:11px;font-weight:700;color:var(--accent);">{{ t.score }}/10</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">{{ t.score }}/10</span>
               {% endif %}
             </div>
             {% endfor %}
@@ -463,7 +463,7 @@
             <div style="font-size:1.1rem;font-weight:800;color:var(--text);">{{ tinfo.name }}</div>
             <div style="font-size:12px;color:var(--muted);">${{ tinfo.price_monthly }}/month</div>
           </div>
-          <span class="tier-badge" style="font-size:13px;padding:5px 16px;background:{{ {'free':'rgba(138,112,104,.15)','starter':'rgba(255,140,90,.15)','pro':'rgba(255,107,43,.2)','elite':'rgba(245,158,11,.2)'}[tier] }};color:{{ {'free':'#8a7068','starter':'#ff8c5a','pro':'#ff6b2b','elite':'#f59e0b'}[tier] }}">
+          <span class="tier-badge" style="font-size:13px;padding:5px 16px;background:{{ {'free':'rgba(255,255,255,.06)','starter':'rgba(255,255,255,.08)','pro':'rgba(255,255,255,.1)','elite':'rgba(255,255,255,.12)'}[tier] }};color:{{ {'free':'#6b6f76','starter':'#b4b4b4','pro':'#e8e8e8','elite':'#ffffff'}[tier] }}">
             {{ (tinfo.revenue_share * 100)|int }}% yours
           </span>
         </div>
@@ -542,16 +542,16 @@ let chart, lineSeries, chartData = [];
 document.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('chart-container');
   chart = LightweightCharts.createChart(el, {
-    layout:      { background: { color: '#151012' }, textColor: '#8a7068' },
-    grid:        { vertLines: { color: '#2a1a1e' }, horzLines: { color: '#2a1a1e' } },
+    layout:      { background: { color: '#111213' }, textColor: '#6b6f76' },
+    grid:        { vertLines: { color: 'rgba(255,255,255,0.06)' }, horzLines: { color: 'rgba(255,255,255,0.06)' } },
     crosshair:   { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor: '#2a1a1e' },
-    timeScale:   { borderColor: '#2a1a1e', timeVisible: true },
+    rightPriceScale: { borderColor: 'rgba(255,255,255,0.06)' },
+    timeScale:   { borderColor: 'rgba(255,255,255,0.06)', timeVisible: true },
     handleScroll: true, handleScale: true,
   });
   lineSeries = chart.addAreaSeries({
-    lineColor: '#ff6b2b', topColor: 'rgba(255,107,43,0.25)',
-    bottomColor: 'rgba(255,107,43,0)', lineWidth: 2,
+    lineColor: '#00d26a', topColor: 'rgba(0,210,106,0.2)',
+    bottomColor: 'rgba(0,210,106,0)', lineWidth: 2,
   });
   new ResizeObserver(e => chart.applyOptions({width: e[0].contentRect.width}))
     .observe(el);
