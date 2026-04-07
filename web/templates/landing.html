@@ -1,1647 +1,652 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ferchaud — Trade Smarter</title>
-    <meta name="description" content="AI-powered stock trading platform. Full market scanning, breakout detection, and automated execution.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
-    <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg: #020617;
-            --primary: #0F172A;
-            --secondary: #1E293B;
-            --cta: #22C55E;
-            --text: #F8FAFC;
-            --muted: rgba(255,255,255,0.4);
-            --border: rgba(255,255,255,0.06);
-            --glow: rgba(34,197,94,0.15);
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #000000;
-            color: var(--text);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            overflow-x: hidden;
-        }
-
-        /* Shipper.now pattern: content shell with margins, doesn't touch edges */
-        .page-shell {
-            margin: 72px 16px 16px;  /* top accounts for navbar height + gap */
-            background: var(--bg);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 24px 24px;
-            position: relative;
-        }
-
-        /* --- Reduced Motion --- */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-        }
-
-        /* --- Utility --- */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 32px;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        button, a.btn {
-            cursor: pointer;
-            border: none;
-            outline: none;
-            font-family: inherit;
-        }
-
-        /* --- Scroll Reveal --- */
-        .reveal {
-            opacity: 0;
-            transform: translateY(24px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* --- Navbar --- */
-        .navbar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 56px;
-            background: var(--bg);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 32px;
-            z-index: 100;
-            transition: background 0.3s ease-out;
-        }
-
-        .navbar-logo {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--text);
-        }
-
-        .navbar-links {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .navbar-links a {
-            font-size: 14px;
-            font-weight: 500;
-            color: rgba(255,255,255,0.5);
-            transition: color 0.2s ease-out;
-            cursor: pointer;
-        }
-
-        .navbar-links a:hover {
-            color: var(--text);
-        }
-
-        .btn-cta {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--cta);
-            color: #000;
-            font-size: 14px;
-            font-weight: 600;
-            padding: 8px 18px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.15s ease-out, box-shadow 0.2s ease-out;
-        }
-
-        .btn-cta:hover {
-            box-shadow: 0 0 20px var(--glow);
-        }
-
-        .btn-cta:active {
-            transform: scale(0.97);
-        }
-
-        .btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            color: var(--text);
-            font-size: 14px;
-            font-weight: 600;
-            padding: 12px 28px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.15);
-            cursor: pointer;
-            transition: border-color 0.2s ease-out, transform 0.15s ease-out;
-        }
-
-        .btn-secondary:hover {
-            border-color: rgba(255,255,255,0.3);
-        }
-
-        .btn-secondary:active {
-            transform: scale(0.97);
-        }
-
-        /* --- Hero --- */
-        .hero {
-            padding-top: 80px;
-            padding-bottom: 100px;
-            display: flex;
-            align-items: center;
-            gap: 60px;
-            min-height: 100vh;
-        }
-
-        .hero-left {
-            flex: 0 0 55%;
-        }
-
-        .hero-right {
-            flex: 1;
-            position: relative;
-            min-height: 400px;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 100px;
-            background: rgba(34,197,94,0.08);
-            border: 1px solid rgba(34,197,94,0.15);
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--cta);
-            letter-spacing: 0.5px;
-            margin-bottom: 28px;
-        }
-
-        .pulse-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--cta);
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
-        }
-
-        .hero h1 {
-            font-size: 64px;
-            font-weight: 800;
-            letter-spacing: -2.5px;
-            line-height: 1.05;
-            margin-bottom: 20px;
-        }
-
-        .hero h1 .muted-line {
-            color: var(--muted);
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: var(--muted);
-            max-width: 420px;
-            line-height: 1.7;
-            margin-bottom: 36px;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 14px;
-            margin-bottom: 28px;
-        }
-
-        .hero-buttons .btn-cta {
-            padding: 14px 32px;
-            font-size: 15px;
-            border-radius: 12px;
-        }
-
-        .hero-trust {
-            font-size: 13px;
-            color: rgba(255,255,255,0.25);
-            font-weight: 400;
-        }
-
-        /* Hero chart area */
-        .hero-chart-wrapper {
-            position: relative;
-            width: 100%;
-            height: 400px;
-        }
-
-        .hero-chart-wrapper::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 80px;
-            background: linear-gradient(to top, var(--bg), transparent);
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .hero-chart-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 80px;
-            background: linear-gradient(to right, var(--bg), transparent);
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .chart-ticker {
-            position: absolute;
-            top: 12px;
-            left: 16px;
-            z-index: 3;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .chart-ticker-symbol {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .chart-ticker-change {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--cta);
-        }
-
-        .chart-meta {
-            position: absolute;
-            bottom: 24px;
-            left: 16px;
-            z-index: 3;
-            font-size: 12px;
-            color: rgba(255,255,255,0.25);
-        }
-
-        /* --- Stats Row --- */
-        .stats-section {
-            padding: 80px 0;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .stats-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .stat-item {
-            flex: 1;
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .stat-item + .stat-item {
-            border-left: 1px solid var(--border);
-        }
-
-        .stat-number {
-            font-size: 40px;
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            color: var(--text);
-            margin-bottom: 6px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: var(--muted);
-            font-weight: 500;
-        }
-
-        /* --- Section Headers --- */
-        .section-badge {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--cta);
-            background: rgba(34,197,94,0.08);
-            border: 1px solid rgba(34,197,94,0.15);
-            padding: 5px 14px;
-            border-radius: 100px;
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-size: 42px;
-            font-weight: 700;
-            letter-spacing: -1.5px;
-            margin-bottom: 16px;
-        }
-
-        .section-subtitle {
-            font-size: 17px;
-            color: var(--muted);
-            max-width: 500px;
-            line-height: 1.7;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 64px;
-        }
-
-        /* --- How It Works --- */
-        .how-section {
-            padding: 120px 0;
-        }
-
-        .how-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-            position: relative;
-        }
-
-        .how-step {
-            text-align: center;
-            position: relative;
-        }
-
-        .how-step-number {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1.5px solid rgba(255,255,255,0.15);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 24px;
-        }
-
-        .how-step-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            color: var(--cta);
-        }
-
-        .how-step-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .how-step-desc {
-            font-size: 15px;
-            color: var(--muted);
-            line-height: 1.7;
-            max-width: 280px;
-            margin: 0 auto;
-        }
-
-        .how-connector {
-            position: absolute;
-            top: 20px;
-            left: calc(33.33% + 20px);
-            width: calc(33.33% - 40px);
-            height: 1px;
-            border-top: 2px dashed rgba(255,255,255,0.08);
-        }
-
-        .how-connector-2 {
-            left: calc(66.66% + 20px);
-        }
-
-        /* --- Bento Grid --- */
-        .bento-section {
-            padding: 120px 0;
-        }
-
-        .bento {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1px;
-            background: var(--border);
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        .bento-card {
-            background: var(--primary);
-            padding: 40px;
-            transition: background-color 0.2s ease-out;
-            cursor: pointer;
-        }
-
-        .bento-card:hover {
-            background: var(--secondary);
-        }
-
-        .bento-card.span-2 {
-            grid-column: span 2;
-        }
-
-        .bento-card-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.04);
-            margin-bottom: 24px;
-            color: var(--cta);
-        }
-
-        .bento-card-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .bento-card-desc {
-            font-size: 14px;
-            color: var(--muted);
-            line-height: 1.7;
-            max-width: 360px;
-        }
-
-        .bento-sparkline {
-            margin-top: 24px;
-            height: 60px;
-            position: relative;
-        }
-
-        .bento-gauge {
-            margin-top: 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .gauge-bar {
-            flex: 1;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255,255,255,0.06);
-            overflow: hidden;
-        }
-
-        .gauge-fill {
-            height: 100%;
-            width: 78%;
-            border-radius: 3px;
-            background: linear-gradient(90deg, var(--cta), #4ade80);
-        }
-
-        .gauge-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--cta);
-            white-space: nowrap;
-        }
-
-        /* --- Dashboard Preview --- */
-        .dashboard-section {
-            padding: 120px 0;
-        }
-
-        .dashboard-window {
-            background: var(--primary);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-
-        .dashboard-titlebar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(15,23,42,0.5);
-        }
-
-        .titlebar-dots {
-            display: flex;
-            gap: 7px;
-        }
-
-        .titlebar-dot {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-        }
-
-        .titlebar-dot.red { background: #EF4444; }
-        .titlebar-dot.yellow { background: #EAB308; }
-        .titlebar-dot.green { background: #22C55E; }
-
-        .titlebar-text {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            font-weight: 500;
-        }
-
-        .titlebar-clock {
-            font-size: 12px;
-            color: rgba(255,255,255,0.25);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .dashboard-body {
-            padding: 28px;
-        }
-
-        .dashboard-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .dash-stat {
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .dash-stat-label {
-            font-size: 12px;
-            color: var(--muted);
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-
-        .dash-stat-value {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .dash-stat-value.green { color: var(--cta); }
-        .dash-stat-value.red { color: #EF4444; }
-
-        .dashboard-chart {
-            height: 250px;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        /* --- Pricing --- */
-        .pricing-section {
-            padding: 120px 0;
-        }
-
-        .pricing-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            margin-bottom: 48px;
-        }
-
-        .pricing-toggle-label {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--muted);
-            cursor: pointer;
-        }
-
-        .pricing-toggle-label.active {
-            color: var(--text);
-        }
-
-        .toggle-switch {
-            width: 44px;
-            height: 24px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.2s ease-out;
-        }
-
-        .toggle-switch.active {
-            background: var(--cta);
-        }
-
-        .toggle-knob {
-            width: 18px;
-            height: 18px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            transition: transform 0.2s ease-out;
-        }
-
-        .toggle-switch.active .toggle-knob {
-            transform: translateX(20px);
-        }
-
-        .pricing-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .pricing-table th,
-        .pricing-table td {
-            padding: 16px 24px;
-            text-align: center;
-            border: 1px solid var(--border);
-            font-size: 14px;
-        }
-
-        .pricing-table th {
-            background: rgba(255,255,255,0.02);
-            font-weight: 600;
-            font-size: 15px;
-            color: var(--text);
-            padding: 20px 24px;
-        }
-
-        .pricing-table th.pro-col {
-            background: rgba(34,197,94,0.05);
-            position: relative;
-        }
-
-        .pricing-table td.pro-col {
-            background: rgba(34,197,94,0.03);
-        }
-
-        .pricing-table td.row-label {
-            text-align: left;
-            color: var(--muted);
-            font-weight: 500;
-        }
-
-        .pricing-table td {
-            color: var(--text);
-            font-weight: 500;
-        }
-
-        .popular-badge {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--cta);
-            background: rgba(34,197,94,0.1);
-            padding: 3px 10px;
-            border-radius: 100px;
-            margin-top: 6px;
-        }
-
-        .price-amount {
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-
-        .price-period {
-            font-size: 13px;
-            color: var(--muted);
-            font-weight: 400;
-        }
-
-        .btn-table {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 24px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s ease-out, box-shadow 0.2s ease-out;
-            border: 1px solid var(--border);
-            background: transparent;
-            color: var(--text);
-        }
-
-        .btn-table:active {
-            transform: scale(0.97);
-        }
-
-        .btn-table.green {
-            background: var(--cta);
-            color: #000;
-            border-color: var(--cta);
-        }
-
-        .btn-table.green:hover {
-            box-shadow: 0 0 20px var(--glow);
-        }
-
-        .btn-table:hover {
-            border-color: rgba(255,255,255,0.15);
-        }
-
-        /* --- CTA Section --- */
-        .cta-section {
-            padding: 120px 0;
-            text-align: center;
-        }
-
-        .cta-section h2 {
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: -1.5px;
-            margin-bottom: 16px;
-        }
-
-        .cta-section p {
-            font-size: 17px;
-            color: var(--muted);
-            margin-bottom: 40px;
-        }
-
-        .cta-section .btn-cta {
-            padding: 16px 40px;
-            font-size: 16px;
-            border-radius: 12px;
-        }
-
-        .cta-fine-print {
-            margin-top: 20px;
-            font-size: 13px;
-            color: rgba(255,255,255,0.2);
-        }
-
-        /* --- Footer --- */
-        .footer {
-            padding: 48px 32px;
-            margin: 0 16px 16px;
-            background: var(--bg);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .footer-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-
-        .footer-logo {
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 28px;
-        }
-
-        .footer-links a {
-            font-size: 13px;
-            color: var(--muted);
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s ease-out;
-        }
-
-        .footer-links a:hover {
-            color: var(--text);
-        }
-
-        .footer-copy {
-            font-size: 13px;
-            color: rgba(255,255,255,0.2);
-            text-align: center;
-        }
-
-        /* --- Hero Load Animations --- */
-        .hero-anim {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: heroFadeIn 0.6s ease-out forwards;
-        }
-
-        .hero-anim-1 { animation-delay: 0.1s; }
-        .hero-anim-2 { animation-delay: 0.2s; }
-        .hero-anim-3 { animation-delay: 0.3s; }
-        .hero-anim-4 { animation-delay: 0.4s; }
-        .hero-anim-5 { animation-delay: 0.5s; }
-        .hero-anim-6 { animation-delay: 0.6s; }
-
-        @keyframes heroFadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* --- Responsive --- */
-        @media (max-width: 900px) {
-            .hero {
-                flex-direction: column;
-                padding-top: 120px;
-                padding-bottom: 80px;
-                min-height: auto;
-            }
-
-            .hero-left {
-                flex: none;
-                width: 100%;
-            }
-
-            .hero-right {
-                width: 100%;
-                min-height: 300px;
-            }
-
-            .hero h1 {
-                font-size: 42px;
-                letter-spacing: -1.5px;
-            }
-
-            .how-grid {
-                grid-template-columns: 1fr;
-                gap: 48px;
-            }
-
-            .how-connector,
-            .how-connector-2 {
-                display: none;
-            }
-
-            .bento {
-                grid-template-columns: 1fr;
-            }
-
-            .bento-card.span-2 {
-                grid-column: span 1;
-            }
-
-            .dashboard-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .stats-row {
-                flex-wrap: wrap;
-            }
-
-            .stat-item {
-                flex: 0 0 50%;
-            }
-
-            .stat-item:nth-child(odd) {
-                border-left: none;
-            }
-
-            .stat-item:nth-child(n+3) {
-                border-top: 1px solid var(--border);
-            }
-
-            .pricing-table {
-                font-size: 12px;
-            }
-
-            .pricing-table th,
-            .pricing-table td {
-                padding: 12px 10px;
-            }
-
-            .price-amount {
-                font-size: 22px;
-            }
-
-            .navbar {
-                left: 16px;
-                right: 16px;
-                top: 12px;
-            }
-
-            .container {
-                padding: 0 20px;
-            }
-
-            .cta-section h2 {
-                font-size: 32px;
-            }
-
-            .section-title {
-                font-size: 30px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferchaud — AI Stock Trading</title>
+<meta name="description" content="Ferchaud AI monitors 12,000+ stocks and executes trades at the optimal moment. Buy the dip. Sell the peak. Automatically.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --surface-2: #f5f5f5;
+  --border: #e5e5e5;
+  --border-hover: #d4d4d4;
+  --text: #0a0a0a;
+  --text-secondary: #525252;
+  --muted: #a3a3a3;
+  --black: #000000;
+  --green: #16a34a;
+  --red: #dc2626;
+  --page-bg: #000000;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--page-bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Navbar ── */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px;
+}
+.navbar-logo {
+  font-size: 20px; font-weight: 700; color: var(--black);
+  text-decoration: none; letter-spacing: -0.5px;
+}
+.navbar-links { display: flex; align-items: center; gap: 32px; }
+.navbar-links a {
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  text-decoration: none; transition: color 0.15s;
+}
+.navbar-links a:hover { color: var(--black); }
+.navbar-cta {
+  background: var(--black); color: #fff;
+  padding: 8px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: opacity 0.15s;
+}
+.navbar-cta:hover { opacity: 0.85; }
+.navbar-mobile-toggle { display: none; background: none; border: none; cursor: pointer; }
+
+/* ── Page Shell ── */
+.page-shell {
+  background: var(--bg);
+  background-image: radial-gradient(circle, #d4d4d4 1px, transparent 1px);
+  background-size: 20px 20px;
+  margin: 72px 16px 16px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  min-height: calc(100vh - 88px);
+  overflow: hidden;
+}
+
+/* ── Section shared ── */
+.section { padding: 80px 64px; }
+.section-sm { padding: 48px 64px; }
+.section-border { border-top: 1px solid var(--border); }
+.section-surface { background: var(--surface); }
+/* ── Hero ── */
+.hero { display: flex; align-items: center; gap: 48px; padding: 100px 64px 80px; }
+.hero-text { flex: 0 0 45%; }
+.hero-label {
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;
+}
+.hero-h1 {
+  font-size: 56px; font-weight: 800; line-height: 1.08;
+  letter-spacing: -2px; color: var(--black); margin-bottom: 24px;
+}
+.hero-sub {
+  font-size: 18px; color: var(--text-secondary); line-height: 1.6;
+  max-width: 420px; margin-bottom: 32px;
+}
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--black); color: #fff;
+  padding: 14px 32px; border-radius: 12px;
+  font-size: 16px; font-weight: 600;
+  text-decoration: none; transition: opacity 0.15s; border: none; cursor: pointer;
+}
+.hero-cta:hover { opacity: 0.85; }
+.hero-cta-sub {
+  margin-top: 12px; font-size: 13px; color: var(--muted);
+}
+.hero-chart { flex: 0 0 55%; position: relative; }
+.hero-chart-container { width: 100%; height: 380px; border-radius: 12px; overflow: hidden; }
+.hero-chart-label {
+  text-align: center; margin-top: 12px;
+  font-size: 13px; color: var(--muted); font-weight: 500;
+}
+/* ── Stats ── */
+.stats-bar {
+  display: flex; justify-content: center; align-items: center;
+  gap: 12px; flex-wrap: wrap;
+  font-size: 15px; color: var(--muted); font-weight: 500;
+}
+.stats-bar .dot { color: var(--border-hover); }
+
+/* ── How It Works ── */
+.how-header { text-align: center; margin-bottom: 56px; }
+.how-header h2 {
+  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
+}
+.how-steps {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px;
+  max-width: 900px; margin: 0 auto; position: relative;
+}
+.how-step { text-align: center; }
+.how-step-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.how-step-icon svg { width: 24px; height: 24px; stroke: var(--black); }
+.how-step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--black); }
+.how-step p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+/* ── Strategy Visual ── */
+.strategy-header { text-align: center; margin-bottom: 16px; }
+.strategy-header h2 {
+  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
+}
+.strategy-header p {
+  font-size: 16px; color: var(--text-secondary); margin-top: 8px;
+}
+.strategy-chart-container { width: 100%; height: 420px; border-radius: 12px; overflow: hidden; margin: 32px 0 16px; }
+.strategy-footer {
+  text-align: center; font-size: 15px; color: var(--text-secondary); font-weight: 500;
+}
+
+/* ── Pricing ── */
+.pricing-header { text-align: center; margin-bottom: 48px; }
+.pricing-header h2 {
+  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
+}
+.pricing-header p { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
+.pricing-table-wrap {
+  max-width: 880px; margin: 0 auto;
+  border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+}
+.pricing-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 14px;
+}
+.pricing-table thead th {
+  padding: 16px 20px; text-align: left;
+  font-weight: 700; font-size: 15px; color: var(--black);
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.pricing-table tbody td {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.pricing-table tbody tr:last-child td { border-bottom: none; }
+.pricing-table .plan-name { font-weight: 600; color: var(--black); }
+.pricing-table .price { font-weight: 700; color: var(--black); font-size: 15px; }
+.pricing-table .feat-yes { color: var(--black); font-weight: 600; }
+.pricing-table .feat-no { color: var(--muted); }
+
+/* ── CTA ── */
+.final-cta { text-align: center; }
+.final-cta h2 {
+  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
+  margin-bottom: 24px;
+}
+.final-cta .hero-cta { margin-bottom: 12px; }
+.final-cta .cta-sub { font-size: 13px; color: var(--muted); }
+
+/* ── Footer Shell ── */
+.footer-shell {
+  background: var(--bg);
+  margin: 0 16px 16px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 32px 64px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-brand { font-size: 14px; color: var(--muted); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 13px; color: var(--muted); text-decoration: none;
+  transition: color 0.15s;
+}
+.footer-links a:hover { color: var(--text-secondary); }
+
+/* ── Scroll Animations ── */
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .navbar { padding: 0 16px; }
+  .navbar-links { display: none; }
+  .navbar-mobile-toggle { display: block; }
+  .page-shell { margin: 68px 8px 8px 8px; border-radius: 14px; }
+  .section { padding: 48px 24px; }
+  .section-sm { padding: 32px 24px; }
+  .hero {
+    flex-direction: column; padding: 48px 24px;
+  }
+  .hero-text { flex: none; width: 100%; }
+  .hero-h1 { font-size: 36px; letter-spacing: -1px; }
+  .hero-sub { font-size: 16px; }
+  .hero-chart { flex: none; width: 100%; }
+  .hero-chart-container { height: 260px; }
+  .how-steps { grid-template-columns: 1fr; gap: 32px; }
+  .strategy-chart-container { height: 280px; }
+  .pricing-table-wrap { overflow-x: auto; }
+  .footer-shell {
+    margin: 0 8px 8px 8px; border-radius: 14px;
+    flex-direction: column; gap: 16px; padding: 24px;
+    text-align: center;
+  }
+  .how-header h2, .strategy-header h2, .pricing-header h2, .final-cta h2 {
+    font-size: 28px;
+  }
+}
+</style>
 </head>
 <body>
 
-    <!-- ========== NAVBAR ========== -->
-    <nav class="navbar">
-        <span class="navbar-logo">Ferchaud</span>
-        <div class="navbar-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#sources">Sources</a>
-            <a href="/register" class="btn-cta">Get Started</a>
+<!-- ════ NAVBAR ════ -->
+<nav class="navbar">
+  <a href="/" class="navbar-logo">Ferchaud</a>
+  <div class="navbar-links">
+    <a href="#how">How It Works</a>
+    <a href="#strategy">Strategy</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/login" class="navbar-cta">Get Started</a>
+  </div>
+  <button class="navbar-mobile-toggle" onclick="document.querySelector('.navbar-links').style.display=document.querySelector('.navbar-links').style.display==='flex'?'none':'flex'" aria-label="Menu">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</nav>
+
+<!-- ════ PAGE SHELL ════ -->
+<main class="page-shell">
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-text">
+      <div class="hero-label">Ferchaud AI</div>
+      <h1 class="hero-h1">Buy the dip.<br>Sell the peak.</h1>
+      <p class="hero-sub">Our AI monitors 12,000+ stocks and executes trades at the optimal moment &mdash; automatically.</p>
+      <a href="/register" class="hero-cta">Start Trading <span>&rarr;</span></a>
+      <div class="hero-cta-sub">Paper trading &middot; No credit card</div>
+    </div>
+    <div class="hero-chart">
+      <div id="heroChart" class="hero-chart-container"></div>
+      <div class="hero-chart-label">$RKLB &middot; +18.4% captured</div>
+    </div>
+  </section>
+
+  <!-- ── Stats Bar ── -->
+  <section class="section-sm section-border reveal">
+    <div class="stats-bar">
+      <span>12,847 stocks analyzed</span>
+      <span class="dot">&middot;</span>
+      <span>9 AI strategies</span>
+      <span class="dot">&middot;</span>
+      <span>&lt; 50ms execution</span>
+      <span class="dot">&middot;</span>
+      <span>98% revenue share</span>
+    </div>
+  </section>
+
+  <!-- ── How It Works ── -->
+  <section id="how" class="section section-border reveal">
+    <div class="how-header">
+      <h2>How It Works</h2>
+    </div>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
         </div>
-    </nav>
-
-    <!-- ========== MAIN CONTENT (doesn't touch screen edges) ========== -->
-    <div class="page-shell">
-
-    <!-- ========== HERO ========== -->
-    <section class="hero container">
-        <div class="hero-left">
-            <div class="hero-badge hero-anim hero-anim-1">
-                <span class="pulse-dot"></span>
-                LIVE &middot; SCANNING 12,847 STOCKS
-            </div>
-            <h1 class="hero-anim hero-anim-2">
-                Trade smarter.<br>
-                <span class="muted-line">Not harder.</span>
-            </h1>
-            <p class="hero-subtitle hero-anim hero-anim-3">
-                AI-powered market scanning, breakout detection, and automated execution. Let the algorithms work while you sleep.
-            </p>
-            <div class="hero-buttons hero-anim hero-anim-4">
-                <a href="/register" class="btn-cta">Start Trading</a>
-                <a href="#demo" class="btn-secondary">Watch Demo</a>
-            </div>
-            <p class="hero-trust hero-anim hero-anim-5">Powered by Alpaca &middot; Grok AI</p>
+        <h3>1. Connect</h3>
+        <p>Link your brokerage account in seconds. We support all major platforms with read-only access.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
         </div>
-
-        <div class="hero-right hero-anim hero-anim-6">
-            <div class="hero-chart-wrapper">
-                <div class="chart-ticker">
-                    <span class="chart-ticker-symbol">RKLB</span>
-                    <span class="chart-ticker-change">+8.42%</span>
-                </div>
-                <div id="hero-chart" style="width:100%;height:100%;"></div>
-                <div class="chart-meta">AI Entry &middot; 2m ago</div>
-            </div>
+        <h3>2. AI Scans</h3>
+        <p>Our models scan 12,000+ stocks in real time, identifying momentum shifts and entry points.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+          </svg>
         </div>
-    </section>
+        <h3>3. Profit</h3>
+        <p>Trades execute automatically at the right moment. You keep 98% of every dollar earned.</p>
+      </div>
+    </div>
+  </section>
 
-    <!-- ========== STATS ROW ========== -->
-    <section class="stats-section reveal">
-        <div class="container">
-            <div class="stats-row">
-                <div class="stat-item">
-                    <div class="stat-number" data-target="12847">0</div>
-                    <div class="stat-label">Stocks Analyzed</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-target="9">0</div>
-                    <div class="stat-label">AI Strategies</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-target="50" data-prefix="< " data-suffix="ms">0</div>
-                    <div class="stat-label">Execution Speed</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" data-target="98" data-suffix="%">0</div>
-                    <div class="stat-label">Max Revenue Share</div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- ── Strategy Visual ── -->
+  <section id="strategy" class="section section-border reveal">
+    <div class="strategy-header">
+      <h2>Every Dip, Caught. Every Peak, Sold.</h2>
+      <p>Multiple buy and sell signals across a real timeline</p>
+    </div>
+    <div id="strategyChart" class="strategy-chart-container"></div>
+    <div class="strategy-footer">Every trade, automated. Every dip, caught.</div>
+  </section>
+  <!-- ── Pricing ── -->
+  <section id="pricing" class="section section-border section-surface reveal">
+    <div class="pricing-header">
+      <h2>Simple Pricing</h2>
+      <p>Start free. Upgrade when you're ready.</p>
+    </div>
+    <div class="pricing-table-wrap">
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th>Starter</th>
+            <th>Pro</th>
+            <th>Elite</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="plan-name">Price</td>
+            <td class="price">$0</td>
+            <td class="price">$29/mo</td>
+            <td class="price">$79/mo</td>
+            <td class="price">$199/mo</td>
+          </tr>
+          <tr>
+            <td class="plan-name">Stocks Tracked</td>
+            <td>100</td>
+            <td>2,500</td>
+            <td>8,000</td>
+            <td>12,847</td>
+          </tr>
+          <tr>
+            <td class="plan-name">AI Strategies</td>
+            <td>2</td>
+            <td>5</td>
+            <td>9</td>
+            <td>9 + Custom</td>
+          </tr>
+          <tr>
+            <td class="plan-name">Auto Trading</td>
+            <td class="feat-no">Paper only</td>
+            <td class="feat-yes">Yes</td>
+            <td class="feat-yes">Yes</td>
+            <td class="feat-yes">Yes</td>
+          </tr>
+          <tr>
+            <td class="plan-name">Revenue Share</td>
+            <td>100%</td>
+            <td>98%</td>
+            <td>98%</td>
+            <td>98%</td>
+          </tr>
+          <tr>
+            <td class="plan-name">Execution Speed</td>
+            <td>Standard</td>
+            <td>&lt; 100ms</td>
+            <td>&lt; 50ms</td>
+            <td>&lt; 10ms</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <!-- ── Final CTA ── -->
+  <section class="section section-border reveal">
+    <div class="final-cta">
+      <h2>Ready to trade smarter?</h2>
+      <a href="/register" class="hero-cta">Get Started Free <span>&rarr;</span></a>
+      <div class="cta-sub">No credit card required</div>
+    </div>
+  </section>
 
-    <!-- ========== HOW IT WORKS ========== -->
-    <section class="how-section" id="how">
-        <div class="container">
-            <div class="section-header reveal">
-                <div class="section-badge">HOW IT WORKS</div>
-                <h2 class="section-title">Three steps to automated profit.</h2>
-                <p class="section-subtitle" style="margin:0 auto;">Connect your brokerage, configure your strategy, and let Ferchaud handle the rest.</p>
-            </div>
-            <div class="how-grid reveal">
-                <div class="how-connector"></div>
-                <div class="how-connector how-connector-2"></div>
-                <div class="how-step">
-                    <div class="how-step-number">1</div>
-                    <div class="how-step-icon">
-                        <!-- Link icon -->
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                    </div>
-                    <h3 class="how-step-title">Connect</h3>
-                    <p class="how-step-desc">Link your Alpaca brokerage account with one click. Paper or live trading supported.</p>
-                </div>
-                <div class="how-step">
-                    <div class="how-step-number">2</div>
-                    <div class="how-step-icon">
-                        <!-- Settings/sliders icon -->
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg>
-                    </div>
-                    <h3 class="how-step-title">Configure</h3>
-                    <p class="how-step-desc">Choose from 9 AI strategies or customize your own. Set risk limits and position sizing.</p>
-                </div>
-                <div class="how-step">
-                    <div class="how-step-number">3</div>
-                    <div class="how-step-icon">
-                        <!-- Zap icon -->
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
-                    </div>
-                    <h3 class="how-step-title">Automate</h3>
-                    <p class="how-step-desc">Ferchaud scans the market 24/7, detects breakouts, and executes trades in under 50ms.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+</main>
 
-    <!-- ========== BENTO FEATURES ========== -->
-    <section class="bento-section" id="features">
-        <div class="container">
-            <div class="section-header reveal">
-                <div class="section-badge">CAPABILITIES</div>
-                <h2 class="section-title">Built for serious traders.</h2>
-                <p class="section-subtitle" style="margin:0 auto;">Every tool you need to find, analyze, and execute trades at institutional speed.</p>
-            </div>
-            <div class="bento reveal">
-                <!-- Card 1: Full Market Scanner (spans 2) -->
-                <div class="bento-card span-2">
-                    <div class="bento-card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    </div>
-                    <div class="bento-card-title">Full Market Scanner</div>
-                    <div class="bento-card-desc">Scans 12,847 stocks in real-time across all major exchanges. Custom filters, volume spikes, and momentum triggers.</div>
-                    <div class="bento-sparkline" id="sparkline-scanner"></div>
-                </div>
-                <!-- Card 2: Grok AI Research -->
-                <div class="bento-card">
-                    <div class="bento-card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg>
-                    </div>
-                    <div class="bento-card-title">Grok AI Research</div>
-                    <div class="bento-card-desc">Deep fundamental analysis powered by xAI. Sentiment scoring from X/Twitter in real-time.</div>
-                </div>
+<!-- ════ FOOTER SHELL ════ -->
+<footer class="footer-shell">
+  <div class="footer-brand">&copy; 2026 Ferchaud. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/docs">Docs</a>
+    <a href="mailto:support@ferchaud.com">Contact</a>
+  </div>
+</footer>
+<script>
+/* ════════════════════════════════════════════
+   HERO CHART — Single stock with BUY / SELL
+   ════════════════════════════════════════════ */
+(function() {
+  const el = document.getElementById('heroChart');
+  if (!el) return;
 
-                <!-- Card 3: Breakout Detection -->
-                <div class="bento-card">
-                    <div class="bento-card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                    </div>
-                    <div class="bento-card-title">Breakout Detection</div>
-                    <div class="bento-card-desc">Pattern recognition across 15+ chart formations. Flags breakouts before they happen.</div>
-                </div>
+  const chart = LightweightCharts.createChart(el, {
+    width: el.clientWidth,
+    height: el.clientHeight,
+    layout: {
+      background: { type: 'solid', color: '#ffffff' },
+      textColor: '#a3a3a3',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: 12,
+    },
+    grid: {
+      vertLines: { color: '#f5f5f5' },
+      horzLines: { color: '#f5f5f5' },
+    },
+    rightPriceScale: { borderColor: '#e5e5e5' },
+    timeScale: { borderColor: '#e5e5e5', timeVisible: false },
+    crosshair: { mode: 0 },
+    handleScroll: false,
+    handleScale: false,
+  });
+  // Generate realistic price data — RKLB-like movement
+  const baseDate = new Date('2025-09-01');
+  const heroData = [];
+  let price = 14.20;
+  const points = 90;
+  // Shape: rise → dip (BUY) → rise to peak (SELL) → slight decline
+  const trajectory = [];
+  for (let i = 0; i < points; i++) {
+    const pct = i / points;
+    let trend;
+    if (pct < 0.25) trend = 0.08;        // gentle rise
+    else if (pct < 0.40) trend = -0.18;   // dip down
+    else if (pct < 0.42) trend = -0.02;   // bottom
+    else if (pct < 0.75) trend = 0.20;    // strong rise
+    else if (pct < 0.77) trend = 0.01;    // peak
+    else trend = -0.10;                    // decline
+    const noise = (Math.random() - 0.5) * 0.12;
+    price = Math.max(8, price + trend + noise);
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    heroData.push({ time: dateStr, value: parseFloat(price.toFixed(2)) });
+    trajectory.push(price);
+  }
+  // Find actual min/max indices for markers
+  let minIdx = 0, maxIdx = 0;
+  for (let i = 1; i < trajectory.length; i++) {
+    if (trajectory[i] < trajectory[minIdx]) minIdx = i;
+    if (trajectory[i] > trajectory[maxIdx]) maxIdx = i;
+  }
 
-                <!-- Card 4: Options Flow -->
-                <div class="bento-card">
-                    <div class="bento-card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    </div>
-                    <div class="bento-card-title">Options Flow</div>
-                    <div class="bento-card-desc">Track unusual options activity and smart money positioning across the entire market.</div>
-                </div>
-                <!-- Card 5: Risk Engine (spans 2) -->
-                <div class="bento-card span-2">
-                    <div class="bento-card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
-                    </div>
-                    <div class="bento-card-title">Risk Engine</div>
-                    <div class="bento-card-desc">Position sizing, stop-loss management, and portfolio-level risk controls. Never risk more than you set.</div>
-                    <div class="bento-gauge">
-                        <div class="gauge-bar"><div class="gauge-fill"></div></div>
-                        <span class="gauge-label">78% Safe</span>
-                    </div>
-                </div>
+  const areaSeries = chart.addAreaSeries({
+    topColor: 'rgba(10, 10, 10, 0.08)',
+    bottomColor: 'rgba(10, 10, 10, 0.01)',
+    lineColor: '#0a0a0a',
+    lineWidth: 2,
+    crosshairMarkerVisible: false,
+  });
+  areaSeries.setData(heroData);
 
-                <!-- Card 6: 24/7 Automation -->
-                <div class="bento-card">
-                    <div class="bento-card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
-                    </div>
-                    <div class="bento-card-title">24/7 Automation</div>
-                    <div class="bento-card-desc">Pre-market scans, intraday execution, and after-hours monitoring. Always on.</div>
-                </div>
-            </div>
-        </div>
-    </section>
+  // BUY and SELL markers
+  areaSeries.setMarkers([
+    {
+      time: heroData[minIdx].time,
+      position: 'belowBar',
+      color: '#16a34a',
+      shape: 'circle',
+      text: 'BUY',
+    },
+    {
+      time: heroData[maxIdx].time,
+      position: 'aboveBar',
+      color: '#dc2626',
+      shape: 'circle',
+      text: 'SELL',
+    },
+  ]);
+  chart.timeScale().fitContent();
+  new ResizeObserver(() => {
+    chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
+  }).observe(el);
+})();
 
-    <!-- ========== DASHBOARD PREVIEW ========== -->
-    <section class="dashboard-section" id="demo">
-        <div class="container">
-            <div class="section-header reveal">
-                <div class="section-badge">PREVIEW</div>
-                <h2 class="section-title">See it in action.</h2>
-                <p class="section-subtitle" style="margin:0 auto;">A real-time view of your portfolio, positions, and AI-driven insights.</p>
-            </div>
-            <div class="dashboard-window reveal">
-                <div class="dashboard-titlebar">
-                    <div class="titlebar-dots">
-                        <span class="titlebar-dot red"></span>
-                        <span class="titlebar-dot yellow"></span>
-                        <span class="titlebar-dot green"></span>
-                    </div>
-                    <div class="titlebar-text">Ferchaud Dashboard &mdash; LIVE</div>
-                    <div class="titlebar-clock" id="live-clock">--:--:--</div>
-                </div>
-                <div class="dashboard-body">
-                    <div class="dashboard-stats">
-                        <div class="dash-stat">
-                            <div class="dash-stat-label">Portfolio Value</div>
-                            <div class="dash-stat-value">$24,831.47</div>
-                        </div>
-                        <div class="dash-stat">
-                            <div class="dash-stat-label">Today's P&L</div>
-                            <div class="dash-stat-value green">+$1,247.32</div>
-                        </div>
-                        <div class="dash-stat">
-                            <div class="dash-stat-label">Win Rate</div>
-                            <div class="dash-stat-value green">73.2%</div>
-                        </div>
-                        <div class="dash-stat">
-                            <div class="dash-stat-label">Open Positions</div>
-                            <div class="dash-stat-value">4</div>
-                        </div>
-                    </div>
-                    <div class="dashboard-chart" id="dashboard-chart"></div>
-                </div>
-            </div>
-        </div>
-    </section>
+/* ════════════════════════════════════════════
+   STRATEGY CHART — Multiple BUY/SELL cycles
+   ════════════════════════════════════════════ */
+(function() {
+  const el = document.getElementById('strategyChart');
+  if (!el) return;
 
-    <!-- ========== PRICING ========== -->
-    <section class="pricing-section" id="pricing">
-        <div class="container">
-            <div class="section-header reveal">
-                <div class="section-badge">PRICING</div>
-                <h2 class="section-title">Simple, transparent pricing.</h2>
-                <p class="section-subtitle" style="margin:0 auto;">Start free. Scale when you're ready. Keep most of what you earn.</p>
-            </div>
+  const chart = LightweightCharts.createChart(el, {
+    width: el.clientWidth,
+    height: el.clientHeight,
+    layout: {
+      background: { type: 'solid', color: '#ffffff' },
+      textColor: '#a3a3a3',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: 12,
+    },
+    grid: {
+      vertLines: { color: '#f5f5f5' },
+      horzLines: { color: '#f5f5f5' },
+    },
+    rightPriceScale: { borderColor: '#e5e5e5' },
+    timeScale: { borderColor: '#e5e5e5', timeVisible: false },
+    crosshair: { mode: 0 },
+    handleScroll: false,
+    handleScale: false,
+  });
+  // Generate longer timeline with multiple cycles
+  const baseDate = new Date('2025-03-01');
+  const data = [];
+  let price = 22.50;
+  const totalDays = 240;
 
-            <div class="pricing-toggle reveal">
-                <span class="pricing-toggle-label active" id="toggle-monthly">Monthly</span>
-                <div class="toggle-switch" id="billing-toggle" role="button" tabindex="0" aria-label="Toggle annual billing">
-                    <div class="toggle-knob"></div>
-                </div>
-                <span class="pricing-toggle-label" id="toggle-annual">Annual <span style="color:var(--cta);font-size:12px;font-weight:600;">Save 20%</span></span>
-            </div>
+  // Define wave pattern: 4 cycles of dip->peak
+  const cycles = [
+    { dipAt: 0.10, peakAt: 0.22 },
+    { dipAt: 0.32, peakAt: 0.47 },
+    { dipAt: 0.55, peakAt: 0.70 },
+    { dipAt: 0.80, peakAt: 0.92 },
+  ];
 
-            <div class="reveal" style="overflow-x:auto;">
-            <table class="pricing-table">
-                <thead>
-                    <tr>
-                        <th style="background:transparent;border-left:none;border-top:none;"></th>
-                        <th>Free</th>
-                        <th>Starter</th>
-                        <th class="pro-col">
-                            Pro
-                            <br><span class="popular-badge">MOST POPULAR</span>
-                        </th>
-                        <th>Elite</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="row-label">Price</td>
-                        <td><span class="price-amount" data-monthly="$0" data-annual="$0">$0</span><span class="price-period">/mo</span></td>
-                        <td><span class="price-amount" data-monthly="$29" data-annual="$23">$29</span><span class="price-period">/mo</span></td>
-                        <td class="pro-col"><span class="price-amount" data-monthly="$99" data-annual="$79">$99</span><span class="price-period">/mo</span></td>
-                        <td><span class="price-amount" data-monthly="$299" data-annual="$239">$299</span><span class="price-period">/mo</span></td>
-                    </tr>
-                    <tr>
-                        <td class="row-label">You Keep</td>
-                        <td>70%</td>
-                        <td>80%</td>
-                        <td class="pro-col">90%</td>
-                        <td>98%</td>
-                    </tr>
-                    <tr>
-                        <td class="row-label">Capital</td>
-                        <td>$500</td>
-                        <td>$2,000</td>
-                        <td class="pro-col">$10,000</td>
-                        <td>Unlimited</td>
-                    </tr>
-                    <tr>
-                        <td class="row-label">Strategies</td>
-                        <td>3</td>
-                        <td>All 9</td>
-                        <td class="pro-col">All 9 + Options</td>
-                        <td>Custom</td>
-                    </tr>
-                    <tr>
-                        <td class="row-label">Support</td>
-                        <td>Community</td>
-                        <td>Email</td>
-                        <td class="pro-col">Priority</td>
-                        <td>Dedicated</td>
-                    </tr>
-                    <tr>
-                        <td class="row-label"></td>
-                        <td><a href="/register" class="btn-table">Start</a></td>
-                        <td><a href="/register" class="btn-table">Start</a></td>
-                        <td class="pro-col"><a href="/register" class="btn-table green">Start</a></td>
-                        <td><a href="/contact" class="btn-table">Contact</a></td>
-                    </tr>
-                </tbody>
-            </table>
-            </div>
-        </div>
-    </section>
+  for (let i = 0; i < totalDays; i++) {
+    const pct = i / totalDays;
+    let trend = 0.02; // slight upward bias
+    // Create waves
+    for (const c of cycles) {
+      const dipCenter = c.dipAt;
+      const peakCenter = c.peakAt;
+      if (Math.abs(pct - dipCenter) < 0.06) trend = -0.22;
+      else if (Math.abs(pct - peakCenter) < 0.05) trend = 0.03;
+      else if (pct > dipCenter && pct < peakCenter && Math.abs(pct - dipCenter) < 0.18) trend = 0.18;
+    }
+    const noise = (Math.random() - 0.5) * 0.15;
+    price = Math.max(15, price + trend + noise);
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + i);
+    data.push({ time: d.toISOString().split('T')[0], value: parseFloat(price.toFixed(2)) });
+  }
+  // Find local mins and maxes for each cycle
+  const markers = [];
+  const profits = ['+4.2%', '+8.1%', '+3.7%', '+5.9%'];
 
-    <!-- ========== CTA ========== -->
-    <section class="cta-section reveal">
-        <div class="container">
-            <h2>Ready to trade smarter?</h2>
-            <p>Join Ferchaud and let AI handle the execution.</p>
-            <a href="/register" class="btn-cta">Get Started Free</a>
-            <div class="cta-fine-print">No credit card required &middot; Paper trading available</div>
-        </div>
-    </section>
+  for (let ci = 0; ci < cycles.length; ci++) {
+    const c = cycles[ci];
+    const dipStart = Math.floor((c.dipAt - 0.06) * totalDays);
+    const dipEnd = Math.floor((c.dipAt + 0.06) * totalDays);
+    const peakStart = Math.floor((c.peakAt - 0.05) * totalDays);
+    const peakEnd = Math.floor((c.peakAt + 0.05) * totalDays);
 
-    <!-- ========== FOOTER ========== -->
-    </div><!-- end .page-shell -->
+    let minI = dipStart, maxI = peakStart;
+    for (let i = dipStart; i <= dipEnd && i < totalDays; i++) {
+      if (data[i].value < data[minI].value) minI = i;
+    }
+    for (let i = peakStart; i <= peakEnd && i < totalDays; i++) {
+      if (data[i].value > data[maxI].value) maxI = i;
+    }
 
-    <footer class="footer" id="sources">
-        <div class="container">
-            <div class="footer-inner">
-                <span class="footer-logo">Ferchaud</span>
-                <div class="footer-links">
-                    <a href="#features">Features</a>
-                    <a href="#pricing">Pricing</a>
-                    <a href="#sources">Sources</a>
-                    <a href="/legal">Legal</a>
-                    <a href="/support">Support</a>
-                </div>
-            </div>
-            <div class="footer-copy">&copy; 2026 Ferchaud. Not financial advice.</div>
-        </div>
-    </footer>
+    markers.push({
+      time: data[minI].time,
+      position: 'belowBar',
+      color: '#16a34a',
+      shape: 'circle',
+      text: 'BUY',
+    });
+    markers.push({
+      time: data[maxI].time,
+      position: 'aboveBar',
+      color: '#dc2626',
+      shape: 'circle',
+      text: profits[ci],
+    });
+  }
+  // Sort markers by time
+  markers.sort((a, b) => a.time.localeCompare(b.time));
 
-    <!-- ========== SCRIPTS ========== -->
-    <script>
-    (function() {
-        'use strict';
+  const areaSeries = chart.addAreaSeries({
+    topColor: 'rgba(10, 10, 10, 0.06)',
+    bottomColor: 'rgba(10, 10, 10, 0.01)',
+    lineColor: '#0a0a0a',
+    lineWidth: 2,
+    crosshairMarkerVisible: false,
+  });
+  areaSeries.setData(data);
+  areaSeries.setMarkers(markers);
 
-        /* --- Respect reduced motion --- */
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  chart.timeScale().fitContent();
+  new ResizeObserver(() => {
+    chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
+  }).observe(el);
+})();
+/* ════════════════════════════════════════════
+   SCROLL REVEAL — IntersectionObserver
+   ════════════════════════════════════════════ */
+(function() {
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    return;
+  }
 
-        /* ============================
-           HERO CHART (Lightweight Charts)
-           ============================ */
-        function createHeroChart() {
-            const container = document.getElementById('hero-chart');
-            if (!container || typeof LightweightCharts === 'undefined') return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
 
-            const chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth,
-                height: container.clientHeight,
-                layout: {
-                    background: { type: 'solid', color: 'transparent' },
-                    textColor: 'rgba(255,255,255,0.3)',
-                    fontSize: 11,
-                    fontFamily: 'Inter, sans-serif',
-                },
-                grid: {
-                    vertLines: { visible: false },
-                    horzLines: { color: 'rgba(255,255,255,0.03)' },
-                },
-                rightPriceScale: {
-                    borderVisible: false,
-                    scaleMargins: { top: 0.1, bottom: 0.1 },
-                },
-                timeScale: {
-                    borderVisible: false,
-                    timeVisible: false,
-                },
-                crosshair: {
-                    vertLine: { color: 'rgba(255,255,255,0.1)', width: 1, style: 3 },
-                    horzLine: { color: 'rgba(255,255,255,0.1)', width: 1, style: 3 },
-                },
-                handleScroll: false,
-                handleScale: false,
-            });
-
-            const areaSeries = chart.addAreaSeries({
-                topColor: 'rgba(34, 197, 94, 0.25)',
-                bottomColor: 'rgba(34, 197, 94, 0.0)',
-                lineColor: '#22C55E',
-                lineWidth: 2,
-                crosshairMarkerVisible: false,
-            });
-
-            /* Generate realistic uptrend data */
-            const data = [];
-            let price = 18.50;
-            const baseTime = Math.floor(Date.now() / 1000) - 60 * 60;
-            for (let i = 0; i < 60; i++) {
-                const noise = (Math.random() - 0.4) * 0.35;
-                price += noise;
-                price = Math.max(price, 16);
-                data.push({
-                    time: baseTime + i * 60,
-                    value: parseFloat(price.toFixed(2)),
-                });
-            }
-            areaSeries.setData(data);
-            chart.timeScale().fitContent();
-
-            /* Resize handler */
-            const ro = new ResizeObserver(() => {
-                chart.applyOptions({
-                    width: container.clientWidth,
-                    height: container.clientHeight,
-                });
-            });
-            ro.observe(container);
-        }
-
-        /* ============================
-           DASHBOARD CHART
-           ============================ */
-        function createDashboardChart() {
-            const container = document.getElementById('dashboard-chart');
-            if (!container || typeof LightweightCharts === 'undefined') return;
-
-            const chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth,
-                height: 250,
-                layout: {
-                    background: { type: 'solid', color: '#0F172A' },
-                    textColor: 'rgba(255,255,255,0.3)',
-                    fontSize: 11,
-                    fontFamily: 'Inter, sans-serif',
-                },
-                grid: {
-                    vertLines: { visible: false },
-                    horzLines: { color: 'rgba(255,255,255,0.04)' },
-                },
-                rightPriceScale: {
-                    borderVisible: false,
-                    scaleMargins: { top: 0.05, bottom: 0.05 },
-                },
-                timeScale: { borderVisible: false },
-                crosshair: {
-                    vertLine: { color: 'rgba(255,255,255,0.1)', width: 1, style: 3 },
-                    horzLine: { color: 'rgba(255,255,255,0.1)', width: 1, style: 3 },
-                },
-                handleScroll: false,
-                handleScale: false,
-            });
-
-            const areaSeries = chart.addAreaSeries({
-                topColor: 'rgba(34, 197, 94, 0.2)',
-                bottomColor: 'rgba(34, 197, 94, 0.0)',
-                lineColor: '#22C55E',
-                lineWidth: 2,
-                crosshairMarkerVisible: false,
-            });
-
-            /* Generate 30 data points with upward trend */
-            const data = [];
-            let val = 22500;
-            const baseTime = Math.floor(Date.now() / 1000) - 30 * 3600;
-            for (let i = 0; i < 30; i++) {
-                val += (Math.random() - 0.35) * 300;
-                val = Math.max(val, 20000);
-                data.push({
-                    time: baseTime + i * 3600,
-                    value: parseFloat(val.toFixed(2)),
-                });
-            }
-            areaSeries.setData(data);
-            chart.timeScale().fitContent();
-
-            const ro = new ResizeObserver(() => {
-                chart.applyOptions({ width: container.clientWidth });
-            });
-            ro.observe(container);
-        }
-
-        /* ============================
-           SPARKLINE (Bento Scanner Card)
-           ============================ */
-        function createSparkline() {
-            const container = document.getElementById('sparkline-scanner');
-            if (!container || typeof LightweightCharts === 'undefined') return;
-
-            const chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth,
-                height: 60,
-                layout: {
-                    background: { type: 'solid', color: 'transparent' },
-                    textColor: 'transparent',
-                },
-                grid: { vertLines: { visible: false }, horzLines: { visible: false } },
-                rightPriceScale: { visible: false },
-                timeScale: { visible: false },
-                crosshair: { mode: 0 },
-                handleScroll: false,
-                handleScale: false,
-            });
-
-            const series = chart.addAreaSeries({
-                topColor: 'rgba(34, 197, 94, 0.15)',
-                bottomColor: 'rgba(34, 197, 94, 0.0)',
-                lineColor: '#22C55E',
-                lineWidth: 1.5,
-                crosshairMarkerVisible: false,
-            });
-
-            const data = [];
-            let v = 50;
-            const bt = Math.floor(Date.now() / 1000) - 40 * 60;
-            for (let i = 0; i < 40; i++) {
-                v += (Math.random() - 0.42) * 3;
-                data.push({ time: bt + i * 60, value: v });
-            }
-            series.setData(data);
-            chart.timeScale().fitContent();
-
-            const ro = new ResizeObserver(() => {
-                chart.applyOptions({ width: container.clientWidth });
-            });
-            ro.observe(container);
-        }
-
-        /* ============================
-           LIVE CLOCK
-           ============================ */
-        function startClock() {
-            const el = document.getElementById('live-clock');
-            if (!el) return;
-            function tick() {
-                const now = new Date();
-                el.textContent = now.toLocaleTimeString('en-US', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                });
-            }
-            tick();
-            setInterval(tick, 1000);
-        }
-
-        /* ============================
-           SCROLL REVEAL (IntersectionObserver)
-           ============================ */
-        function initScrollReveal() {
-            if (prefersReducedMotion) {
-                document.querySelectorAll('.reveal').forEach(function(el) {
-                    el.classList.add('visible');
-                });
-                return;
-            }
-            const observer = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-
-            document.querySelectorAll('.reveal').forEach(function(el) {
-                observer.observe(el);
-            });
-        }
-
-        /* ============================
-           COUNTER ANIMATION
-           ============================ */
-        function initCounters() {
-            const counters = document.querySelectorAll('.stat-number[data-target]');
-            if (!counters.length) return;
-
-            const observer = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
-                    if (!entry.isIntersecting) return;
-                    const el = entry.target;
-                    observer.unobserve(el);
-
-                    const target = parseInt(el.getAttribute('data-target'), 10);
-                    const prefix = el.getAttribute('data-prefix') || '';
-                    const suffix = el.getAttribute('data-suffix') || '';
-                    const duration = 1200;
-                    const start = performance.now();
-
-                    if (prefersReducedMotion) {
-                        el.textContent = prefix + target.toLocaleString() + suffix;
-                        return;
-                    }
-
-                    function step(now) {
-                        var progress = Math.min((now - start) / duration, 1);
-                        /* ease-out cubic */
-                        var eased = 1 - Math.pow(1 - progress, 3);
-                        var current = Math.floor(eased * target);
-                        el.textContent = prefix + current.toLocaleString() + suffix;
-                        if (progress < 1) {
-                            requestAnimationFrame(step);
-                        } else {
-                            el.textContent = prefix + target.toLocaleString() + suffix;
-                        }
-                    }
-                    requestAnimationFrame(step);
-                });
-            }, { threshold: 0.5 });
-
-            counters.forEach(function(el) {
-                observer.observe(el);
-            });
-        }
-
-        /* ============================
-           PRICING TOGGLE
-           ============================ */
-        function initPricingToggle() {
-            const toggle = document.getElementById('billing-toggle');
-            const monthlyLabel = document.getElementById('toggle-monthly');
-            const annualLabel = document.getElementById('toggle-annual');
-            const prices = document.querySelectorAll('.price-amount[data-monthly]');
-            if (!toggle) return;
-
-            let isAnnual = false;
-
-            function handleToggle() {
-                isAnnual = !isAnnual;
-                toggle.classList.toggle('active', isAnnual);
-                monthlyLabel.classList.toggle('active', !isAnnual);
-                annualLabel.classList.toggle('active', isAnnual);
-                prices.forEach(function(el) {
-                    el.textContent = isAnnual
-                        ? el.getAttribute('data-annual')
-                        : el.getAttribute('data-monthly');
-                });
-            }
-
-            toggle.addEventListener('click', handleToggle);
-            toggle.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleToggle();
-                }
-            });
-        }
-
-        /* ============================
-           INIT
-           ============================ */
-        document.addEventListener('DOMContentLoaded', function() {
-            createHeroChart();
-            createDashboardChart();
-            createSparkline();
-            startClock();
-            initScrollReveal();
-            initCounters();
-            initPricingToggle();
-        });
-
-    })();
-    </script>
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+})();
+</script>
 </body>
 </html>
