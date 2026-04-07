@@ -69,10 +69,10 @@ body {
 
 /* ── Page Shell ── */
 .page-shell {
-  margin: 76px 24px 24px 24px;
+  margin: 76px 12px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
 }
 .page-shell > section, .page-shell > div {
   background: var(--bg);
@@ -166,31 +166,24 @@ body {
   font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
 }
 .pricing-header p { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
-/* Pricing stacking cards */
-.pricing-stack {
-  position: relative;
-  max-width: 400px;
+/* Pricing grid */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 1100px;
   margin: 0 auto;
-  height: 500px;
-  perspective: 1000px;
 }
-.stack-card {
-  position: absolute;
-  width: 100%;
+.price-card {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 32px 24px;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
-.stack-card:hover { border-color: #a3a3a3; }
-.stack-card[data-pos="-2"] { transform: translateY(-16px) scale(0.92); opacity: 0.4; z-index: 1; }
-.stack-card[data-pos="-1"] { transform: translateY(-8px) scale(0.96); opacity: 0.7; z-index: 2; }
-.stack-card[data-pos="0"]  { transform: translateY(0) scale(1); opacity: 1; z-index: 4; }
-.stack-card[data-pos="1"]  { transform: translateY(8px) scale(0.96); opacity: 0.7; z-index: 2; }
-.stack-card[data-pos="2"]  { transform: translateY(16px) scale(0.92); opacity: 0.4; z-index: 1; }
-.stack-card-active { border: 2px solid var(--black); }
+.price-card:hover { border-color: #a3a3a3; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+.price-card-featured { border: 2px solid var(--black); }
 .price-badge {
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
   background: var(--black); color: #fff; font-size: 11px; font-weight: 600;
@@ -210,21 +203,12 @@ body {
 .price-btn:hover { border-color: var(--black); }
 .price-btn-active { background: var(--black); color: #fff; border-color: var(--black); }
 .price-btn-active:hover { opacity: 0.85; }
-.pricing-nav {
-  display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 24px;
+@media (max-width: 900px) {
+  .pricing-grid { grid-template-columns: 1fr 1fr; }
 }
-.pricing-nav-btn {
-  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border);
-  background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s; font-size: 18px; color: var(--black);
+@media (max-width: 600px) {
+  .pricing-grid { grid-template-columns: 1fr; max-width: 360px; }
 }
-.pricing-nav-btn:hover { border-color: var(--black); background: var(--surface); }
-.pricing-dots { display: flex; gap: 8px; }
-.pricing-dots .dot {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--border);
-  border: none; cursor: pointer; transition: background 0.2s; padding: 0;
-}
-.pricing-dots .dot.active { background: var(--black); }
 
 /* ── CTA ── */
 .final-cta { text-align: center; }
@@ -238,7 +222,7 @@ body {
 /* ── Footer Shell ── */
 .footer-shell {
   background: var(--bg);
-  margin: 0 24px 24px 24px;
+  margin: 0 12px 12px 12px;
   border-radius: 20px;
   border: 1px solid var(--border);
   padding: 32px 64px;
@@ -393,9 +377,8 @@ body {
       <h2>Simple Pricing</h2>
       <p>Start free. Upgrade when you're ready. Cancel anytime.</p>
     </div>
-    <div class="pricing-stack" id="pricingStack">
-      <!-- Free -->
-      <div class="stack-card" data-index="0">
+    <div class="pricing-grid">
+      <div class="price-card">
         <div class="price-tier">Free</div>
         <div class="price-amount">$0<span>/mo</span></div>
         <ul class="price-features">
@@ -406,8 +389,7 @@ body {
         </ul>
         <a href="/signup" class="price-btn">Start Free</a>
       </div>
-      <!-- Starter -->
-      <div class="stack-card" data-index="1">
+      <div class="price-card">
         <div class="price-tier">Starter</div>
         <div class="price-amount">$29<span>/mo</span></div>
         <ul class="price-features">
@@ -419,8 +401,7 @@ body {
         </ul>
         <a href="/signup" class="price-btn">Get Started</a>
       </div>
-      <!-- Pro (default active) -->
-      <div class="stack-card stack-card-active" data-index="2">
+      <div class="price-card price-card-featured">
         <div class="price-badge">Recommended</div>
         <div class="price-tier">Pro</div>
         <div class="price-amount">$99<span>/mo</span></div>
@@ -434,8 +415,7 @@ body {
         </ul>
         <a href="/signup" class="price-btn price-btn-active">Get Started</a>
       </div>
-      <!-- Elite -->
-      <div class="stack-card" data-index="3">
+      <div class="price-card">
         <div class="price-tier">Elite</div>
         <div class="price-amount">$299<span>/mo</span></div>
         <ul class="price-features">
@@ -447,16 +427,6 @@ body {
         </ul>
         <a href="/signup" class="price-btn">Contact Us</a>
       </div>
-    </div>
-    <div class="pricing-nav">
-      <button class="pricing-nav-btn" onclick="stackNav(-1)" aria-label="Previous">&larr;</button>
-      <div class="pricing-dots">
-        <button class="dot" onclick="stackGoTo(0)"></button>
-        <button class="dot" onclick="stackGoTo(1)"></button>
-        <button class="dot active" onclick="stackGoTo(2)"></button>
-        <button class="dot" onclick="stackGoTo(3)"></button>
-      </div>
-      <button class="pricing-nav-btn" onclick="stackNav(1)" aria-label="Next">&rarr;</button>
     </div>
   </section>
   <!-- ── Final CTA ── -->
@@ -702,28 +672,13 @@ body {
 })();
 
 /* Pricing stacking cards */
-let stackActive = 2; // Default to Pro
-const stackCards = document.querySelectorAll('.stack-card');
-const stackDots = document.querySelectorAll('.pricing-dots .dot');
-
-function updateStack() {
-  stackCards.forEach((card, i) => {
-    const pos = i - stackActive;
-    const clamped = Math.max(-2, Math.min(2, pos));
-    card.setAttribute('data-pos', clamped);
-  });
+let stackActive = 2; const stackCards = document.querySelectorAll(');
   stackDots.forEach((d, i) => d.classList.toggle('active', i === stackActive));
 }
 
-function stackNav(dir) {
-  stackActive = Math.max(0, Math.min(stackCards.length - 1, stackActive + dir));
-  updateStack();
-}
 
-function stackGoTo(idx) {
-  stackActive = idx;
-  updateStack();
-}
+
+
 
 // Click a card to bring it to front
 stackCards.forEach(card => {
