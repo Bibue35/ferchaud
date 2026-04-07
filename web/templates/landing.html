@@ -33,14 +33,24 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg);
+            background-color: #000000;
             color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
-            background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+        }
+
+        /* Shipper.now pattern: content shell with margins, doesn't touch edges */
+        .page-shell {
+            margin: 72px 16px 16px;  /* top accounts for navbar height + gap */
+            background: var(--bg);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
             background-size: 24px 24px;
+            position: relative;
         }
 
         /* --- Reduced Motion --- */
@@ -87,19 +97,14 @@
         /* --- Navbar --- */
         .navbar {
             position: fixed;
-            top: 20px;
-            left: 32px;
-            right: 32px;
-            height: 52px;
-            border-radius: 16px;
-            background: rgba(2, 6, 23, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
+            padding: 0 32px;
             z-index: 100;
             transition: background 0.3s ease-out;
         }
@@ -176,8 +181,8 @@
 
         /* --- Hero --- */
         .hero {
-            padding-top: 140px;
-            padding-bottom: 120px;
+            padding-top: 80px;
+            padding-bottom: 100px;
             display: flex;
             align-items: center;
             gap: 60px;
@@ -821,8 +826,11 @@
 
         /* --- Footer --- */
         .footer {
-            padding: 48px 0;
-            border-top: 1px solid var(--border);
+            padding: 48px 32px;
+            margin: 0 16px 16px;
+            background: var(--bg);
+            border-radius: 20px;
+            border: 1px solid var(--border);
         }
 
         .footer-inner {
@@ -989,6 +997,9 @@
             <a href="/register" class="btn-cta">Get Started</a>
         </div>
     </nav>
+
+    <!-- ========== MAIN CONTENT (doesn't touch screen edges) ========== -->
+    <div class="page-shell">
 
     <!-- ========== HERO ========== -->
     <section class="hero container">
@@ -1292,6 +1303,8 @@
     </section>
 
     <!-- ========== FOOTER ========== -->
+    </div><!-- end .page-shell -->
+
     <footer class="footer" id="sources">
         <div class="container">
             <div class="footer-inner">
