@@ -59,7 +59,7 @@
 </style>
 {% endblock %}
 {% block body %}
-<div class="auth-page">
+<div class="auth-page page-enter">
   <div class="auth-card">
     <div class="auth-logo">Fer<span>chaud</span></div>
 
@@ -95,7 +95,7 @@
         <input type="password" name="password" placeholder="Min 6 characters" minlength="6" required>
       </div>
 
-      <button type="submit" class="auth-submit" id="auth-btn">
+      <button type="submit" class="auth-submit glow-pulse" id="auth-btn">
         {% if mode == 'signup' %}Create Account{% else %}Log In{% endif %}
       </button>
     </form>
@@ -103,9 +103,11 @@
     <div class="auth-footer">
       {% if mode == 'signup' %}
       Already have an account? <a href="/login">Log in</a>
+      <div style="margin-top:12px;font-size:11px;">By signing up you agree to our <a href="/legal" style="font-weight:500;">Terms &amp; Privacy Policy</a></div>
       {% else %}
       Don't have an account? <a href="/signup">Sign up</a>
       {% endif %}
+      <div style="margin-top:16px;"><a href="/legal" style="color:var(--muted);font-weight:400;font-size:11px;">Legal</a></div>
     </div>
   </div>
 </div>

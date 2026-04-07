@@ -16,6 +16,11 @@
 .stat-card   {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 20px; padding: 1.25rem 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 .stat-label  {
   font-size: 11px; font-weight: 600; letter-spacing: .8px;
@@ -116,7 +121,10 @@
     <a href="/dashboard" class="logo">Fer<span class="logo-accent">chaud</span></a>
     <div class="nav-links">
       <span class="badge badge-live">LIVE</span>
-      <a href="/pricing" style="font-size:13px;color:var(--muted);text-decoration:none;padding:.3rem .75rem;">Plans</a>
+      <a href="/dashboard" class="nav-link active">Dashboard</a>
+      <a href="/feed" class="nav-link">Feed</a>
+      <a href="/sources" class="nav-link">Sources</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
       <span class="nav-link muted" id="clock" style="font-family:var(--mono);font-size:13px;"></span>
       <div class="nav-user">
         <div class="avatar">{{ user.username[0]|upper }}</div>
@@ -133,7 +141,7 @@
   </div>
 </nav>
 
-<div class="dash-wrap">
+<div class="dash-wrap page-enter">
   <!-- Bot Control Bar (Pill) -->
   <div class="bot-bar">
     <div class="bot-status">
@@ -472,6 +480,20 @@
     <button class="btn btn-ghost" style="width:100%;margin-top:1rem;border-radius:50px;" onclick="closeBankModal()">Cancel</button>
   </div>
 </div>
+
+<!-- Footer -->
+<footer class="site-footer" style="margin-top:40px;">
+  <div class="site-footer-inner">
+    <p>&copy; 2026 Ferchaud. All rights reserved.</p>
+    <div class="site-footer-links">
+      <a href="/legal">Legal</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/sources">Sources</a>
+      <a href="mailto:support@ferchaud.com">Support</a>
+    </div>
+  </div>
+</footer>
+
 <script>
 // ── Clock ──────────────────────────────────────────────────────────────────
 function tick() {

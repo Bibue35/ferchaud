@@ -1,17 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}Ferchaud{% endblock %}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/app.css">
-{% block head %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ferchaud — AI-powered trading platform. Algorithmic strategies, real-time market intelligence, and automated execution.">
+  <meta property="og:title" content="Ferchaud — AI Trading Platform">
+  <meta property="og:description" content="Algorithmic trading powered by AI. Real-time market scanning, intelligent execution, and transparent revenue sharing.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Ferchaud">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#0a0608">
+  <title>{% block title %}Ferchaud{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+  {% block head %}{% endblock %}
 </head>
-<body>
-{% block body %}{% endblock %}
-<script src="/static/js/app.js"></script>
-{% block scripts %}{% endblock %}
+<body class="page-enter">
+  {% block body %}{% endblock %}
+  <script src="/static/js/app.js"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

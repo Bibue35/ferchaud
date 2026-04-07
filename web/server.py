@@ -92,6 +92,11 @@ async def pricing_page(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
 
 
+@app.get("/legal", response_class=HTMLResponse)
+async def legal_page(request: Request):
+    return templates.TemplateResponse("legal.html", {"request": request})
+
+
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     user = require_user(request)

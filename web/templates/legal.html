@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Ferchaud Legal — Terms of Service, Privacy Policy, Risk Disclosure, and Cookie Policy.">
+<title>Legal — Ferchaud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0608;
+  --surface: #151012;
+  --surface-2: #1a1315;
+  --border: #2a1a1e;
+  --border-hover: #3d2228;
+  --accent: #ff6b2b;
+  --accent-light: #ff8c5a;
+  --accent-glow: rgba(255, 107, 43, 0.25);
+  --text: #f5e6d3;
+  --text-secondary: #c4a88e;
+  --muted: #8a7068;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); -webkit-font-smoothing: antialiased;
+  line-height: 1.7; min-height: 100vh;
+}
+a { color: var(--accent-light); text-decoration: none; transition: color 0.15s; }
+a:hover { color: var(--accent); }
+
+/* Navbar */
+.navbar {
+  position: fixed; top: 16px; left: 24px; right: 24px; height: 56px;
+  border-radius: 50px; background: rgba(10,6,8,0.85);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,107,43,0.12);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 1000; padding: 0 28px;
+}
+.navbar-inner {
+  max-width: 1280px; margin: 0 auto; height: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
+  color: var(--text); text-decoration: none;
+}
+.logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 24px; align-items: center; }
+.nav-link { color: var(--muted); font-size: 14px; font-weight: 500; transition: color 0.15s; }.nav-link:hover { color: var(--text); }
+
+/* Layout */
+.legal-layout {
+  display: grid; grid-template-columns: 260px 1fr;
+  max-width: 1280px; margin: 0 auto; padding: 100px 24px 60px;
+  gap: 48px;
+}
+
+/* Sidebar TOC */
+.toc {
+  position: sticky; top: 100px; align-self: start;
+  max-height: calc(100vh - 120px); overflow-y: auto;
+}
+.toc-title {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px;
+}
+.toc-section { margin-bottom: 20px; }
+.toc-section-title {
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  margin-bottom: 8px; display: block;
+}
+.toc-link {
+  display: block; font-size: 12px; color: var(--muted);
+  padding: 3px 0 3px 12px; border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.toc-link:hover { color: var(--text); border-left-color: var(--border-hover); }
+.toc-link.active { color: var(--accent-light); border-left-color: var(--accent); }
+/* Content */
+.legal-content { min-width: 0; }
+.legal-updated {
+  font-size: 13px; color: var(--muted); margin-bottom: 32px;
+  padding: 12px 20px; background: var(--surface);
+  border-radius: 50px; display: inline-block;
+  border: 1px solid var(--border);
+}
+.legal-section { margin-bottom: 56px; scroll-margin-top: 100px; }
+.legal-section h2 {
+  font-size: 28px; font-weight: 800; letter-spacing: -0.8px;
+  color: var(--text); margin-bottom: 8px;
+  background: linear-gradient(135deg, #ff4500, #ff6b2b, #f59e0b);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.legal-section h3 {
+  font-size: 18px; font-weight: 700; color: var(--text);
+  margin: 32px 0 12px; scroll-margin-top: 100px;
+}
+.legal-section h4 {
+  font-size: 15px; font-weight: 600; color: var(--text-secondary);
+  margin: 20px 0 8px;
+}
+.legal-section p {
+  color: var(--text-secondary); margin-bottom: 14px; line-height: 1.75;
+}
+.legal-section ul, .legal-section ol {
+  color: var(--text-secondary); margin: 0 0 16px 20px; line-height: 1.8;
+}
+.legal-section li { margin-bottom: 4px; }.legal-section strong { color: var(--text); }
+.legal-divider {
+  border: none; border-top: 1px solid var(--border); margin: 48px 0;
+}
+.legal-callout {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; padding: 20px 24px; margin: 20px 0;
+}
+.legal-callout.warning {
+  border-color: rgba(248,113,113,0.3);
+  background: rgba(248,113,113,0.05);
+}
+.legal-callout p { margin-bottom: 0; }
+
+/* Footer */
+.legal-footer {
+  border-top: 1px solid var(--border); padding: 40px 24px; margin-top: 40px;
+}
+.legal-footer-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.legal-footer p { font-size: 13px; color: var(--muted); }
+.legal-footer a { color: var(--muted); font-size: 13px; }
+.legal-footer a:hover { color: var(--text); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .legal-layout { grid-template-columns: 1fr; padding-top: 80px; gap: 24px; }
+  .toc { position: relative; top: 0; max-height: none; }
+  .navbar { left: 12px; right: 12px; top: 10px; border-radius: 28px; padding: 0 18px; height: 50px; }
+}/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="logo">Fer<span>chaud</span></a>
+    <div class="nav-links">
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/login" class="nav-link">Log In</a>
+      <a href="/signup" class="nav-link" style="background:var(--fire-gradient);color:#fff;padding:8px 20px;border-radius:50px;font-weight:600;">Sign Up</a>
+    </div>
+  </div>
+</nav>
+
+<div class="legal-layout">
+
+<!-- Table of Contents Sidebar -->
+<aside class="toc">
+  <div class="toc-title">Contents</div>
+
+  <div class="toc-section">
+    <a href="#terms" class="toc-section-title">Terms of Service</a>    <a href="#tos-acceptance" class="toc-link">Acceptance of Terms</a>
+    <a href="#tos-services" class="toc-link">Description of Services</a>
+    <a href="#tos-registration" class="toc-link">Account Registration</a>
+    <a href="#tos-billing" class="toc-link">Subscription &amp; Billing</a>
+    <a href="#tos-virtual" class="toc-link">Virtual Trading Disclaimer</a>
+    <a href="#tos-conduct" class="toc-link">User Conduct</a>
+    <a href="#tos-ip" class="toc-link">Intellectual Property</a>
+    <a href="#tos-liability" class="toc-link">Limitation of Liability</a>
+    <a href="#tos-warranty" class="toc-link">Disclaimer of Warranties</a>
+    <a href="#tos-indemnification" class="toc-link">Indemnification</a>
+    <a href="#tos-termination" class="toc-link">Termination</a>
+    <a href="#tos-governing" class="toc-link">Governing Law</a>
+    <a href="#tos-disputes" class="toc-link">Dispute Resolution</a>
+    <a href="#tos-modifications" class="toc-link">Modifications</a>
+    <a href="#tos-contact" class="toc-link">Contact</a>
+  </div>
+
+  <div class="toc-section">
+    <a href="#privacy" class="toc-section-title">Privacy Policy</a>
+    <a href="#priv-collect" class="toc-link">Information We Collect</a>
+    <a href="#priv-use" class="toc-link">How We Use Information</a>
+    <a href="#priv-sharing" class="toc-link">Data Sharing</a>
+    <a href="#priv-thirdparty" class="toc-link">Third-Party Services</a>
+    <a href="#priv-cookies" class="toc-link">Cookies &amp; Tracking</a>
+    <a href="#priv-retention" class="toc-link">Data Retention</a>
+    <a href="#priv-security" class="toc-link">Security Measures</a>
+    <a href="#priv-rights" class="toc-link">Your Rights</a>
+    <a href="#priv-children" class="toc-link">Children's Privacy</a>
+    <a href="#priv-international" class="toc-link">International Transfers</a>
+    <a href="#priv-changes" class="toc-link">Changes to Policy</a>  </div>
+
+  <div class="toc-section">
+    <a href="#risk" class="toc-section-title">Risk Disclosure</a>
+    <a href="#risk-general" class="toc-link">General Trading Risks</a>
+    <a href="#risk-ai" class="toc-link">AI/Algorithmic Risks</a>
+    <a href="#risk-market" class="toc-link">Market Volatility</a>
+    <a href="#risk-liquidity" class="toc-link">Liquidity Risks</a>
+    <a href="#risk-tech" class="toc-link">Technology Risks</a>
+    <a href="#risk-regulatory" class="toc-link">Regulatory Risks</a>
+    <a href="#risk-advisor" class="toc-link">Not an Investment Advisor</a>
+    <a href="#risk-maxloss" class="toc-link">Maximum Loss</a>
+  </div>
+
+  <div class="toc-section">
+    <a href="#cookies" class="toc-section-title">Cookie Policy</a>
+    <a href="#cookie-what" class="toc-link">What Cookies We Use</a>
+    <a href="#cookie-essential" class="toc-link">Essential Cookies</a>
+    <a href="#cookie-analytics" class="toc-link">Analytics Cookies</a>
+    <a href="#cookie-manage" class="toc-link">Managing Cookies</a>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="legal-content">
+  <div class="legal-updated">Last updated: April 6, 2026</div>
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- TERMS OF SERVICE                                -->
+  <!-- ════════════════════════════════════════════════ -->
+  <section id="terms" class="legal-section">
+    <h2>Terms of Service</h2>
+    <p>These Terms of Service ("Terms") govern your access to and use of the Ferchaud platform, including our website, APIs, trading algorithms, and related services (collectively, the "Service"). By accessing or using the Service, you agree to be bound by these Terms.</p>
+
+    <h3 id="tos-acceptance">1. Acceptance of Terms</h3>
+    <p>By creating an account, accessing, or using any part of the Ferchaud platform, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these Terms, you must not access or use the Service.</p>
+    <p>Your continued use of the Service following the posting of any changes to these Terms constitutes acceptance of those changes.</p>
+
+    <h3 id="tos-services">2. Description of Services</h3>
+    <p>Ferchaud is an AI-powered trading platform that provides:</p>
+    <ul>
+      <li>Algorithmic trading strategies utilizing artificial intelligence and machine learning models</li>
+      <li>Real-time market scanning and analysis across equities, ETFs, and other financial instruments</li>
+      <li>Automated trade execution through integrated brokerage services (via Alpaca Markets)</li>
+      <li>Portfolio tracking, performance analytics, and trade history</li>
+      <li>Social sentiment analysis and market intelligence derived from public data sources</li>
+      <li>Paper trading (virtual) and live trading modes</li>
+    </ul>
+    <p>The Service is provided for informational and educational purposes. Ferchaud does <strong>not</strong> provide personalized investment advice, and the use of our algorithms does not constitute a recommendation to buy or sell any security.</p>
+    <h3 id="tos-registration">3. Account Registration and Eligibility</h3>
+    <p>To use the Service, you must:</p>
+    <ul>
+      <li>Be at least 18 years of age</li>
+      <li>Be a legal resident of the United States or an eligible jurisdiction</li>
+      <li>Provide accurate, current, and complete registration information</li>
+      <li>Maintain and promptly update your account information</li>
+      <li>Be responsible for safeguarding your password and for all activities under your account</li>
+      <li>Notify us immediately of any unauthorized use of your account</li>
+    </ul>
+    <p>We reserve the right to refuse service, terminate accounts, or restrict access at our sole discretion.</p>
+
+    <h3 id="tos-billing">4. Subscription Plans and Billing</h3>
+    <p>Ferchaud offers the following subscription tiers:</p>
+    <ul>
+      <li><strong>Free:</strong> Access to basic features, paper trading, and limited market data. 50% revenue share on profits generated.</li>
+      <li><strong>Starter ($29/month):</strong> Enhanced market scanning, priority execution, and expanded analytics. 40% revenue share.</li>
+      <li><strong>Pro ($79/month):</strong> Full access to all trading strategies, real-time signals, advanced analytics, and priority support. 25% revenue share.</li>
+      <li><strong>Elite ($199/month):</strong> White-glove service with custom strategy tuning, dedicated support, API access, and premium features. 15% revenue share.</li>
+    </ul>
+    <p>The revenue share model means Ferchaud retains a percentage of net trading profits generated through the platform. Revenue share is calculated on realized gains only and does not apply to losses. Subscription fees are billed monthly through Stripe and are non-refundable except as required by applicable law.</p>
+    <h3 id="tos-virtual">5. Virtual Trading and Paper Trading Disclaimers</h3>
+    <p>Ferchaud offers a paper trading (virtual) mode that simulates market conditions. You acknowledge that:</p>
+    <ul>
+      <li>Paper trading results do not reflect actual market execution and may not account for slippage, liquidity constraints, or market impact</li>
+      <li>Virtual trading performance is hypothetical and does not guarantee similar results in live trading</li>
+      <li>Transitioning from paper to live trading involves real financial risk</li>
+    </ul>
+
+    <h3 id="tos-conduct">6. User Conduct and Prohibited Activities</h3>
+    <p>You agree not to:</p>
+    <ul>
+      <li>Use the Service for any unlawful purpose or in violation of any applicable regulations</li>
+      <li>Attempt to manipulate markets, engage in wash trading, or conduct any form of market abuse</li>
+      <li>Reverse-engineer, decompile, or disassemble any part of the Service or its algorithms</li>
+      <li>Share your account credentials or allow third parties to access your account</li>
+      <li>Use automated tools (bots, scrapers) to access the Service beyond the provided APIs</li>
+      <li>Interfere with or disrupt the Service's infrastructure or other users' access</li>
+      <li>Circumvent any access controls, rate limits, or security measures</li>
+      <li>Resell, redistribute, or sublicense the Service without written authorization</li>
+    </ul>
+
+    <h3 id="tos-ip">7. Intellectual Property</h3>
+    <p>All content, software, algorithms, trading strategies, machine learning models, data analytics, branding, and documentation associated with the Ferchaud platform are the exclusive property of Ferchaud and its licensors. This includes but is not limited to:</p>
+    <ul>
+      <li>Proprietary trading algorithms and AI models</li>
+      <li>Market scanning and signal generation systems</li>
+      <li>User interface designs, logos, and trademarks</li>
+      <li>Platform source code and architecture</li>
+    </ul>
+    <p>You are granted a limited, non-exclusive, non-transferable license to use the Service in accordance with these Terms. No ownership rights are transferred to you.</p>
+    <h3 id="tos-liability">8. Limitation of Liability</h3>
+    <div class="legal-callout warning">
+      <p><strong>Important:</strong> Ferchaud is NOT a registered investment advisor, broker-dealer, or financial planner. The Service does not provide personalized investment advice. All trading decisions are made at your own risk. Past performance is not indicative of future results.</p>
+    </div>
+    <p>To the maximum extent permitted by applicable law, Ferchaud and its officers, directors, employees, and agents shall not be liable for:</p>
+    <ul>
+      <li>Any indirect, incidental, special, consequential, or punitive damages</li>
+      <li>Any loss of profits, data, use, goodwill, or other intangible losses</li>
+      <li>Any trading losses resulting from use of the Service or reliance on its outputs</li>
+      <li>Any damages arising from unauthorized access to or alteration of your data</li>
+      <li>Any interruption or cessation of the Service</li>
+    </ul>
+    <p>Our total aggregate liability shall not exceed the greater of (a) the amount you paid to Ferchaud in the twelve (12) months preceding the claim, or (b) one hundred dollars ($100).</p>
+
+    <h3 id="tos-warranty">9. Disclaimer of Warranties</h3>
+    <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY. FERCHAUD EXPRESSLY DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:</p>
+    <ul>
+      <li>IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT</li>
+      <li>ANY WARRANTIES REGARDING THE ACCURACY, RELIABILITY, OR COMPLETENESS OF TRADING SIGNALS, MARKET DATA, OR ALGORITHMIC OUTPUTS</li>
+      <li>ANY WARRANTIES THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE</li>
+      <li>ANY WARRANTIES REGARDING THE RESULTS OBTAINED FROM USE OF THE SERVICE</li>
+    </ul>
+    <h3 id="tos-indemnification">10. Indemnification</h3>
+    <p>You agree to indemnify, defend, and hold harmless Ferchaud, its affiliates, officers, directors, employees, and agents from and against any and all claims, liabilities, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising out of or relating to:</p>
+    <ul>
+      <li>Your use or misuse of the Service</li>
+      <li>Your violation of these Terms</li>
+      <li>Your violation of any applicable law or regulation</li>
+      <li>Your trading activity and any resulting financial outcomes</li>
+      <li>Any content or data you submit through the Service</li>
+    </ul>
+
+    <h3 id="tos-termination">11. Termination of Accounts</h3>
+    <p>We may suspend or terminate your account and access to the Service at any time, with or without cause, and with or without notice. Grounds for termination include but are not limited to:</p>
+    <ul>
+      <li>Violation of these Terms or any applicable law</li>
+      <li>Fraudulent, abusive, or illegal activity</li>
+      <li>Non-payment of subscription fees</li>
+      <li>Extended period of inactivity</li>
+      <li>At your request</li>
+    </ul>
+    <p>Upon termination, your right to use the Service ceases immediately. Any outstanding revenue share balances will be settled within 30 business days of account closure.</p>
+
+    <h3 id="tos-governing">12. Governing Law</h3>
+    <p>These Terms shall be governed by and construed in accordance with the laws of the State of Delaware, United States, without regard to its conflict of law provisions. Any legal action arising under these Terms shall be brought exclusively in the state or federal courts located in Delaware.</p>
+    <h3 id="tos-disputes">13. Dispute Resolution</h3>
+    <p>Any dispute, controversy, or claim arising out of or relating to these Terms, or the breach thereof, shall be settled by <strong>binding arbitration</strong> administered by the American Arbitration Association ("AAA") in accordance with its Commercial Arbitration Rules. Key provisions:</p>
+    <ul>
+      <li>Arbitration shall take place in Wilmington, Delaware, or remotely at the arbitrator's discretion</li>
+      <li>The arbitrator's decision shall be final and binding</li>
+      <li>Each party shall bear its own costs, unless the arbitrator determines otherwise</li>
+      <li>You waive the right to participate in class action lawsuits or class-wide arbitration</li>
+      <li>Claims must be brought within one (1) year of the date the cause of action arose</li>
+    </ul>
+
+    <h3 id="tos-modifications">14. Modifications to Terms</h3>
+    <p>We reserve the right to modify these Terms at any time. Material changes will be communicated via email or a prominent notice on the platform at least 30 days before taking effect. Your continued use of the Service after changes become effective constitutes acceptance of the modified Terms.</p>
+
+    <h3 id="tos-contact">15. Contact Information</h3>
+    <p>For questions or concerns about these Terms, contact us at:</p>
+    <ul>
+      <li>Email: <a href="mailto:legal@ferchaud.com">legal@ferchaud.com</a></li>
+      <li>Support: <a href="mailto:support@ferchaud.com">support@ferchaud.com</a></li>
+    </ul>
+  </section>
+
+  <hr class="legal-divider">
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- PRIVACY POLICY                                  -->
+  <!-- ════════════════════════════════════════════════ -->
+  <section id="privacy" class="legal-section">
+    <h2>Privacy Policy</h2>
+    <p>This Privacy Policy describes how Ferchaud ("we," "our," or "us") collects, uses, and protects your personal information when you use our platform and services.</p>
+
+    <h3 id="priv-collect">1. Information We Collect</h3>
+    <h4>Account Information</h4>
+    <ul>
+      <li>Email address, username, and encrypted password</li>
+      <li>Subscription tier and billing information</li>
+      <li>Connected wallet addresses (if provided)</li>
+      <li>Profile preferences and trading mode selections</li>
+    </ul>
+    <h4>Trading Data</h4>
+    <ul>
+      <li>Trade history, including symbols, quantities, prices, and timestamps</li>
+      <li>Portfolio values and performance metrics</li>
+      <li>Strategy selections and bot configuration settings</li>
+      <li>Deposit and withdrawal records</li>
+    </ul>
+    <h4>Usage Analytics</h4>
+    <ul>
+      <li>Pages visited, features used, and session duration</li>
+      <li>Device type, browser, operating system, and IP address</li>
+      <li>Referring URLs and interaction patterns</li>
+    </ul>
+    <h3 id="priv-use">2. How We Use Information</h3>
+    <p>We use collected information to:</p>
+    <ul>
+      <li>Provide, maintain, and improve the Service</li>
+      <li>Execute trades and manage your portfolio on your behalf</li>
+      <li>Process payments and manage subscriptions</li>
+      <li>Calculate and distribute revenue share</li>
+      <li>Send service-related communications (trade confirmations, account alerts)</li>
+      <li>Analyze usage patterns to improve platform performance and user experience</li>
+      <li>Detect and prevent fraud, abuse, and security incidents</li>
+      <li>Comply with legal obligations and regulatory requirements</li>
+    </ul>
+
+    <h3 id="priv-sharing">3. Data Sharing</h3>
+    <p><strong>We do not sell your personal data.</strong> We may share information in the following limited circumstances:</p>
+    <ul>
+      <li><strong>Alpaca Markets:</strong> Trading data is shared with Alpaca Securities LLC for order execution and brokerage services. Alpaca is a registered broker-dealer and member of FINRA/SIPC.</li>
+      <li><strong>Stripe:</strong> Payment and billing information is processed by Stripe, Inc. for subscription management and deposit processing.</li>
+      <li><strong>Legal compliance:</strong> We may disclose information when required by law, subpoena, or government request.</li>
+      <li><strong>Business transfers:</strong> In the event of a merger, acquisition, or sale of assets, user data may be transferred to the successor entity.</li>
+    </ul>
+
+    <h3 id="priv-thirdparty">4. Third-Party Services</h3>
+    <p>The Service integrates with the following third-party providers:</p>
+    <ul>
+      <li><strong>Alpaca Markets:</strong> Brokerage and trade execution (FINRA/SIPC regulated)</li>
+      <li><strong>Stripe:</strong> Payment processing and subscription billing (PCI DSS compliant)</li>
+      <li><strong>Grok / xAI:</strong> AI-powered market analysis and sentiment processing</li>
+      <li><strong>Vercel:</strong> Platform hosting and content delivery</li>
+    </ul>
+    <p>Each third-party service operates under its own privacy policy. We encourage you to review their respective policies.</p>
+    <h3 id="priv-cookies">5. Cookies and Tracking</h3>
+    <p>We use cookies and similar technologies as described in our <a href="#cookies">Cookie Policy</a> below. These include essential cookies for authentication and optional analytics cookies to understand usage patterns.</p>
+
+    <h3 id="priv-retention">6. Data Retention</h3>
+    <p>We retain your data as follows:</p>
+    <ul>
+      <li><strong>Account data:</strong> Retained for the duration of your account and 90 days after deletion request</li>
+      <li><strong>Trading data:</strong> Retained for 7 years to comply with financial record-keeping requirements</li>
+      <li><strong>Usage analytics:</strong> Aggregated and anonymized after 24 months</li>
+      <li><strong>Payment records:</strong> Retained as required by tax and financial regulations</li>
+    </ul>
+
+    <h3 id="priv-security">7. Security Measures</h3>
+    <p>We implement industry-standard security measures to protect your data:</p>
+    <ul>
+      <li><strong>Encryption:</strong> All data in transit is encrypted via TLS 1.3. Sensitive data at rest is encrypted using AES-256.</li>
+      <li><strong>Password security:</strong> Passwords are hashed using bcrypt with salting; we never store plaintext passwords.</li>
+      <li><strong>Authentication:</strong> Session management via secure, HTTP-only JWT tokens with automatic expiration.</li>
+      <li><strong>Infrastructure:</strong> Hosted on hardened cloud infrastructure with DDoS protection and continuous monitoring.</li>
+      <li><strong>Access controls:</strong> Internal access to user data is restricted on a need-to-know basis with audit logging.</li>
+    </ul>
+    <h3 id="priv-rights">8. Your Rights</h3>
+    <p>Depending on your jurisdiction, you may have the following rights:</p>
+    <ul>
+      <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
+      <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data</li>
+      <li><strong>Deletion:</strong> Request deletion of your personal data (subject to legal retention requirements)</li>
+      <li><strong>Portability:</strong> Request your data in a machine-readable format</li>
+      <li><strong>Opt-out:</strong> Opt out of non-essential communications and analytics tracking</li>
+      <li><strong>Restriction:</strong> Request restriction of processing in certain circumstances</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:privacy@ferchaud.com">privacy@ferchaud.com</a>. We will respond within 30 days.</p>
+
+    <h3 id="priv-children">9. Children's Privacy</h3>
+    <p>The Service is not intended for individuals under the age of 18. We do not knowingly collect personal information from children. If we discover that a child under 18 has provided us with personal information, we will promptly delete it. If you believe a child has provided us with data, please contact us at <a href="mailto:privacy@ferchaud.com">privacy@ferchaud.com</a>.</p>
+
+    <h3 id="priv-international">10. International Transfers</h3>
+    <p>Ferchaud is based in the United States. If you access the Service from outside the US, your information may be transferred to, stored, and processed in the United States. By using the Service, you consent to such transfers. We take appropriate measures to ensure your data is treated securely and in accordance with applicable data protection laws.</p>
+
+    <h3 id="priv-changes">11. Changes to Privacy Policy</h3>
+    <p>We may update this Privacy Policy periodically. Material changes will be communicated via email or an in-app notification at least 30 days before taking effect. The "Last updated" date at the top of this page reflects the most recent revision.</p>
+  </section>
+
+  <hr class="legal-divider">
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- RISK DISCLOSURE                                 -->
+  <!-- ════════════════════════════════════════════════ -->
+  <section id="risk" class="legal-section">
+    <h2>Risk Disclosure</h2>
+    <div class="legal-callout warning">
+      <p><strong>Warning:</strong> Trading financial instruments involves substantial risk of loss and is not suitable for all investors. You should carefully consider whether trading is appropriate for you in light of your financial situation, experience, and risk tolerance. You could lose some or all of your deposited funds.</p>
+    </div>
+
+    <h3 id="risk-general">1. General Trading Risks</h3>
+    <p>Trading in securities, including stocks, ETFs, and other financial instruments, involves substantial risk of loss. Key risks include:</p>
+    <ul>
+      <li>You may lose some or all of the funds you deposit for trading</li>
+      <li><strong>Past performance is not indicative of future results</strong></li>
+      <li>No trading system or strategy can guarantee profits or prevent losses</li>
+      <li>Market conditions can change rapidly and without warning</li>
+      <li>Historical backtesting results may not reflect future live trading performance</li>
+    </ul>
+
+    <h3 id="risk-ai">2. AI and Algorithmic Trading Risks</h3>
+    <p>The use of AI and algorithmic trading systems introduces specific risks:</p>
+    <ul>
+      <li>AI models may produce inaccurate predictions or signals based on incomplete or biased data</li>
+      <li>Algorithms may behave unexpectedly in market conditions not represented in training data</li>
+      <li>Machine learning models may experience "model drift" as market dynamics evolve</li>
+      <li>Automated execution may result in rapid, compounding losses during adverse conditions</li>
+      <li>Technical failures in AI systems may lead to missed opportunities or erroneous trades</li>
+    </ul>
+    <h3 id="risk-market">3. Market Volatility Risks</h3>
+    <p>Financial markets are inherently volatile. You should be aware that:</p>
+    <ul>
+      <li>Prices can fluctuate significantly in short periods due to economic events, geopolitical developments, or market sentiment</li>
+      <li>Volatility can result in execution at prices materially different from expected (slippage)</li>
+      <li>Market gaps (overnight or weekend) may result in orders being filled at prices substantially different from the prior close</li>
+      <li>Extreme market events ("flash crashes," circuit breakers) may prevent timely execution of orders</li>
+    </ul>
+
+    <h3 id="risk-liquidity">4. Liquidity Risks</h3>
+    <p>Liquidity risk refers to the possibility that you may not be able to buy or sell a security at the desired price or in the desired quantity:</p>
+    <ul>
+      <li>Low-volume securities may have wide bid-ask spreads, increasing transaction costs</li>
+      <li>Market conditions may reduce liquidity, making it difficult to exit positions</li>
+      <li>Small-cap and micro-cap securities may have limited market depth</li>
+    </ul>
+
+    <h3 id="risk-tech">5. Technology Risks</h3>
+    <p>As a technology-dependent platform, Ferchaud is subject to the following risks:</p>
+    <ul>
+      <li><strong>System failures:</strong> Hardware, software, or network failures may disrupt the Service</li>
+      <li><strong>Connectivity:</strong> Internet outages or latency may prevent order execution or data retrieval</li>
+      <li><strong>Third-party dependencies:</strong> Outages at Alpaca, data providers, or cloud infrastructure may impact service availability</li>
+      <li><strong>Cybersecurity:</strong> Despite security measures, no system is immune to cyberattacks or data breaches</li>
+      <li><strong>Data accuracy:</strong> Market data feeds may contain errors, delays, or gaps that could affect trading decisions</li>
+    </ul>
+    <h3 id="risk-regulatory">6. Regulatory Risks</h3>
+    <p>The regulatory landscape for trading platforms and AI-driven financial services is evolving:</p>
+    <ul>
+      <li>Changes in securities regulations may affect the availability or operation of the Service</li>
+      <li>New laws or regulatory actions may impose additional requirements or restrictions</li>
+      <li>Tax laws and reporting requirements may change and affect your obligations</li>
+    </ul>
+
+    <h3 id="risk-advisor">7. Not a Registered Investment Advisor</h3>
+    <div class="legal-callout warning">
+      <p><strong>Ferchaud is not a registered investment advisor, broker-dealer, or financial planner.</strong> The information and tools provided by the Service do not constitute personalized investment advice. You should consult with a qualified financial professional before making any investment decisions. All trading activity on the platform is self-directed.</p>
+    </div>
+
+    <h3 id="risk-maxloss">8. Maximum Loss</h3>
+    <p>When trading through Ferchaud:</p>
+    <ul>
+      <li>Your maximum loss is limited to the total funds you have deposited into your trading account</li>
+      <li>Ferchaud does not offer margin trading or leverage through the platform; therefore, you cannot lose more than your deposited funds</li>
+      <li>However, you should only trade with funds you can afford to lose entirely</li>
+    </ul>
+  </section>
+
+  <hr class="legal-divider">
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- COOKIE POLICY                                   -->
+  <!-- ════════════════════════════════════════════════ -->
+  <section id="cookies" class="legal-section">
+    <h2>Cookie Policy</h2>
+    <p>This Cookie Policy explains how Ferchaud uses cookies and similar tracking technologies when you visit or use our platform.</p>
+
+    <h3 id="cookie-what">1. What Cookies We Use</h3>
+    <p>Cookies are small text files stored on your device when you visit a website. We use cookies to ensure the platform functions correctly, to remember your preferences, and to understand how you interact with our Service.</p>
+
+    <h3 id="cookie-essential">2. Essential Cookies</h3>
+    <p>These cookies are strictly necessary for the Service to function and cannot be disabled:</p>
+    <ul>
+      <li><strong>Authentication token (token):</strong> A secure, HTTP-only cookie containing your JWT session token. Expires after 30 days. Required to maintain your logged-in state.</li>
+      <li><strong>Session state:</strong> Temporary cookies used to maintain session context during your visit (e.g., CSRF protection, onboarding step tracking).</li>
+    </ul>
+
+    <h3 id="cookie-analytics">3. Analytics Cookies</h3>
+    <p>We may use analytics cookies to understand how visitors interact with the platform:</p>
+    <ul>
+      <li>Page views and navigation patterns</li>
+      <li>Feature usage and interaction metrics</li>
+      <li>Performance monitoring (load times, error rates)</li>
+    </ul>
+    <p>Analytics data is aggregated and anonymized. We do not use analytics cookies for advertising or cross-site tracking.</p>
+    <h3 id="cookie-manage">4. Managing Cookies</h3>
+    <p>You can manage cookie preferences through your browser settings:</p>
+    <ul>
+      <li><strong>Chrome:</strong> Settings &gt; Privacy and Security &gt; Cookies and other site data</li>
+      <li><strong>Firefox:</strong> Settings &gt; Privacy &amp; Security &gt; Cookies and Site Data</li>
+      <li><strong>Safari:</strong> Preferences &gt; Privacy &gt; Manage Website Data</li>
+      <li><strong>Edge:</strong> Settings &gt; Cookies and Site Permissions</li>
+    </ul>
+    <p>Please note that disabling essential cookies will prevent you from logging in and using the Service.</p>
+  </section>
+
+</main>
+</div>
+
+<!-- Footer -->
+<footer class="legal-footer">
+  <div class="legal-footer-inner">
+    <p>&copy; 2026 Ferchaud. All rights reserved.</p>
+    <div style="display:flex;gap:24px;">
+      <a href="mailto:legal@ferchaud.com">legal@ferchaud.com</a>
+      <a href="mailto:support@ferchaud.com">support@ferchaud.com</a>
+      <a href="/">Home</a>
+      <a href="/pricing">Pricing</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Scrollspy Script -->
+<script>
+(function() {
+  const links = document.querySelectorAll('.toc-link');
+  const sections = [];
+  links.forEach(l => {    const id = l.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ el, link: l });
+  });
+  function update() {
+    let current = sections[0];
+    for (const s of sections) {
+      if (s.el.getBoundingClientRect().top <= 120) current = s;
+    }
+    links.forEach(l => l.classList.remove('active'));
+    if (current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+})();
+</script>
+</body>
+</html>

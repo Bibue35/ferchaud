@@ -267,13 +267,11 @@ a:hover { color: var(--accent); }
 <!-- ── Floating Pill Navbar ──────────────────────── -->
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/" class="logo">
-      <span class="logo-accent">F</span>erchaud
-    </a>
+    <a href="/" class="logo">Fer<span class="logo-accent">chaud</span></a>
     <div class="nav-links">
       <a href="/dashboard" class="nav-link">Dashboard</a>
       <a href="/feed" class="nav-link">Feed</a>
-      <a href="/sources" class="nav-link" style="color:var(--text)">Sources</a>
+      <a href="/sources" class="nav-link active">Sources</a>
       <a href="/pricing" class="nav-link">Pricing</a>
       <a href="/signup" class="btn btn-primary" style="padding:8px 20px;font-size:13px">Get Started</a>
     </div>
@@ -369,8 +367,13 @@ a:hover { color: var(--accent); }
 </section>
 
 <!-- ── Footer ────────────────────────────────────── -->
-<footer class="sources-footer">
+<footer class="sources-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
   <p>&copy; 2026 Ferchaud. Autonomous trading intelligence.</p>
+  <div style="display:flex;gap:24px;">
+    <a href="/legal" style="color:var(--muted);font-size:13px;">Legal</a>
+    <a href="/pricing" style="color:var(--muted);font-size:13px;">Pricing</a>
+    <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-size:13px;">Support</a>
+  </div>
 </footer>
 
 </body>

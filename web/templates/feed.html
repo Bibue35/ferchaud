@@ -131,6 +131,12 @@
 .sidebar-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 24px; padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.sidebar-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  border-color: var(--border-hover);
 }
 .sidebar-card-title {
   font-size: 10px; font-weight: 700; color: var(--muted);
@@ -204,12 +210,10 @@
 <!-- ── Floating Pill Navbar ──────────────────────── -->
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/dashboard" class="logo">
-      <span class="logo-accent">F</span>erchaud
-    </a>
+    <a href="/dashboard" class="logo">Fer<span class="logo-accent">chaud</span></a>
     <div class="nav-links">
       <a href="/dashboard" class="nav-link">Dashboard</a>
-      <a href="/feed" class="nav-link" style="color:var(--text)">Feed</a>
+      <a href="/feed" class="nav-link active">Feed</a>
       <a href="/sources" class="nav-link">Sources</a>
       <a href="/pricing" class="nav-link">Pricing</a>
     </div>
@@ -220,7 +224,7 @@
 </nav>
 
 <!-- ── Feed Page ─────────────────────────────────── -->
-<div class="feed-page">
+<div class="feed-page page-enter">
   <div class="feed-grid">
     <!-- Left: Activity Stream -->
     <div class="feed-stream">
@@ -302,6 +306,19 @@
     </div>
   </div>
 </div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>&copy; 2026 Ferchaud. All rights reserved.</p>
+    <div class="site-footer-links">
+      <a href="/legal">Legal</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/sources">Sources</a>
+      <a href="mailto:support@ferchaud.com">Support</a>
+    </div>
+  </div>
+</footer>
 {% endblock %}
 
 {% block scripts %}
