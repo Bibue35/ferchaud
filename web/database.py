@@ -18,6 +18,7 @@ class User(Base):
     email           = Column(String, unique=True, index=True, nullable=False)
     username        = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    auth_provider   = Column(String, default="email")          # email | google | apple | x
     created_at      = Column(DateTime, default=datetime.utcnow)
 
     # Subscription

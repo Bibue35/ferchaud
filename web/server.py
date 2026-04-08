@@ -42,15 +42,82 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 # ─── OAuth Setup ──────────────────────────────────────────────────────────────
 if OAuth:
     oauth = OAuth()
-    oauth.register(
-        name='google',
-        client_id=os.getenv('GOOGLE_CLIENT_ID', ''),
-        client_secret=os.getenv('GOOGLE_CLIENT_SECRET', ''),
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-        client_kwargs={'scope': 'openid email profile'},
-    )
+
+    # Google — OpenID Connect (auto-discovery)
+    if os.getenv('GOOGLE_CLIENT_ID'):
+        oauth.register(
+            name='google',
+            client_id=os.getenv('GOOGLE_CLIENT_ID', ''),
+            client_secret=os.getenv('GOOGLE_CLIENT_SECRET', ''),
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            client_kwargs={'scope': 'openid email profile'},
+        )
+
+    # Apple — Sign in with Apple (OIDC)
+    if os.getenv('APPLE_CLIENT_ID'):
+        oauth.register(
+            name='apple',
+            client_id=os.getenv('APPLE_CLIENT_ID', ''),          # Services ID (e.g. com.ferchaud.auth)
+            client_secret='',                                      # Generated dynamically below
+            authorize_url='https://appleid.apple.com/auth/authorize',
+            access_token_url='https://appleid.apple.com/auth/token',
+            client_kwargs={
+                'scope': 'name email',
+                'response_mode': 'form_post',
+            },
+        )
+
+    # X / Twitter — OAuth 2.0 PKCE
+    if os.getenv('X_CLIENT_ID'):
+        oauth.register(
+            name='twitter',
+            client_id=os.getenv('X_CLIENT_ID', ''),
+            client_secret=os.getenv('X_CLIENT_SECRET', ''),
+            authorize_url='https://twitter.com/i/oauth2/authorize',
+            access_token_url='https://api.twitter.com/2/oauth2/token',
+            api_base_url='https://api.twitter.com/2/',
+            client_kwargs={
+                'scope': 'users.read tweet.read offline.access',
+                'code_challenge_method': 'S256',
+                'token_endpoint_auth_method': 'client_secret_basic',
+            },
+        )
 else:
     oauth = None
+
+
+def _generate_apple_client_secret():
+    """Generate a signed JWT client secret for Apple Sign-In.
+    Requires: APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY (PEM content or path).
+    """
+    import time
+    team_id = os.getenv('APPLE_TEAM_ID', '')
+    key_id = os.getenv('APPLE_KEY_ID', '')
+    client_id = os.getenv('APPLE_CLIENT_ID', '')
+    private_key = os.getenv('APPLE_PRIVATE_KEY', '')
+
+    # Support file path or raw PEM
+    if private_key and not private_key.startswith('-----'):
+        try:
+            with open(private_key) as f:
+                private_key = f.read()
+        except FileNotFoundError:
+            pass
+
+    if not all([team_id, key_id, client_id, private_key]):
+        return None
+
+    from jose import jwt as jose_jwt
+    now = int(time.time())
+    payload = {
+        'iss': team_id,
+        'iat': now,
+        'exp': now + 86400 * 180,  # 6 months max
+        'aud': 'https://appleid.apple.com',
+        'sub': client_id,
+    }
+    headers = {'kid': key_id, 'alg': 'ES256'}
+    return jose_jwt.encode(payload, private_key, algorithm='ES256', headers=headers)
 
 BASE_DIR = Path(__file__).resolve().parent
 try:
@@ -313,6 +380,7 @@ async def auth_google_callback(request: Request):
                     email=email,
                     username=name.replace(' ', '').lower()[:20],
                     hashed_password='oauth_google',  # Not used for OAuth users
+                    auth_provider='google',
                 )
                 db.add(user)
                 db.commit()
@@ -330,18 +398,155 @@ async def auth_google_callback(request: Request):
 
 @app.get("/api/auth/apple")
 async def auth_apple(request: Request):
-    """Apple Sign-In requires Apple Developer Program setup.
-    User needs to configure: APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID
-    """
-    return RedirectResponse("/login?error=apple_setup_required")
+    """Redirect user to Apple's Sign-In consent screen."""
+    if not oauth or not hasattr(oauth, 'apple'):
+        return RedirectResponse("/login?error=apple_not_configured")
+    # Generate fresh client_secret JWT for Apple
+    client_secret = _generate_apple_client_secret()
+    if not client_secret:
+        return RedirectResponse("/login?error=apple_keys_missing")
+    oauth.apple.client_secret = client_secret
+    redirect_uri = str(request.base_url).rstrip("/") + "/api/auth/apple/callback"
+    return await oauth.apple.authorize_redirect(request, redirect_uri)
+
+
+@app.post("/api/auth/apple/callback")
+@app.get("/api/auth/apple/callback")
+async def auth_apple_callback(request: Request):
+    """Handle the callback from Apple Sign-In (form_post or GET)."""
+    try:
+        if not oauth or not hasattr(oauth, 'apple'):
+            return RedirectResponse("/login?error=apple_not_configured")
+        # Refresh client_secret
+        client_secret = _generate_apple_client_secret()
+        if client_secret:
+            oauth.apple.client_secret = client_secret
+
+        token = await oauth.apple.authorize_access_token(request)
+        # Apple returns id_token — decode it for user info
+        from jose import jwt as jose_jwt
+        id_token = token.get('id_token', '')
+        if not id_token:
+            return RedirectResponse("/login?error=apple_no_token")
+        # Decode without verification (Apple's public keys would need JWKS fetch)
+        claims = jose_jwt.get_unverified_claims(id_token)
+        email = claims.get('email', '')
+        # Apple only sends name on first auth — grab from form_post body
+        form_data = {}
+        if request.method == 'POST':
+            form_data = dict(await request.form())
+        import json as _json
+        user_data = {}
+        if 'user' in form_data:
+            try:
+                user_data = _json.loads(form_data['user'])
+            except Exception:
+                pass
+        first_name = user_data.get('name', {}).get('firstName', '')
+        last_name = user_data.get('name', {}).get('lastName', '')
+        name = f"{first_name} {last_name}".strip() or email.split('@')[0]
+
+        if not email:
+            return RedirectResponse("/login?error=apple_no_email")
+
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            if not user:
+                user = User(
+                    email=email,
+                    username=name.replace(' ', '').lower()[:20] or f"apple_{email.split('@')[0][:15]}",
+                    hashed_password='oauth_apple',
+                    auth_provider='apple',
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+
+            jwt_token = create_token({"sub": str(user.id), "email": email})
+            response = RedirectResponse("/dashboard")
+            response.set_cookie("token", jwt_token, httponly=True, max_age=86400 * 30, samesite="lax")
+            return response
+        finally:
+            db.close()
+    except Exception as e:
+        return RedirectResponse(f"/login?error={str(e)[:50]}")
 
 
 @app.get("/api/auth/x")
 async def auth_x(request: Request):
-    """X/Twitter OAuth requires developer portal setup.
-    User needs to configure: X_CLIENT_ID, X_CLIENT_SECRET
-    """
-    return RedirectResponse("/login?error=x_setup_required")
+    """Redirect user to X/Twitter OAuth 2.0 consent screen."""
+    if not oauth or not hasattr(oauth, 'twitter'):
+        return RedirectResponse("/login?error=x_not_configured")
+    redirect_uri = str(request.base_url).rstrip("/") + "/api/auth/x/callback"
+    return await oauth.twitter.authorize_redirect(request, redirect_uri)
+
+
+@app.get("/api/auth/x/callback")
+async def auth_x_callback(request: Request):
+    """Handle the callback from X/Twitter OAuth 2.0."""
+    try:
+        if not oauth or not hasattr(oauth, 'twitter'):
+            return RedirectResponse("/login?error=x_not_configured")
+
+        token = await oauth.twitter.authorize_access_token(request)
+        access_token = token.get('access_token', '')
+        if not access_token:
+            return RedirectResponse("/login?error=x_no_token")
+
+        # Fetch user profile from Twitter API v2
+        import httpx
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                'https://api.twitter.com/2/users/me',
+                params={'user.fields': 'id,name,username,profile_image_url'},
+                headers={'Authorization': f'Bearer {access_token}'},
+            )
+            if resp.status_code != 200:
+                return RedirectResponse("/login?error=x_profile_failed")
+            user_data = resp.json().get('data', {})
+
+        x_username = user_data.get('username', '')
+        x_name = user_data.get('name', '')
+        x_id = user_data.get('id', '')
+
+        if not x_username:
+            return RedirectResponse("/login?error=x_no_username")
+
+        # Use X username as email substitute (X doesn't share email via OAuth2)
+        # We create a synthetic email so our User model works
+        email = f"{x_username}@x.ferchaud.com"
+
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            if not user:
+                # Also check if there's a user with just the username
+                user = db.query(User).filter(User.username == x_username.lower()).first()
+                if not user:
+                    user = User(
+                        email=email,
+                        username=x_username.lower()[:20],
+                        hashed_password='oauth_x',
+                    auth_provider='x',
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                else:
+                    # Update email if user exists by username
+                    if user.hashed_password.startswith('oauth_'):
+                        user.email = email
+                        db.commit()
+
+            jwt_token = create_token({"sub": str(user.id), "email": email})
+            response = RedirectResponse("/dashboard")
+            response.set_cookie("token", jwt_token, httponly=True, max_age=86400 * 30, samesite="lax")
+            return response
+        finally:
+            db.close()
+    except Exception as e:
+        return RedirectResponse(f"/login?error={str(e)[:50]}")
 
 
 @app.post("/api/auth/logout")
