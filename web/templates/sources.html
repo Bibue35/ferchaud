@@ -6,441 +6,385 @@
 <title>Sources — Ferchaud</title>
 <script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ── Ferchaud Warm White Design System (standalone) ── */
+/* ── Reset & Variables ────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
   --bg: #fefefe;
   --bg-warm: #faf9f7;
   --bg-cream: #f5f3ef;
   --surface: #ffffff;
-  --surface-2: #f5f3ef;
-  --surface-3: #ebebeb;
   --border: #eaeaea;
   --border-hover: #d4d4d4;
-  --border-strong: #a3a3a3;
-  --accent: #1a1a1a;
-  --accent-light: #333;
-  --accent-glow: rgba(0,0,0,0.06);
-  --amber: #f59e0b;
-  --gradient-primary: linear-gradient(135deg, #1a1a1a, #333);
   --text: #1a1a1a;
   --text-secondary: #666666;
   --muted: #999999;
+  --accent: #1a1a1a;
   --green: #22c55e;
   --red: #ef4444;
+  --shell-bg: #e8e8e8;
+  --radius: 20px;
+  --nav-height: 54px;
   --font: 'Inter', -apple-system, system-ui, sans-serif;
   --mono: 'SF Mono', 'Fira Code', ui-monospace, monospace;
 }
-[data-theme="dark"] {
-  --bg: #0a0a0a; --bg-warm: #111111; --bg-cream: #1a1a1a;
-  --surface: #111111; --surface-2: #1a1a1a; --surface-3: #282828;
-  --border: #2a2a2a; --border-hover: #3a3a3a; --border-strong: #555;
-  --text: #f0f0f0; --text-secondary: #999; --muted: #666;
-  --accent: #fff; --accent-light: #e0e0e0; --accent-glow: rgba(255,255,255,0.06);
-  --gradient-primary: linear-gradient(135deg, #e8e8e8, #fff);
-}
 </style>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 15px; }
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --bg-warm: #111111;
+  --bg-cream: #1a1a1a;
+  --surface: #111111;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --text: #f0f0f0;
+  --text-secondary: #999999;
+  --muted: #666666;
+  --accent: #ffffff;
+  --green: #22c55e;
+  --red: #ef4444;
+  --shell-bg: #000000;
+}
+[data-theme="dark"] .navbar { background: rgba(10,10,10,0.92) !important; border-color: #2a2a2a !important; }
+html { scroll-behavior: smooth; font-size: 15px; }
 body {
-  background: #e8e8e8; color: var(--text);
-  font-family: var(--font); -webkit-font-smoothing: antialiased;
-  line-height: 1.5; min-height: 100vh;
+  background: var(--shell-bg);
   background-image: radial-gradient(circle, #d4d4d4 0.8px, transparent 0.8px);
   background-size: 20px 20px;
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+  min-height: 100vh;
 }
 [data-theme="dark"] body {
   background: #000;
   background-image: radial-gradient(circle, rgba(255,255,255,0.03) 0.8px, transparent 0.8px);
   background-size: 20px 20px;
 }
-a { color: var(--text-secondary); text-decoration: none; }
+a { color: var(--text-secondary); text-decoration: none; transition: color 0.15s; }
 a:hover { color: var(--text); }
+</style>
+<style>
+/* ── Page Shell ───────────────────────────────────── */
+.page-shell {
+  margin: 76px 12px 12px;
+  min-height: calc(100vh - 88px);
+}
+.page-shell > section, .page-shell > footer {
+  background: var(--bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+.page-shell > section + section,
+.page-shell > section + footer { margin-top: 2px; }
 
 /* ── Floating Pill Navbar ─────────────────────────── */
 .navbar {
-  position: fixed; top: 12px; left: 24px; right: 24px;
-  height: 54px; border-radius: 16px;
-  background: var(--surface);
+  position: fixed; top: 8px; left: 12px; right: 12px; z-index: 1000;
+  height: var(--nav-height);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  z-index: 1000; padding: 0 24px;
-  transition: background 0.2s, border-color 0.2s;
-}
-[data-theme="dark"] .navbar { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
-}
-.navbar-inner {
-  max-width: 1280px; margin: 0 auto; height: 100%;
+  border-radius: 16px;
   display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  transition: background 0.3s, border-color 0.3s;
 }
-.logo {
-  font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
-  display: flex; align-items: center; gap: 10px;
+.nav-logo {
+  font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+  display: flex; align-items: center; gap: 8px;
   color: var(--text); text-decoration: none;
 }
+.nav-logo .logo-dot {
+  width: 10px; height: 10px; background: var(--green);
+  border-radius: 50%; display: inline-block;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.nav-links { display: flex; align-items: center; gap: 24px; }
+.nav-links a {
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 10px; border: none;
+  background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s; color: var(--text-secondary);
+}
+.theme-toggle:hover { background: var(--bg-cream); }
+.theme-toggle svg { width: 18px; height: 18px; }
+.icon-moon { display: none; }
+[data-theme="dark"] .icon-sun { display: none; }
+[data-theme="dark"] .icon-moon { display: block; }
+.btn-get-started {
+  font-size: 13px; font-weight: 600; color: #fff;
+  background: var(--accent); padding: 8px 20px;
+  border-radius: 50px; transition: all 0.2s;
+}
+.btn-get-started:hover { opacity: 0.85; color: #fff; }
 </style>
 <style>
-.logo-accent { color: var(--text); }
-.nav-links { display: flex; gap: 24px; align-items: center; }
-.nav-link {
-  color: var(--muted); font-size: 14px; font-weight: 500;
-  transition: color 0.15s;
-}
-.nav-link:hover { color: var(--text); }
-
-/* ── Buttons (pill) ───────────────────────────────── */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 24px; border-radius: 50px; font-size: 14px;
-  font-weight: 600; border: none; cursor: pointer;
-  transition: all 0.2s; font-family: var(--font);
-}
-.btn-primary {
-  background: var(--accent); color: var(--surface);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}
-.btn-outline {
-  background: transparent; border: 1.5px solid var(--border);
-  color: var(--text);
-}
-.btn-outline:hover { border-color: var(--border-strong); color: var(--text); }
-.btn-lg { padding: 16px 32px; font-size: 16px; }
-</style>
-<style>
-/* ── Hero Section ─────────────────────────────────── */
+/* ── Hero ─────────────────────────────────────────── */
 .sources-hero {
-  padding-top: 120px; padding-bottom: 64px;
-  text-align: center; position: relative; overflow: hidden;
-}
-.sources-hero::before {
-  content: ''; position: absolute; top: -200px;
-  left: 50%; transform: translateX(-50%);
-  width: 900px; height: 900px;
-  background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
-  pointer-events: none;
+  padding: 80px 40px 56px;
+  text-align: center;
 }
 .sources-hero h1 {
-  font-size: 56px; font-weight: 800; letter-spacing: -2.5px;
-  line-height: 1.08; max-width: 700px; margin: 0 auto;
-  position: relative;
-}
-.fire-text {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  font-size: 48px; font-weight: 800; letter-spacing: -2px;
+  line-height: 1.1; color: var(--text);
 }
 .sources-hero .subtitle {
-  font-size: 17px; color: var(--muted); max-width: 560px;
-  margin: 20px auto 0; line-height: 1.6; position: relative;
-}
-.source-count {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 28px; font-size: 12px; font-weight: 600;
-  color: var(--text); font-family: var(--mono);
-}
-</style>
-<style>
-.source-count .dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--green); animation: pulse 2s infinite;
-}
-
-/* ── Sources Grid ─────────────────────────────────── */
-.sources-section {
-  max-width: 1080px; margin: 0 auto;
-  padding: 0 24px 80px;
-}
-.sources-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-.source-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 24px; padding: 28px;
-  transition: all 0.3s ease; position: relative;
-  overflow: hidden;
-}
-.source-card::before {
-  content: ''; position: absolute;
-  left: 0; top: 0; bottom: 0; width: 3px;
-  background: transparent; transition: background 0.3s;
-  border-radius: 24px 0 0 24px;
-}
-.source-card:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 0 24px var(--accent-glow), 0 12px 40px rgba(0,0,0,0.08);
-}
-</style>
-<style>
-.source-card:hover::before {
-  background: var(--accent); color: var(--surface);
-}
-/* Tooltip */
-[data-tooltip] { position: relative; cursor: help; }
-[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
-  position: absolute; bottom: calc(100% + 6px); left: 50%;
-  transform: translateX(-50%);
-  background: var(--surface-2); color: var(--text-secondary);
-  font-size: 11px; font-weight: 500;
-  padding: 5px 12px; border-radius: 50px;
-  border: 1px solid var(--border);
-  white-space: nowrap; z-index: 100;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  pointer-events: none;
-}
-/* Hover lift */
-.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.hover-lift:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-/* Scroll-triggered stagger */
-.source-card.scroll-reveal {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-.source-card.scroll-reveal.visible {
-  opacity: 1; transform: translateY(0);
-}
-.source-icon {
-  font-size: 28px; margin-bottom: 16px;
-  width: 52px; height: 52px; border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--surface-2); border: 1px solid var(--border);
-}
-.source-name {
-  font-size: 17px; font-weight: 700; letter-spacing: -0.3px;
-  margin-bottom: 8px; color: var(--text);
-}
-.source-badge {
-  display: inline-flex; align-items: center;
-  padding: 3px 10px; border-radius: 50px;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.6px; text-transform: uppercase;
-  font-family: var(--mono); margin-bottom: 12px;
-}
-.source-badge.execution { background: rgba(74,222,128,0.1); color: var(--green); }
-.source-badge.social { background: rgba(168,85,247,0.1); color: #a855f7; }
-.source-badge.technical { background: var(--bg-cream); color: var(--text-secondary); }
-.source-badge.risk { background: rgba(248,113,113,0.1); color: var(--red); }
-.source-badge.regime { background: rgba(56,189,248,0.1); color: #38bdf8; }
-.source-badge.discovery { background: rgba(245,158,11,0.1); color: var(--amber); }
-.source-badge.news { background: rgba(129,140,248,0.1); color: #818cf8; }
-.source-badge.options { background: rgba(45,212,191,0.1); color: #2dd4bf; }
-</style>
-<style>
-.source-desc {
-  font-size: 13px; color: var(--text-secondary);
+  font-size: 16px; color: var(--text-secondary);
+  max-width: 560px; margin: 18px auto 0;
   line-height: 1.65;
 }
 
-/* ── Bottom CTA Section ───────────────────────────── */
-.sources-cta {
-  text-align: center; padding: 80px 24px 40px;
-  position: relative;
+/* ── Sources Grid ─────────────────────────────────── */
+.sources-section { max-width: 960px; margin: 0 auto; padding: 0 40px 80px; }
+.sources-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
 }
-.sources-cta::before {
-  content: ''; position: absolute;
-  bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 800px; height: 500px;
-  background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
-  pointer-events: none;
+.source-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.sources-cta h2 {
-  font-size: 36px; font-weight: 800; letter-spacing: -1.5px;
-  line-height: 1.15; max-width: 550px; margin: 0 auto;
-  position: relative;
+.source-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
 }
-.sources-cta p {
-  font-size: 15px; color: var(--muted); margin-top: 16px;
-  position: relative;
+</style>
+<style>
+[data-theme="dark"] .source-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
-.sources-cta .btn { margin-top: 28px; position: relative; }
+.source-name {
+  font-size: 16px; font-weight: 700; letter-spacing: -0.3px;
+  margin-bottom: 8px; color: var(--text);
+}
+.source-badge {
+  display: inline-block;
+  padding: 3px 10px; border-radius: 50px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  font-family: var(--mono);
+  margin-bottom: 12px;
+  background: var(--bg-cream); color: var(--muted);
+}
+.source-desc {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ── Scroll Reveal ────────────────────────────────── */
+.source-card {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.45s ease, transform 0.45s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.source-card.visible {
+  opacity: 1; transform: translateY(0);
+}
 </style>
 <style>
 /* ── Footer ───────────────────────────────────────── */
-.sources-footer {
-  text-align: center; padding: 40px 24px;
-  border-top: 1px solid var(--border);
-  margin-top: 40px;
+.footer {
+  background: var(--bg-cream) !important;
+  padding: 48px 40px 28px;
 }
-.sources-footer p {
+.footer-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 16px;
+}
+.footer-brand {
+  font-size: 15px; font-weight: 800; letter-spacing: -0.5px;
+  color: var(--text);
+}
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 13px; color: var(--text-secondary);
+  transition: color 0.15s;
+}
+.footer-links a:hover { color: var(--text); }
+.footer-copy {
+  width: 100%; text-align: center;
+  margin-top: 24px; padding-top: 20px;
+  border-top: 1px solid var(--border);
   font-size: 12px; color: var(--muted);
-  font-family: var(--mono);
 }
 
-/* ── Animations ───────────────────────────────────── */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-in {
-  opacity: 0; animation: fadeUp 0.5s ease forwards;
-}
-.animate-in:nth-child(1) { animation-delay: 0.05s; }
-.animate-in:nth-child(2) { animation-delay: 0.10s; }
-.animate-in:nth-child(3) { animation-delay: 0.15s; }
-.animate-in:nth-child(4) { animation-delay: 0.20s; }
-.animate-in:nth-child(5) { animation-delay: 0.25s; }
-.animate-in:nth-child(6) { animation-delay: 0.30s; }
-.animate-in:nth-child(7) { animation-delay: 0.35s; }
-.animate-in:nth-child(8) { animation-delay: 0.40s; }
-</style>
-<style>
 /* ── Scrollbar ────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
+</style>
+<style>
 /* ── Responsive ───────────────────────────────────── */
-@media (max-width: 900px) {
-  .sources-hero h1 { font-size: 36px; }
+@media (max-width: 768px) {
+  .page-shell { margin: 68px 8px 8px; }
+  .navbar { left: 8px; right: 8px; padding: 0 16px; }
+  .nav-links { display: none; }
+  .sources-hero { padding: 60px 24px 40px; }
+  .sources-hero h1 { font-size: 32px; letter-spacing: -1px; }
+  .sources-hero .subtitle { font-size: 15px; }
+  .sources-section { padding: 0 16px 60px; }
   .sources-grid { grid-template-columns: 1fr; }
-  .sources-cta h2 { font-size: 28px; }
-  .navbar { left: 12px; right: 12px; top: 10px; border-radius: 28px; padding: 0 18px; height: 50px; }
+  .footer { padding: 36px 24px 20px; }
+  .footer-inner { flex-direction: column; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; }
 }
 </style>
 </head>
 <body>
 
-<!-- ── Floating Pill Navbar ──────────────────────── -->
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a href="/" class="logo">Ferchaud</a>
-    <div class="nav-links">
-      <a href="/#features" class="nav-link">Features</a>
-      <a href="/pricing" class="nav-link">Pricing</a>
-      <a href="/sources" class="nav-link active">Sources</a>
-      <a href="/feed" class="nav-link">Feed</a>
-      <a href="/signup" class="btn btn-primary" style="padding:8px 20px;font-size:13px">Get Started</a>
-    </div>
+<!-- ── Navbar ──────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <a href="/" class="nav-logo">
+    <span class="logo-dot"></span>
+    Ferchaud
+  </a>
+  <div class="nav-links">
+    <a href="/#features">Features</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/sources">Sources</a>
+  </div>
+  <div class="nav-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+    </button>
+    <a href="/signup" class="btn-get-started">Get Started</a>
   </div>
 </nav>
 
+<!-- ── Page Shell ──────────────────────────────────── -->
+<div class="page-shell">
+
 <!-- ── Hero ──────────────────────────────────────── -->
-<section class="sources-hero page-enter">
-  <h1>Powered by real-time<br><span class="fire-text">market intelligence</span></h1>
-  <p class="subtitle">Ferchaud aggregates data from 8+ institutional-grade sources to make trading decisions in milliseconds.</p>
-  <div class="source-count">
-    <span class="dot"></span>
-    All sources active &mdash; last sync &lt; 1s ago
-  </div>
+<section class="sources-hero">
+  <h1>Our Data Sources</h1>
+  <p class="subtitle">Ferchaud aggregates data from institutional-grade sources to identify trading opportunities.</p>
 </section>
 
 <!-- ── Sources Grid ──────────────────────────────── -->
 <section class="sources-section">
   <div class="sources-grid">
 
-    <!-- 1. Alpaca Markets -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#128200;</div>
+    <div class="source-card">
       <div class="source-name">Alpaca Markets</div>
-      <div class="source-badge execution" data-tooltip="Trade execution and real-time price feeds">Execution &amp; Data</div>
-      <p class="source-desc">Real-time market data for 12,000+ US equities. Sub-second price feeds, level 2 data, and direct order execution through commission-free brokerage API.</p>
+      <span class="source-badge">Execution &amp; Data</span>
+      <p class="source-desc">Real-time market data for US equities. Sub-second price feeds and commission-free order execution via API.</p>
     </div>
 
-    <!-- 2. Grok AI -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#129302;</div>
+    <div class="source-card">
       <div class="source-name">Grok AI (xAI)</div>
-      <div class="source-badge social" data-tooltip="Scans X/Twitter for sentiment and catalysts">Social Intelligence</div>
-      <p class="source-desc">Live X/Twitter search powered by Grok. Scans social sentiment, trending tickers, and breaking catalysts in real-time to find alpha before the crowd.</p>
+      <span class="source-badge">Social Intelligence</span>
+      <p class="source-desc">Live X/Twitter search for trending tickers, social sentiment, and breaking catalysts.</p>
     </div>
 
-    <!-- 3. Technical Analysis Engine -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#128202;</div>
-      <div class="source-name">Technical Analysis Engine</div>
-      <div class="source-badge technical" data-tooltip="Generates scored signals from 10+ indicators">Technical Signals</div>
-      <p class="source-desc">10+ indicators including EMA (8/21/50), MACD, RSI, Bollinger Bands, ATR, and Volume Profile. Custom signal scoring system rates setups 1-10.</p>
+    <div class="source-card">
+      <div class="source-name">Technical Analysis</div>
+      <span class="source-badge">Signal Generation</span>
+      <p class="source-desc">EMA, MACD, RSI, Bollinger Bands, ATR, and volume analysis across all scanned stocks.</p>
     </div>
 
-    <!-- 4. VPIN Toxicity Monitor -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#128737;</div>
-      <div class="source-name">VPIN Toxicity Monitor</div>
-      <div class="source-badge risk" data-tooltip="Detects toxic order flow to protect capital">Risk Detection</div>
-      <p class="source-desc">Volume-synchronized probability of informed trading. Detects toxic order flow before price moves. Institutional-grade risk filter that protects capital.</p>
+    <div class="source-card">
+      <div class="source-name">VPIN Monitor</div>
+      <span class="source-badge">Risk Detection</span>
+      <p class="source-desc">Volume-synchronized probability of informed trading. Detects toxic order flow before price moves.</p>
     </div>
 
-    <!-- 5. Regime Detection (HMM) -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#127919;</div>
-      <div class="source-name">Regime Detection (HMM)</div>
-      <div class="source-badge regime" data-tooltip="Identifies bull, bear, or sideways market state">Market Regime</div>
-      <p class="source-desc">Hidden Markov Model identifies market regimes &mdash; bull, bear, or sideways. Dynamically adjusts strategy allocation and risk parameters in real-time.</p>
+    <div class="source-card">
+      <div class="source-name">Regime Detection</div>
+      <span class="source-badge">Market Regime</span>
+      <p class="source-desc">Hidden Markov Model identifies market conditions (bull/bear/sideways) and adjusts strategy allocation.</p>
     </div>
 
-    <!-- 6. Full Market Scanner -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#128225;</div>
-      <div class="source-name">Full Market Scanner</div>
-      <div class="source-badge discovery" data-tooltip="Screens 12K+ stocks every 3 minutes for setups">Stock Discovery</div>
-      <p class="source-desc">Screens all 12,000+ US equities every 3 minutes. Filters by price ($0.50-$50), volume, and momentum. Finds explosive movers before they trend.</p>
+    <div class="source-card">
+      <div class="source-name">Market Scanner</div>
+      <span class="source-badge">Stock Discovery</span>
+      <p class="source-desc">Scans US equities every 3 minutes filtering by price, volume, and momentum signals.</p>
     </div>
 
-    <!-- 7. News Aggregation -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#128240;</div>
-      <div class="source-name">News Aggregation</div>
-      <div class="source-badge news" data-tooltip="Aggregates earnings, FDA, and sector news">News &amp; Catalysts</div>
-      <p class="source-desc">Finnhub news API for earnings, FDA approvals, partnerships, and sector catalysts. Cross-references with price action to validate trading signals.</p>
+    <div class="source-card">
+      <div class="source-name">News Feeds</div>
+      <span class="source-badge">News &amp; Catalysts</span>
+      <p class="source-desc">Earnings, FDA approvals, partnerships, and sector catalysts cross-referenced with price action.</p>
     </div>
 
-    <!-- 8. Options Chain Analysis -->
-    <div class="source-card hover-lift scroll-reveal">
-      <div class="source-icon">&#9878;</div>
-      <div class="source-name">Options Chain Analysis</div>
-      <div class="source-badge options" data-tooltip="Real-time options chains for high-conviction plays">Options Data</div>
-      <p class="source-desc">Real-time options data for high-conviction plays. ATM calls on breakouts, puts on reversals. Only deployed on liquid names with tight spreads.</p>
+    <div class="source-card">
+      <div class="source-name">Options Chain</div>
+      <span class="source-badge">Options Data</span>
+      <p class="source-desc">Real-time options data for calls/puts on high-conviction setups with liquid names.</p>
     </div>
 
   </div>
-</section>
-
-<!-- ── Bottom CTA ────────────────────────────────── -->
-<section class="sources-cta">
-  <h2>9 strategies. 24/7 automation.<br><span class="fire-text">One AI.</span></h2>
-  <p>Ferchaud combines institutional-grade data with autonomous execution to trade while you sleep.</p>
-  <a href="/signup" class="btn btn-primary btn-lg">See it in action &#8594;</a>
 </section>
 
 <!-- ── Footer ────────────────────────────────────── -->
-<footer class="sources-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-  <p>&copy; 2026 Ferchaud</p>
-  <div style="display:flex;gap:24px;">
-    <a href="/#features" style="color:var(--muted);font-size:13px;">Features</a>
-    <a href="/pricing" style="color:var(--muted);font-size:13px;">Pricing</a>
-    <a href="/sources" style="color:var(--muted);font-size:13px;">Sources</a>
-    <a href="/legal" style="color:var(--muted);font-size:13px;">Legal</a>
-    <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-size:13px;">Support</a>
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">Ferchaud</div>
+    <div class="footer-links">
+      <a href="/#features">Features</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/sources">Sources</a>
+      <a href="/legal">Legal</a>
+      <a href="/support">Support</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 Ferchaud. All rights reserved.</div>
   </div>
 </footer>
 
+</div><!-- end .page-shell -->
+
 <script>
-// Scroll-triggered stagger animation for source cards
+// Theme toggle
+function toggleTheme() {
+  var html = document.documentElement;
+  var current = html.getAttribute('data-theme');
+  if (current === 'dark') {
+    html.removeAttribute('data-theme');
+    localStorage.removeItem('theme');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+}
+
+// Scroll-reveal stagger for source cards
 (function() {
-  var cards = document.querySelectorAll('.scroll-reveal');
+  var cards = document.querySelectorAll('.source-card');
   if (!cards.length) return;
   var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry, i) {
+    entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         var idx = Array.prototype.indexOf.call(cards, entry.target);
         setTimeout(function() {
           entry.target.classList.add('visible');
-        }, idx * 80);
+        }, idx * 70);
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.15 });
+  }, { threshold: 0.1 });
   cards.forEach(function(card) { observer.observe(card); });
 })();
 </script>

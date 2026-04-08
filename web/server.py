@@ -462,7 +462,9 @@ async def feed_page(request: Request):
 
 @app.get("/sources", response_class=HTMLResponse)
 async def sources_page(request: Request):
-    return templates.TemplateResponse("sources.html", {"request": request})
+    sources_path = BASE_DIR / "templates" / "sources.html"
+    with open(sources_path, "r") as f:
+        return HTMLResponse(f.read())
 
 
 @app.get("/api/feed")
@@ -518,6 +520,17 @@ async def api_feed(request: Request):
         return feed_items
     finally:
         db.close()
+
+
+@app.get("/api/performance")
+async def api_performance(request: Request):
+    """Get bot performance summary with learning insights."""
+    try:
+        from core.trade_learner import trade_learner
+        summary = trade_learner.get_performance_summary(30)
+        return summary
+    except Exception as e:
+        return {"error": str(e), "message": "No trade data available yet"}
 
 
 if __name__ == "__main__":
