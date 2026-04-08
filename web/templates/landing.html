@@ -89,7 +89,37 @@ body {
 .section-border { /* inherits from page-shell > section */ }
 .section-surface { background: var(--surface); }
 /* ── Hero ── */
-.hero { display: flex; align-items: center; gap: 48px; padding: 100px 64px 80px; }
+.hero {
+  display: flex; align-items: center; gap: 48px; padding: 100px 64px 80px;
+  background: #000 !important;
+  background-image: none !important;
+  color: #fff;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  min-height: 80vh;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+.hero .hero-label { color: rgba(255,255,255,0.5); }
+.hero .hero-h1 { color: #fff; }
+.hero .hero-sub { color: rgba(255,255,255,0.5); }
+.hero .hero-cta { background: #fff; color: #000; }
+.hero .hero-cta:hover { background: #e5e5e5; }
+.hero .hero-cta-sub { color: rgba(255,255,255,0.35); }
+.hero .hero-chart-label { color: rgba(255,255,255,0.4); }
+.section-dark {
+  background: #000 !important;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
+  color: #fff;
+}
+.section-dark h2, .section-dark h3 { color: #fff; }
+.section-dark p { color: rgba(255,255,255,0.5); }
 .hero-text { flex: 0 0 45%; }
 .hero-label {
   font-size: 13px; font-weight: 600; color: var(--muted);
@@ -363,7 +393,7 @@ body {
   </section>
 
   <!-- ── Strategy Visual ── -->
-  <section id="strategy" class="section section-border reveal">
+  <section id="strategy" class="section section-border reveal section-dark">
     <div class="strategy-header">
       <h2>Every Dip, Caught. Every Peak, Sold.</h2>
       <p>Multiple buy and sell signals across a real timeline</p>
@@ -462,17 +492,17 @@ body {
     width: el.clientWidth,
     height: el.clientHeight,
     layout: {
-      background: { type: 'solid', color: '#ffffff' },
-      textColor: '#a3a3a3',
+      background: { type: 'solid', color: '#000000' },
+      textColor: 'rgba(255,255,255,0.35)',
       fontFamily: 'Inter, sans-serif',
       fontSize: 12,
     },
     grid: {
-      vertLines: { color: '#f5f5f5' },
-      horzLines: { color: '#f5f5f5' },
+      vertLines: { color: 'rgba(255,255,255,0.06)' },
+      horzLines: { color: 'rgba(255,255,255,0.06)' },
     },
-    rightPriceScale: { borderColor: '#e5e5e5' },
-    timeScale: { borderColor: '#e5e5e5', timeVisible: false },
+    rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
+    timeScale: { borderColor: 'rgba(255,255,255,0.1)', timeVisible: false },
     crosshair: { mode: 0 },
     handleScroll: false,
     handleScale: false,
@@ -509,9 +539,9 @@ body {
   }
 
   const areaSeries = chart.addAreaSeries({
-    topColor: 'rgba(10, 10, 10, 0.08)',
+    topColor: 'rgba(255, 255, 255, 0.08)',
     bottomColor: 'rgba(10, 10, 10, 0.01)',
-    lineColor: '#0a0a0a',
+    lineColor: '#ffffff',
     lineWidth: 2,
     crosshairMarkerVisible: false,
   });
@@ -551,17 +581,17 @@ body {
     width: el.clientWidth,
     height: el.clientHeight,
     layout: {
-      background: { type: 'solid', color: '#ffffff' },
-      textColor: '#a3a3a3',
+      background: { type: 'solid', color: '#000000' },
+      textColor: 'rgba(255,255,255,0.35)',
       fontFamily: 'Inter, sans-serif',
       fontSize: 12,
     },
     grid: {
-      vertLines: { color: '#f5f5f5' },
-      horzLines: { color: '#f5f5f5' },
+      vertLines: { color: 'rgba(255,255,255,0.06)' },
+      horzLines: { color: 'rgba(255,255,255,0.06)' },
     },
-    rightPriceScale: { borderColor: '#e5e5e5' },
-    timeScale: { borderColor: '#e5e5e5', timeVisible: false },
+    rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
+    timeScale: { borderColor: 'rgba(255,255,255,0.1)', timeVisible: false },
     crosshair: { mode: 0 },
     handleScroll: false,
     handleScale: false,
@@ -635,9 +665,9 @@ body {
   markers.sort((a, b) => a.time.localeCompare(b.time));
 
   const areaSeries = chart.addAreaSeries({
-    topColor: 'rgba(10, 10, 10, 0.06)',
+    topColor: 'rgba(255, 255, 255, 0.06)',
     bottomColor: 'rgba(10, 10, 10, 0.01)',
-    lineColor: '#0a0a0a',
+    lineColor: '#ffffff',
     lineWidth: 2,
     crosshairMarkerVisible: false,
   });
