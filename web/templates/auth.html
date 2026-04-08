@@ -1,35 +1,77 @@
 {% extends "base.html" %}
 {% block title %}{% if mode == 'signup' %}Sign Up{% else %}Log In{% endif %} — Ferchaud{% endblock %}
 {% block head %}
+<script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
 <style>
   .auth-page {
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: #f5f5f5;
+    background: var(--bg-warm, #faf9f7);
     position: relative; overflow: hidden;
     cursor: pointer;
   }
+  [data-theme="dark"] .auth-page { background: var(--bg, #0a0a0a); }
   .auth-page::before {
     content: ''; position: absolute; inset: 0;
-    background-image: radial-gradient(#d4d4d4 0.8px, transparent 0.8px);
+    background-image: radial-gradient(var(--border, #eaeaea) 0.8px, transparent 0.8px);
     background-size: 20px 20px;
     pointer-events: none;
   }
+
+  /* Floating pill navbar */
+  .auth-navbar {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #eaeaea);
+    border-radius: 16px; padding: 0 24px; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    width: calc(100% - 48px); max-width: 720px;
+    z-index: 1000;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  [data-theme="dark"] .auth-navbar {
+    background: var(--surface, #111111);
+    border-color: var(--border, #2a2a2a);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .auth-navbar-logo {
+    font-weight: 800; font-size: 17px; letter-spacing: -0.5px;
+    color: var(--text, #1a1a1a); text-decoration: none;
+  }
+  .auth-navbar-links { display: flex; gap: 16px; align-items: center; }
+  .auth-navbar-links a {
+    font-size: 13px; font-weight: 500; color: var(--text-secondary, #666);
+    text-decoration: none; transition: color 0.15s;
+  }
+  .auth-navbar-links a:hover { color: var(--text, #1a1a1a); }
+  .theme-toggle {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 8px; cursor: pointer; color: var(--text-secondary);
+    font-size: 14px; line-height: 1; transition: all 0.15s;
+  }
+  .theme-toggle:hover { border-color: var(--text-secondary); }
+
+  /* Auth card */
   .auth-card {
-    width: 100%; max-width: 400px; background: #ffffff;
-    border: 1px solid #e5e5e5; border-radius: 20px;
+    width: 100%; max-width: 420px; background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #eaeaea); border-radius: 20px;
     padding: 2.5rem 2rem;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.06);
     position: relative; z-index: 1;
     cursor: default;
+  }
+  [data-theme="dark"] .auth-card {
+    background: var(--surface, #111111);
+    border-color: var(--border, #2a2a2a);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
   }
   .auth-logo {
     text-align: center; font-size: 1.5rem; font-weight: 800;
     letter-spacing: -1px; margin-bottom: 2rem;
   }
-  .auth-logo a { color: #0a0a0a; text-decoration: none; }
+  .auth-logo a { color: var(--text, #1a1a1a); text-decoration: none; }
   .auth-title { text-align: center; margin-bottom: 0.5rem; }
   .auth-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
-  .auth-title p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .auth-title p { color: var(--muted, #999); font-size: 14px; margin-top: 6px; }
 
   /* OAuth buttons */
   .oauth-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 1.5rem; }
@@ -44,73 +86,93 @@
   .oauth-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
   .oauth-apple {
-    background: #fff; color: #000;
+    background: #000; color: #fff;
   }
-  .oauth-apple:hover { background: #f0f0f0; }
+  [data-theme="dark"] .oauth-apple { background: #fff; color: #000; }
+  .oauth-apple:hover { opacity: 0.9; }
 
   .oauth-google {
-    background: transparent; color: var(--text);
-    border: 1px solid var(--border-strong);
+    background: var(--surface, #fff); color: var(--text, #1a1a1a);
+    border: 1px solid var(--border, #eaeaea);
   }
-  .oauth-google:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.03); }
+  .oauth-google:hover { border-color: var(--text-secondary); background: var(--bg-warm, #faf9f7); }
 
   .oauth-x {
-    background: var(--surface-2); color: var(--text);
-    border: 1px solid var(--border);
+    background: var(--bg-cream, #f5f3ef); color: var(--text, #1a1a1a);
+    border: 1px solid var(--border, #eaeaea);
   }
-  .oauth-x:hover { background: var(--surface-3); border-color: var(--border-hover); }
+  [data-theme="dark"] .oauth-x { background: var(--bg-cream, #1a1a1a); }
+  .oauth-x:hover { border-color: var(--text-secondary); }
 
   /* Divider */
   .auth-divider {
     display: flex; align-items: center; gap: 16px;
-    margin: 1.5rem 0; color: var(--muted); font-size: 12px; font-weight: 500;
+    margin: 1.5rem 0; color: var(--muted, #999); font-size: 12px; font-weight: 500;
   }
   .auth-divider::before, .auth-divider::after {
-    content: ''; flex: 1; height: 1px; background: var(--border);
+    content: ''; flex: 1; height: 1px; background: var(--border, #eaeaea);
   }
 
   /* Form */
   .auth-form { display: flex; flex-direction: column; gap: 14px; }
   .auth-input-group { display: flex; flex-direction: column; gap: 5px; }
   .auth-input-group label {
-    font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    font-size: 12px; font-weight: 600; color: var(--text-secondary, #666);
     letter-spacing: 0.3px; padding-left: 8px;
   }
   .auth-input-group input {
-    width: 100%; background: #fafafa; border: 1px solid #e5e5e5;
-    border-radius: 12px; color: #0a0a0a; font-family: 'Inter', sans-serif;
+    width: 100%; background: var(--bg-warm, #faf9f7); border: 1px solid var(--border, #eaeaea);
+    border-radius: 12px; color: var(--text, #1a1a1a); font-family: 'Inter', sans-serif;
     font-size: 14px; padding: 12px 20px; outline: none; transition: border-color 0.2s;
   }
-  .auth-input-group input:focus {
-    border-color: #0a0a0a; box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+  [data-theme="dark"] .auth-input-group input {
+    background: var(--bg-cream, #1a1a1a); border-color: var(--border, #2a2a2a);
+    color: var(--text, #f0f0f0);
   }
-  .auth-input-group input::placeholder { color: var(--muted); }
+  .auth-input-group input:focus {
+    border-color: var(--accent, #1a1a1a); box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+  }
+  [data-theme="dark"] .auth-input-group input:focus {
+    border-color: var(--accent, #fff); box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+  }
+  .auth-input-group input::placeholder { color: var(--muted, #999); }
 
   .auth-submit {
     width: 100%; padding: 13px; border-radius: 12px; border: none; cursor: pointer;
     font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
-    background: #0a0a0a; color: #ffffff;
+    background: var(--accent, #1a1a1a); color: #ffffff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: all 0.2s; margin-top: 0.25rem;
   }
-  .auth-submit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(255,255,255,0.1);
-  }
+  [data-theme="dark"] .auth-submit { background: #fff; color: #000; }
+  .auth-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
   .auth-submit:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+
   .auth-footer {
-    text-align: center; margin-top: 1.5rem; font-size: 13px; color: var(--muted);
+    text-align: center; margin-top: 1.5rem; font-size: 13px; color: var(--muted, #999);
   }
-  .auth-footer a { color: var(--text-secondary); font-weight: 600; }
-  .auth-footer a:hover { color: var(--text); }
+  .auth-footer a { color: var(--text-secondary, #666); font-weight: 600; text-decoration: none; }
+  .auth-footer a:hover { color: var(--text, #1a1a1a); }
+
   .auth-error-msg {
-    background: rgba(255,77,79,0.1); color: var(--red);
+    background: rgba(239,68,68,0.08); color: var(--red, #ef4444);
     padding: 10px 18px; border-radius: 50px; font-size: 13px;
     text-align: center; display: none;
   }
 </style>
 {% endblock %}
 {% block body %}
+<!-- Floating pill navbar -->
+<nav class="auth-navbar">
+  <a href="/" class="auth-navbar-logo">Ferchaud</a>
+  <div class="auth-navbar-links">
+    <a href="/#features">Features</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/sources">Sources</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="themeBtn">&#9790;</button>
+  </div>
+</nav>
+
 <div class="auth-page page-enter">
   <div class="auth-card">
     <div class="auth-logo"><a href="/">Ferchaud</a></div>
@@ -148,10 +210,6 @@
     <form class="auth-form" id="auth-form" onsubmit="return handleAuth(event)">
       {% if mode == 'signup' %}
       <div class="auth-input-group">
-        <label>Full Name</label>
-        <input type="text" name="full_name" placeholder="John Doe" required>
-      </div>
-      <div class="auth-input-group">
         <label>Username</label>
         <input type="text" name="username" placeholder="johndoe" required>
       </div>
@@ -182,16 +240,30 @@
         <a href="/pricing" style="color:var(--muted);font-weight:400;font-size:11px;">Pricing</a>
         <a href="/sources" style="color:var(--muted);font-weight:400;font-size:11px;">Sources</a>
         <a href="/legal" style="color:var(--muted);font-weight:400;font-size:11px;">Legal</a>
-        <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-weight:400;font-size:11px;">Support</a>
+        <a href="/support" style="color:var(--muted);font-weight:400;font-size:11px;">Support</a>
       </div>
-      <div style="margin-top:8px;font-size:10px;color:var(--text-dim);">&copy; 2026 Ferchaud</div>
-      <div style="margin-top:16px;font-size:12px;color:var(--text-dim);font-style:italic;letter-spacing:-0.2px;">AI-powered trading. You stay in control.</div>
+      <div style="margin-top:8px;font-size:10px;color:var(--muted);">&copy; 2026 Ferchaud</div>
+      <div style="margin-top:16px;font-size:12px;color:var(--muted);font-style:italic;letter-spacing:-0.2px;">AI-powered trading. You stay in control.</div>
     </div>
   </div>
 </div>
 {% endblock %}
 {% block scripts %}
 <script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  if (next === 'light') { html.removeAttribute('data-theme'); localStorage.removeItem('theme'); }
+  else { html.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); }
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '\u2600' : '\u263E';
+}
+// Set icon on load
+(function(){
+  const t = document.documentElement.getAttribute('data-theme');
+  document.getElementById('themeBtn').textContent = t === 'dark' ? '\u2600' : '\u263E';
+})();
+
 async function handleAuth(e) {
   e.preventDefault();
   const form = e.target;
@@ -228,9 +300,9 @@ async function handleAuth(e) {
   }
   return false;
 }
-// Click outside card → go back to home
+// Click outside card -> go back to home
 document.querySelector('.auth-page').addEventListener('click', function(e) {
-  if (!e.target.closest('.auth-card')) {
+  if (!e.target.closest('.auth-card') && !e.target.closest('.auth-navbar')) {
     window.location.href = '/';
   }
 });

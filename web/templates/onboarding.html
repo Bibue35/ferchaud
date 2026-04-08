@@ -4,32 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Welcome to Ferchaud</title>
+  <script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #08090a; --surface: #111213; --surface-2: #191a1b; --surface-3: #28282c;
-      --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.14);
-      --accent: #e8e8e8; --accent-light: #f0f0f0;
-      --accent-glow: rgba(255,255,255,0.06);
-      --gradient-primary: linear-gradient(135deg, #e8e8e8, #ffffff);
-      --text: #f7f8f8; --text-secondary: #b4b4b4;
-      --muted: #6b6f76; --green: #00d26a; --red: #ff4d4f;
+      --bg: #fefefe; --bg-warm: #faf9f7; --bg-cream: #f5f3ef;
+      --surface: #ffffff; --surface-2: #f5f3ef; --surface-3: #ebebeb;
+      --border: #eaeaea; --border-hover: #d4d4d4; --border-strong: #a3a3a3;
+      --accent: #1a1a1a; --accent-light: #333;
+      --accent-glow: rgba(0,0,0,0.06);
+      --gradient-primary: linear-gradient(135deg, #1a1a1a, #333);
+      --text: #1a1a1a; --text-secondary: #666666;
+      --muted: #999999; --green: #22c55e; --red: #ef4444;
+    }
+    [data-theme="dark"] {
+      --bg: #0a0a0a; --bg-warm: #111111; --bg-cream: #1a1a1a;
+      --surface: #111111; --surface-2: #1a1a1a; --surface-3: #282828;
+      --border: #2a2a2a; --border-hover: #3a3a3a; --border-strong: #555;
+      --text: #f0f0f0; --text-secondary: #999; --muted: #666;
+      --accent: #fff; --accent-light: #e0e0e0; --accent-glow: rgba(255,255,255,0.06);
+      --gradient-primary: linear-gradient(135deg, #e8e8e8, #fff);
+      --green: #22c55e; --red: #ef4444;
     }
     body {
-      background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
+      background: #e8e8e8; color: var(--text); font-family: 'Inter', sans-serif;
       min-height: 100vh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 24px 24px;
+      background-image: radial-gradient(#d4d4d4 0.8px, transparent 0.8px);
+      background-size: 20px 20px;
+    }
+    [data-theme="dark"] body {
+      background: #000;
+      background-image: radial-gradient(rgba(255,255,255,0.03) 0.8px, transparent 0.8px);
+      background-size: 20px 20px;
     }
     .wizard { width: 100%; max-width: 560px; padding: 0 1.5rem; }
     /* Progress bar */
     .progress-bar { display: flex; gap: 8px; margin-bottom: 2.5rem; }
     .progress-step { flex: 1; height: 4px; background: var(--border); border-radius: 50px; transition: background 0.4s, box-shadow 0.4s; }
     .progress-step.done { background: #fff; }
-    .progress-step.active { background: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.08); }
+    .progress-step.active { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
 
     /* Card */
     .card {
@@ -53,15 +69,15 @@
       border: 1.5px solid var(--border); border-radius: 24px; padding: 1.25rem;
       cursor: pointer; transition: all 0.2s; position: relative;
     }
-    .tier-card:hover, .hover-lift:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.02); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+    .tier-card:hover, .hover-lift:hover { border-color: var(--border-hover); background: var(--bg-cream); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
     .tier-card.selected {
       border-color: transparent;
-      background: rgba(255,255,255,0.04);
+      background: var(--bg-cream);
       border: 1.5px solid transparent;
-      background-image: linear-gradient(var(--surface), var(--surface)), linear-gradient(135deg, #e8e8e8, #ffffff);
+      background-image: linear-gradient(var(--surface), var(--surface)), var(--gradient-primary);
       background-origin: border-box;
       background-clip: padding-box, border-box;
-      box-shadow: 0 0 20px rgba(255,255,255,0.06);
+      box-shadow: 0 0 20px var(--accent-glow);
     }    .tier-card .badge {
       position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
       padding: 3px 10px; border-radius: 50px;
@@ -80,7 +96,7 @@
       font-size: 0.9rem; padding: 0.8rem 1.25rem; margin-bottom: 1rem;
       outline: none; transition: border 0.2s;
     }
-    input:focus { border-color: rgba(255,255,255,0.2); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
     input::placeholder { color: var(--muted); }
 
     .btn {
@@ -89,14 +105,14 @@
       transition: all 0.2s; margin-top: 0.5rem;
     }
     .btn-primary {
-      background: #fff; color: #08090a;
-      box-shadow: 0 2px 8px rgba(255,255,255,0.06);
+      background: var(--accent); color: var(--surface);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,255,255,0.1); }    .btn-outline {
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }    .btn-outline {
       background: transparent; color: var(--text); border: 1px solid var(--border);
     }
     .btn-outline:hover { border-color: var(--border-strong); color: var(--text); }
-    .btn-green { background: #16a34a; color: white; }
+    .btn-green { background: var(--green); color: white; }
     .btn-green:hover { background: #15803d; }
 
     /* Wallet buttons */
@@ -106,7 +122,7 @@
       padding: 1rem; display: flex; flex-direction: column; align-items: center;
       gap: 8px; cursor: pointer; transition: all 0.2s;
     }
-    .wallet-btn:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.03); }
+    .wallet-btn:hover { border-color: var(--border-hover); background: var(--bg-cream); }
     .wallet-btn img { width: 36px; height: 36px; border-radius: 50px; }
     .wallet-btn span { font-size: 12px; font-weight: 600; color: var(--text); }
     .wallet-btn.connected { border-color: var(--green); }

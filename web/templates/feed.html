@@ -27,7 +27,7 @@
 </style>
 <style>
 .feed-page-title span {
-  background: linear-gradient(135deg, #e8e8e8, #ffffff);
+  background: var(--gradient-primary);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .feed-live-dot {
@@ -64,7 +64,7 @@
 <style>
 .feed-item:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 0 20px rgba(255,255,255,0.02), 0 8px 32px rgba(0,0,0,0.2);
+  box-shadow: 0 0 20px rgba(0,0,0,0.02), 0 8px 32px rgba(0,0,0,0.06);
 }
 .feed-icon {
   width: 40px; height: 40px; min-width: 40px;
@@ -74,7 +74,7 @@
 }
 .feed-icon.buy { background: rgba(74,222,128,0.12); color: var(--green); }
 .feed-icon.sell { background: rgba(248,113,113,0.12); color: var(--red); }
-.feed-icon.signal { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+.feed-icon.signal { background: var(--bg-cream, #f5f3ef); color: var(--text-secondary); }
 .feed-icon.alert { background: rgba(245,158,11,0.12); color: var(--amber); }
 .feed-icon.research { background: rgba(168,85,247,0.12); color: #a855f7; }
 
@@ -99,7 +99,7 @@
   letter-spacing: 0.4px; text-transform: uppercase;
   font-family: var(--mono);
 }
-.feed-badge.strategy { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+.feed-badge.strategy { background: var(--bg-cream, #f5f3ef); color: var(--text-secondary); }
 .feed-badge.reason { background: rgba(248,113,113,0.1); color: var(--red); }
 .feed-badge.scanner { background: rgba(245,158,11,0.1); color: var(--amber); }
 .feed-badge.grok { background: rgba(168,85,247,0.1); color: #a855f7; }
@@ -125,7 +125,7 @@
 .feed-score {
   font-family: var(--mono); font-size: 11px; font-weight: 600;
   color: var(--text-secondary); padding: 1px 8px;
-  border-radius: 50px; background: rgba(255,255,255,0.06);
+  border-radius: 50px; background: var(--bg-cream, #f5f3ef);
 }
 
 /* ── Feed Empty State ─────────────────────────────── */

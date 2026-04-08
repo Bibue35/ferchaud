@@ -5,22 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Support — Ferchaud</title>
 <meta name="description" content="Get help with Ferchaud AI trading platform. FAQs, guides, and contact support.">
+<script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg: #ffffff;
-  --surface: #fafafa;
-  --surface-2: #f5f5f5;
-  --border: #e5e5e5;
+  --bg: #fefefe;
+  --bg-warm: #faf9f7;
+  --bg-cream: #f5f3ef;
+  --surface: #ffffff;
+  --surface-2: #f5f3ef;
+  --border: #eaeaea;
   --border-hover: #d4d4d4;
-  --text: #0a0a0a;
-  --text-secondary: #525252;
-  --muted: #a3a3a3;
+  --text: #1a1a1a;
+  --text-secondary: #666666;
+  --muted: #999999;
   --black: #000000;
-  --page-bg: #ffffff;
+  --page-bg: #e8e8e8;
+}
+[data-theme="dark"] {
+  --bg: #0a0a0a; --bg-warm: #111111; --bg-cream: #1a1a1a;
+  --surface: #111111; --surface-2: #1a1a1a;
+  --border: #2a2a2a; --border-hover: #3a3a3a;
+  --text: #f0f0f0; --text-secondary: #999; --muted: #666;
+  --black: #ffffff; --page-bg: #000;
 }
 html { scroll-behavior: smooth; }
 body {
@@ -35,16 +45,18 @@ body {
 
 /* ── Navbar ── */
 .navbar {
-  position: fixed; top: 12px; left: 16px; right: 16px;
-  height: 58px;
-  background: #ffffff;
+  position: fixed; top: 12px; left: 24px; right: 24px;
+  height: 54px;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
   z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 24px;
+  transition: background 0.2s, border-color 0.2s;
 }
+[data-theme="dark"] .navbar { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
 .navbar-logo {
   font-size: 20px; font-weight: 700; color: var(--black);
   text-decoration: none; letter-spacing: -0.5px;

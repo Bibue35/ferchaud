@@ -5,43 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Ferchaud Legal — Terms of Service, Privacy Policy, Risk Disclosure, and Cookie Policy.">
 <title>Legal — Ferchaud</title>
+<script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #08090a;
-  --surface: #111213;
-  --surface-2: #191a1b;
-  --surface-3: #28282c;
-  --border: rgba(255,255,255,0.06);
-  --border-hover: rgba(255,255,255,0.1);
-  --border-strong: rgba(255,255,255,0.14);
-  --accent: #e8e8e8;
-  --accent-light: #f0f0f0;
-  --accent-glow: rgba(255,255,255,0.06);
-  --text: #f7f8f8;
-  --text-secondary: #b4b4b4;
-  --muted: #6b6f76;
+  --bg: #fefefe;
+  --bg-warm: #faf9f7;
+  --bg-cream: #f5f3ef;
+  --surface: #ffffff;
+  --surface-2: #f5f3ef;
+  --surface-3: #ebebeb;
+  --border: #eaeaea;
+  --border-hover: #d4d4d4;
+  --border-strong: #a3a3a3;
+  --accent: #1a1a1a;
+  --accent-light: #333;
+  --accent-glow: rgba(0,0,0,0.06);
+  --text: #1a1a1a;
+  --text-secondary: #666666;
+  --muted: #999999;
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #0a0a0a; --bg-warm: #111111; --bg-cream: #1a1a1a;
+  --surface: #111111; --surface-2: #1a1a1a; --surface-3: #282828;
+  --border: #2a2a2a; --border-hover: #3a3a3a; --border-strong: #555;
+  --text: #f0f0f0; --text-secondary: #999; --muted: #666;
+  --accent: #fff; --accent-light: #e0e0e0; --accent-glow: rgba(255,255,255,0.06);
 }*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 15px; scroll-behavior: smooth; }
 body {
-  background: var(--bg); color: var(--text);
+  background: #e8e8e8; color: var(--text);
   font-family: var(--font); -webkit-font-smoothing: antialiased;
   line-height: 1.7; min-height: 100vh;
+  background-image: radial-gradient(circle, #d4d4d4 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+}
+[data-theme="dark"] body {
+  background: #000;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
 }
 a { color: var(--text-secondary); text-decoration: none; transition: color 0.15s; }
 a:hover { color: var(--text); }
 
 /* Navbar */
 .navbar {
-  position: fixed; top: 16px; left: 24px; right: 24px; height: 56px;
-  border-radius: 50px; background: rgba(10,6,8,0.85);
-  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  position: fixed; top: 12px; left: 24px; right: 24px; height: 54px;
+  border-radius: 16px; background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 1000; padding: 0 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04); z-index: 1000; padding: 0 24px;
+  transition: background 0.2s, border-color 0.2s;
 }
+[data-theme="dark"] .navbar { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
 .navbar-inner {
   max-width: 1280px; margin: 0 auto; height: 100%;
   display: flex; align-items: center; justify-content: space-between;
@@ -160,7 +178,7 @@ a:hover { color: var(--text); }
     <div class="nav-links">
       <a href="/pricing" class="nav-link">Pricing</a>
       <a href="/login" class="nav-link">Log In</a>
-      <a href="/signup" class="nav-link" style="background:#fff;color:#08090a;padding:8px 20px;border-radius:50px;font-weight:600;">Sign Up</a>
+      <a href="/signup" class="nav-link" style="background:var(--accent);color:var(--surface);padding:8px 20px;border-radius:50px;font-weight:600;">Sign Up</a>
     </div>
   </div>
 </nav>

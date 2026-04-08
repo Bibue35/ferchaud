@@ -1,707 +1,1328 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ferchaud — AI Stock Trading</title>
-<meta name="description" content="Ferchaud AI monitors 12,000+ stocks and executes trades at the optimal moment. Buy the dip. Sell the peak. Automatically.">
+<title>Ferchaud — AI-Powered Trading</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   RESET & CSS VARIABLES
+   ═══════════════════════════════════════════════════════════════ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
 :root {
-  --bg: #ffffff;
-  --surface: #fafafa;
-  --surface-2: #f5f5f5;
-  --border: #e5e5e5;
-  --border-hover: #d4d4d4;
-  --text: #0a0a0a;
-  --text-secondary: #525252;
-  --muted: #a3a3a3;
-  --black: #000000;
-  --green: #16a34a;
-  --red: #dc2626;
-  --page-bg: #000000;
+  --bg: #fefefe;
+  --bg-warm: #faf9f7;
+  --bg-cream: #f5f3ef;
+  --surface: #ffffff;
+  --border: #eaeaea;
+  --text: #1a1a1a;
+  --text-secondary: #666666;
+  --muted: #999999;
+  --accent: #1a1a1a;
+  --green: #22c55e;
+  --red: #ef4444;
+  --shell-bg: #e8e8e8;
+  --radius: 20px;
+  --nav-height: 64px;
 }
+
+/* DARK THEME */
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --bg-warm: #111111;
+  --bg-cream: #1a1a1a;
+  --surface: #111111;
+  --border: #2a2a2a;
+  --text: #f0f0f0;
+  --text-secondary: #999999;
+  --muted: #666666;
+  --accent: #ffffff;
+  --shell-bg: #000000;
+}
+[data-theme="dark"] .navbar { background: rgba(10,10,10,0.92) !important; border-color: #2a2a2a !important; }
+[data-theme="dark"] .cta-section { background: #ffffff !important; }
+[data-theme="dark"] .cta-section h2,
+[data-theme="dark"] .cta-section p { color: #0a0a0a !important; }
+[data-theme="dark"] .cta-section .btn-cta { background: #0a0a0a !important; color: #fff !important; }
+[data-theme="dark"] .icon-sun { display: none; }
+[data-theme="dark"] .icon-moon { display: block; }
+[data-theme="dark"] .pricing-card.featured { border-color: #fff; }
+[data-theme="dark"] .pricing-card.featured .card-badge { background: #fff; color: #000; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════ */
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--page-bg);
   color: var(--text);
-  line-height: 1.6;
+  background: var(--shell-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
-
-/* ── Navbar ── */
-.navbar {
-  position: fixed; top: 12px; left: 16px; right: 16px;
-  height: 58px;
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px;
-}
-.navbar-logo {
-  font-size: 20px; font-weight: 700; color: var(--black);
-  text-decoration: none; letter-spacing: -0.5px;
-}
-.navbar-links { display: flex; align-items: center; gap: 32px; }
-.navbar-links a {
-  font-size: 14px; font-weight: 500; color: var(--text-secondary);
-  text-decoration: none; transition: color 0.15s;
-}
-.navbar-links a:hover { color: var(--black); }
-.navbar-cta {
-  background: var(--black); color: #fff;
-  padding: 8px 20px; border-radius: 10px;
-  font-size: 14px; font-weight: 600;
-  text-decoration: none; transition: opacity 0.15s;
-}
-.navbar-cta:hover { opacity: 0.85; }
-.navbar-mobile-toggle { display: none; background: none; border: none; cursor: pointer; }
-
-/* ── Page Shell ── */
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
 .page-shell {
-  margin: 76px 12px 12px 12px;
+  margin: 76px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 2px;
 }
-.page-shell > section, .page-shell > div {
+.page-shell > section, .page-shell > footer {
   background: var(--bg);
-  background-image: radial-gradient(circle, #e5e5e5 0.8px, transparent 0.8px);
-  background-size: 20px 20px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
+  border-radius: var(--radius);
   overflow: hidden;
-}
-
-/* ── Section shared ── */
-.section { padding: 80px 64px; }
-.section-sm { padding: 48px 64px; }
-.section-border { /* inherits from page-shell > section */ }
-.section-surface { background: var(--surface); }
-/* ── Hero ── */
-.hero {
-  display: flex; align-items: center; gap: 48px; padding: 100px 64px 80px;
-  background: #000 !important;
-  background-image: none !important;
-  color: #fff;
-  border-radius: 20px;
   position: relative;
-  overflow: hidden;
-  min-height: 80vh;
 }
-.hero::before {
-  content: ''; position: absolute; inset: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+.container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TEXTURE OVERLAYS
+   ═══════════════════════════════════════════════════════════════ */
+.noise::after {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.4;
+}
+.dot-grid::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
   background-size: 24px 24px;
+  opacity: 0.5;
   pointer-events: none;
 }
-.hero .hero-label { color: rgba(255,255,255,0.5); }
-.hero .hero-h1 { color: #fff; }
-.hero .hero-sub { color: rgba(255,255,255,0.5); }
-.hero .hero-cta { background: #fff; color: #000; }
-.hero .hero-cta:hover { background: #e5e5e5; }
-.hero .hero-cta-sub { color: rgba(255,255,255,0.35); }
-.hero .hero-chart-label { color: rgba(255,255,255,0.4); }
-.section-dark {
-  background: #000 !important;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px) !important;
-  background-size: 24px 24px !important;
-  color: #fff;
+.diag-lines::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background: repeating-linear-gradient(
+    -45deg, transparent, transparent 10px,
+    var(--border) 10px, var(--border) 10.5px
+  );
+  opacity: 0.3;
+  pointer-events: none;
 }
-.section-dark h2, .section-dark h3 { color: #fff; }
-.section-dark p { color: rgba(255,255,255,0.5); }
-.hero-text { flex: 0 0 45%; }
-.hero-label {
-  font-size: 13px; font-weight: 600; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;
+.star-dots::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
 }
-.hero-h1 {
-  font-size: 56px; font-weight: 800; line-height: 1.08;
-  letter-spacing: -2px; color: var(--black); margin-bottom: 24px;
-}
-.hero-sub {
-  font-size: 18px; color: var(--text-secondary); line-height: 1.6;
-  max-width: 420px; margin-bottom: 32px;
-}
-.hero-cta {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--black); color: #fff;
-  padding: 14px 32px; border-radius: 12px;
-  font-size: 16px; font-weight: 600;
-  text-decoration: none; transition: opacity 0.15s; border: none; cursor: pointer;
-}
-.hero-cta:hover { opacity: 0.85; }
-.hero-cta-sub {
-  margin-top: 12px; font-size: 13px; color: var(--muted);
-}
-.hero-chart { flex: 0 0 55%; position: relative; }
-.hero-chart-container { width: 100%; height: 380px; border-radius: 12px; overflow: hidden; }
-.hero-chart-label {
-  text-align: center; margin-top: 12px;
-  font-size: 13px; color: var(--muted); font-weight: 500;
-}
-/* ── Stats ── */
-.stats-bar {
-  display: flex; justify-content: center; align-items: center;
-  gap: 12px; flex-wrap: wrap;
-  font-size: 15px; color: var(--muted); font-weight: 500;
-}
-.stats-bar .dot { color: var(--border-hover); }
 
-/* ── How It Works ── */
-.how-header { text-align: center; margin-bottom: 56px; }
-.how-header h2 {
-  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
+/* ═══════════════════════════════════════════════════════════════
+   NAVBAR
+   ═══════════════════════════════════════════════════════════════ */
+.navbar {
+  position: fixed; top: 8px; left: 12px; right: 12px; z-index: 1000;
+  height: var(--nav-height);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), background 0.3s, border-color 0.3s;
 }
-.how-steps {
+.navbar.hidden { transform: translateY(-120%); }
+.nav-logo {
+  font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-logo .logo-dot {
+  width: 10px; height: 10px; background: var(--green);
+  border-radius: 50%; display: inline-block;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links a {
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+  color: var(--text-secondary);
+}
+.theme-toggle:hover { background: var(--bg-cream); }
+.theme-toggle svg { width: 18px; height: 18px; }
+.icon-moon { display: none; }
+.btn-signin {
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  padding: 8px 16px; border-radius: 10px; transition: color 0.2s, background 0.2s;
+}
+.btn-signin:hover { color: var(--text); background: var(--bg-cream); }
+.btn-get-started {
+  font-size: 14px; font-weight: 600; color: #fff;
+  background: var(--accent); padding: 8px 20px; border-radius: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-get-started:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HERO SECTION
+   ═══════════════════════════════════════════════════════════════ */
+.hero { background: var(--bg-warm); padding: 100px 0 80px; min-height: 90vh; display: flex; align-items: center; }
+.hero-mesh {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(34,197,94,0.07) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(59,130,246,0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(245,158,11,0.04) 0%, transparent 50%);
+  animation: meshShift 15s ease-in-out infinite;
+}
+@keyframes meshShift {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  33% { transform: scale(1.1) rotate(1deg); }
+  66% { transform: scale(0.95) rotate(-1deg); }
+}
+.hero-grid {
+  position: relative; z-index: 2;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+}
+.hero-left h1 {
+  font-size: 56px; font-weight: 800; letter-spacing: -2px;
+  line-height: 1.08; margin-bottom: 20px; min-height: 130px;
+}
+.typewriter-cursor {
+  display: inline-block; width: 3px; height: 52px;
+  background: var(--green); margin-left: 4px;
+  animation: blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.hero-subtitle {
+  font-size: 18px; color: var(--text-secondary); line-height: 1.6;
+  margin-bottom: 32px; max-width: 440px;
+}
+.hero-ctas { display: flex; gap: 12px; margin-bottom: 40px; }
+.btn-hero-primary {
+  font-size: 16px; font-weight: 600; color: #fff;
+  background: var(--accent); padding: 14px 32px; border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-hero-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+.btn-hero-secondary {
+  font-size: 16px; font-weight: 500; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 14px 32px; border-radius: 12px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.btn-hero-secondary:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-secondary);
+}
+.scanner-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 100px; padding: 8px 16px; font-size: 13px;
+  color: var(--text-secondary); font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.scanner-dot {
+  width: 8px; height: 8px; background: var(--green);
+  border-radius: 50%; animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.trust-row {
+  display: flex; gap: 24px; align-items: center;
+  font-size: 13px; color: var(--muted);
+}
+.trust-row span { display: flex; align-items: center; gap: 6px; }
+.trust-row svg { width: 14px; height: 14px; opacity: 0.5; }
+
+/* Hero Chart Area */
+.hero-chart-wrap {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+  transition: box-shadow 0.3s;
+}
+.hero-chart-wrap:hover { box-shadow: 0 12px 48px rgba(0,0,0,0.1); }
+.chart-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.chart-header .ticker { font-weight: 700; font-size: 16px; }
+.chart-header .price-up { color: var(--green); font-weight: 600; font-size: 14px; }
+#hero-chart { width: 100%; height: 280px; border-radius: 8px; overflow: hidden; }
+
+/* Floating badges */
+.float-badge {
+  position: absolute; z-index: 10;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 100px; padding: 6px 14px;
+  font-size: 12px; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  animation: floatBob 3s ease-in-out infinite;
+}
+.float-badge.b1 { top: -12px; right: 30px; color: var(--green); animation-delay: 0s; }
+.float-badge.b2 { bottom: 60px; left: -20px; color: var(--accent); animation-delay: 0.8s; }
+.float-badge.b3 { bottom: -8px; right: 60px; color: var(--green); animation-delay: 1.6s; }
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+  z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+}
+.scroll-indicator svg {
+  width: 20px; height: 20px; animation: bounceDown 1.8s ease-in-out infinite;
+}
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STATS ROW
+   ═══════════════════════════════════════════════════════════════ */
+.stats-section { background: var(--surface); padding: 60px 0; }
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
+  text-align: center;
+}
+.stat-item { position: relative; }
+.stat-item:not(:last-child)::after {
+  content: ''; position: absolute; right: -16px; top: 10%;
+  height: 80%; width: 1px; background: var(--border);
+}
+.stat-number {
+  font-size: 42px; font-weight: 800; letter-spacing: -1.5px;
+  margin-bottom: 6px;
+}
+.stat-number .stat-suffix { font-size: 28px; }
+.stat-label { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+
+/* ═══════════════════════════════════════════════════════════════
+   HOW IT WORKS
+   ═══════════════════════════════════════════════════════════════ */
+.how-section { background: var(--bg-cream); padding: 100px 0; }
+.section-label {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--muted); margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: 40px; font-weight: 800; letter-spacing: -1.5px;
+  margin-bottom: 16px; line-height: 1.15;
+}
+.section-subtitle {
+  font-size: 17px; color: var(--text-secondary); line-height: 1.6;
+  max-width: 520px; margin-bottom: 60px;
+}
+.steps-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px;
-  max-width: 900px; margin: 0 auto; position: relative;
+  position: relative;
 }
-.how-step { text-align: center; }
-.how-step-icon {
-  width: 56px; height: 56px; border-radius: 14px;
-  background: var(--surface-2); border: 1px solid var(--border);
+.step-card {
+  position: relative; z-index: 2;
+  text-align: center; padding: 40px 24px;
+}
+.step-num {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: var(--accent); color: var(--bg);
+  font-size: 22px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 20px;
 }
-.how-step-icon svg { width: 24px; height: 24px; stroke: var(--black); }
-.how-step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--black); }
-.how-step p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
-/* ── Strategy Visual ── */
-.strategy-header { text-align: center; margin-bottom: 16px; }
-.strategy-header h2 {
-  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
-}
-.strategy-header p {
-  font-size: 16px; color: var(--text-secondary); margin-top: 8px;
-}
-.strategy-chart-container { width: 100%; height: 420px; border-radius: 12px; overflow: hidden; margin: 32px 0 16px; }
-.strategy-footer {
-  text-align: center; font-size: 15px; color: var(--text-secondary); font-weight: 500;
+.step-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+.step-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
+.steps-connector {
+  position: absolute; top: 68px; left: 20%; right: 20%;
+  height: 2px; z-index: 1;
+  background: repeating-linear-gradient(90deg, var(--border) 0, var(--border) 8px, transparent 8px, transparent 16px);
 }
 
-/* ── Pricing ── */
-.pricing-header { text-align: center; margin-bottom: 48px; }
-.pricing-header h2 {
-  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
-}
-.pricing-header p { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
-/* Pricing grid */
-.pricing-grid {
+/* ═══════════════════════════════════════════════════════════════
+   BENTO FEATURES GRID
+   ═══════════════════════════════════════════════════════════════ */
+.features-section { background: var(--surface); padding: 100px 0; }
+.bento-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto;
   gap: 16px;
-  max-width: 1100px;
-  margin: 0 auto;
 }
-.price-card {
-  background: #fff;
+.bento-card {
+  background: var(--bg-warm);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 32px 24px;
-  transition: all 0.2s ease;
-  position: relative;
+  padding: 32px;
+  position: relative; z-index: 2;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s, border-color 0.3s;
+  overflow: hidden;
 }
-.price-card:hover { border-color: #a3a3a3; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-.price-card-featured { border: 2px solid var(--black); }
-.price-badge {
-  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-  background: var(--black); color: #fff; font-size: 11px; font-weight: 600;
-  padding: 4px 14px; border-radius: 50px; white-space: nowrap;
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  border-color: var(--text-secondary);
 }
-.price-tier { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.price-amount { font-size: 40px; font-weight: 800; color: var(--black); letter-spacing: -2px; margin-bottom: 20px; }
-.price-amount span { font-size: 15px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
-.price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-.price-features li { font-size: 13px; color: var(--text-secondary); padding-left: 20px; position: relative; }
-.price-features li::before { content: "\2713"; position: absolute; left: 0; color: var(--black); font-weight: 700; }
-.price-btn {
-  display: block; width: 100%; text-align: center; padding: 12px; border-radius: 10px;
-  font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.15s;
-  background: #fff; color: var(--black); border: 1px solid var(--border); cursor: pointer;
-}
-.price-btn:hover { border-color: var(--black); }
-.price-btn-active { background: var(--black); color: #fff; border-color: var(--black); }
-.price-btn-active:hover { opacity: 0.85; }
-@media (max-width: 900px) {
-  .pricing-grid { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 600px) {
-  .pricing-grid { grid-template-columns: 1fr; max-width: 360px; }
+.bento-card.wide { grid-column: span 2; }
+.bento-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--bg-cream); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px; font-size: 20px;
 }
 
-/* ── CTA ── */
-.final-cta { text-align: center; }
-.final-cta h2 {
-  font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--black);
-  margin-bottom: 24px;
+.bento-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.bento-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.bento-mini-chart {
+  margin-top: 20px; height: 60px;
+  display: flex; align-items: flex-end; gap: 3px;
 }
-.final-cta .hero-cta { margin-bottom: 12px; }
-.final-cta .cta-sub { font-size: 13px; color: var(--muted); }
+.bento-mini-chart .bar {
+  flex: 1; border-radius: 3px 3px 0 0;
+  background: var(--green); opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.bento-card:hover .bento-mini-chart .bar { opacity: 1; }
+.bento-mini-chart .bar.red { background: var(--red); }
 
-/* ── Footer Shell ── */
-.footer-shell {
-  background: var(--bg);
-  margin: 0 12px 12px 12px;
-  border-radius: 20px;
+/* ═══════════════════════════════════════════════════════════════
+   STRATEGY CHART
+   ═══════════════════════════════════════════════════════════════ */
+.strategy-section { background: var(--bg-cream); padding: 100px 0; }
+.strategy-chart-wrap {
+  background: var(--surface);
   border: 1px solid var(--border);
-  padding: 32px 64px;
-  display: flex; justify-content: space-between; align-items: center;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
 }
-.footer-brand { font-size: 14px; color: var(--muted); }
-.footer-links { display: flex; gap: 24px; }
-.footer-links a {
-  font-size: 13px; color: var(--muted); text-decoration: none;
-  transition: color 0.15s;
+#strategy-chart { width: 100%; height: 340px; border-radius: 8px; overflow: hidden; }
+.strategy-stats {
+  display: flex; gap: 32px; margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
-.footer-links a:hover { color: var(--text-secondary); }
 
-/* ── Scroll Animations ── */
+.strategy-stat-item .ss-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.strategy-stat-item .ss-value { font-size: 18px; font-weight: 700; }
+.strategy-stat-item .ss-value.green { color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════
+   PRICING
+   ═══════════════════════════════════════════════════════════════ */
+.pricing-section { background: var(--surface); padding: 100px 0; }
+.pricing-toggle-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; margin-bottom: 48px;
+}
+.pricing-toggle-label { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+.pricing-toggle-label.active { color: var(--text); font-weight: 600; }
+.pricing-toggle {
+  width: 48px; height: 26px; border-radius: 100px;
+  background: var(--border); position: relative; cursor: pointer;
+  transition: background 0.3s;
+}
+.pricing-toggle.annual { background: var(--green); }
+.pricing-toggle .toggle-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; position: absolute; top: 3px; left: 3px;
+  transition: transform 0.3s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.pricing-toggle.annual .toggle-dot { transform: translateX(22px); }
+.save-badge {
+  font-size: 11px; font-weight: 600; color: var(--green);
+  background: rgba(34,197,94,0.1); padding: 3px 8px; border-radius: 6px;
+}
+
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+}
+.pricing-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px 24px;
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.06);
+  border-color: var(--text-secondary);
+}
+.pricing-card.featured {
+  border: 2px solid transparent;
+  background-image: linear-gradient(var(--bg), var(--bg)),
+    linear-gradient(135deg, var(--accent), var(--green), var(--accent));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+.card-badge {
+  position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: var(--bg); font-size: 11px;
+  font-weight: 700; padding: 4px 14px; border-radius: 100px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.pricing-tier { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+.pricing-price { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; }
+.pricing-price .period { font-size: 14px; font-weight: 500; color: var(--muted); }
+
+.pricing-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+.pricing-features { list-style: none; margin-bottom: 28px; }
+.pricing-features li {
+  font-size: 13px; color: var(--text-secondary); padding: 6px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.pricing-features li::before {
+  content: ''; width: 16px; height: 16px; flex-shrink: 0;
+  background: var(--green); border-radius: 50%;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.btn-pricing {
+  display: block; width: 100%; text-align: center;
+  padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  border: 1px solid var(--border); color: var(--text);
+  transition: all 0.2s;
+}
+.btn-pricing:hover { border-color: var(--accent); background: var(--bg-cream); }
+.btn-pricing.primary {
+  background: var(--accent); color: var(--bg); border-color: var(--accent);
+}
+.btn-pricing.primary:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CTA SECTION — THE ONE BLACK SECTION
+   ═══════════════════════════════════════════════════════════════ */
+.cta-section {
+  background: #0a0a0a !important; padding: 100px 0; text-align: center;
+}
+.cta-section h2 {
+  font-size: 44px; font-weight: 800; letter-spacing: -1.5px;
+  color: #ffffff; margin-bottom: 16px;
+}
+.cta-section p {
+  font-size: 17px; color: #999; margin-bottom: 36px; max-width: 440px; margin-left: auto; margin-right: auto;
+}
+.btn-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #ffffff; color: #0a0a0a;
+  font-size: 16px; font-weight: 600;
+  padding: 16px 36px; border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: ctaPulse 3s ease-in-out infinite;
+}
+.btn-cta:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 32px rgba(255,255,255,0.15);
+}
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.1); }
+  50% { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════════ */
+.footer { background: var(--bg-cream) !important; padding: 60px 0 32px; }
+.footer-grid {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+  margin-bottom: 48px;
+}
+.footer-brand { max-width: 280px; }
+.footer-brand .nav-logo { margin-bottom: 16px; }
+.footer-brand p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.footer-col h4 {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px;
+}
+.footer-col a {
+  display: block; font-size: 14px; color: var(--text-secondary);
+  padding: 4px 0; transition: color 0.2s;
+}
+.footer-col a:hover { color: var(--text); }
+.footer-bottom {
+  border-top: 1px solid var(--border); padding-top: 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: var(--muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLL REVEAL ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
 .reveal {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
 }
 .reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+.reveal-delay-6 { transition-delay: 0.6s; }
 
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  .hero-mesh { animation: none; }
+  .typewriter-cursor { animation: none; opacity: 1; }
 }
 
-/* ── Responsive ── */
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .navbar { padding: 0 16px; }
-  .navbar-links { display: none; }
-  .navbar-mobile-toggle { display: block; }
-  .page-shell { margin: 68px 12px 12px 12px; border-radius: 14px; }
-  .section { padding: 48px 24px; }
-  .section-sm { padding: 32px 24px; }
-  .hero {
-    flex-direction: column; padding: 48px 24px;
-  }
-  .hero-text { flex: none; width: 100%; }
-  .hero-h1 { font-size: 36px; letter-spacing: -1px; }
-  .hero-sub { font-size: 16px; }
-  .hero-chart { flex: none; width: 100%; }
-  .hero-chart-container { height: 260px; }
-  .how-steps { grid-template-columns: 1fr; gap: 32px; }
-  .strategy-chart-container { height: 280px; }
-  .pricing-table-wrap { overflow-x: auto; }
-  .footer-shell {
-    margin: 0 12px 12px 12px; border-radius: 14px;
-    flex-direction: column; gap: 16px; padding: 24px;
-    text-align: center;
-  }
-  .how-header h2, .strategy-header h2, .pricing-header h2, .final-cta h2 {
-    font-size: 28px;
-  }
+  .container { padding: 0 20px; }
+  .page-shell { margin: 68px 8px 8px; }
+  .navbar { left: 8px; right: 8px; padding: 0 16px; }
+  .nav-links { display: none; }
+  .hero { padding: 60px 0 60px; min-height: auto; }
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero-left h1 { font-size: 36px; min-height: 90px; }
+  .typewriter-cursor { height: 34px; }
+  .hero-subtitle { font-size: 16px; }
+  #hero-chart { height: 220px; }
+  .float-badge.b2 { display: none; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .stat-item:not(:last-child)::after { display: none; }
+  .stat-number { font-size: 32px; }
+  .steps-grid { grid-template-columns: 1fr; gap: 24px; }
+  .steps-connector { display: none; }
+  .section-title { font-size: 30px; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .bento-card.wide { grid-column: span 1; }
+  #strategy-chart { height: 250px; }
+  .strategy-stats { flex-wrap: wrap; gap: 16px; }
+  .pricing-grid { grid-template-columns: 1fr; gap: 12px; }
+  .cta-section h2 { font-size: 30px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
 }
+
 </style>
 </head>
 <body>
 
-<!-- ════ NAVBAR ════ -->
-<nav class="navbar">
-  <a href="/" class="navbar-logo">Ferchaud</a>
-  <div class="navbar-links">
-    <a href="#how">Features</a>
-    <a href="#pricing">Pricing</a>
-    <a href="/sources">Sources</a>
-    <a href="/support">Support</a>
-    <a href="/login">Sign In</a>
-    <a href="/signup" class="navbar-cta">Get Started</a>
+<!-- ═══════════════════════════════════════════════════════════════
+     NAVBAR
+     ═══════════════════════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-logo">
+    <span class="logo-dot"></span>
+    Ferchaud
   </div>
-  <button class="navbar-mobile-toggle" onclick="document.querySelector('.navbar-links').style.display=document.querySelector('.navbar-links').style.display==='flex'?'none':'flex'" aria-label="Menu">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#sources">Sources</a>
+    <a href="#support">Support</a>
+  </div>
+  <div class="nav-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+    </button>
+    <a href="/login" class="btn-signin">Sign In</a>
+    <a href="/register" class="btn-get-started">Get Started</a>
+  </div>
 </nav>
 
-<!-- ════ PAGE SHELL ════ -->
-<main class="page-shell">
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE SHELL
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="page-shell">
 
-  <!-- ── Hero ── -->
-  <section class="hero">
-    <div class="hero-text">
-      <div class="hero-label">Ferchaud AI</div>
-      <h1 class="hero-h1">Buy the dip.<br>Sell the peak.</h1>
-      <p class="hero-sub">Our AI monitors 12,000+ stocks and executes trades at the optimal moment &mdash; automatically.</p>
-      <a href="/signup" class="hero-cta">Start Trading <span>&rarr;</span></a>
-      <div class="hero-cta-sub">Paper trading &middot; No credit card</div>
-    </div>
-    <div class="hero-chart">
-      <div id="heroChart" class="hero-chart-container"></div>
-      <div class="hero-chart-label">$RKLB &middot; +18.4% captured</div>
-    </div>
-  </section>
-
-  <!-- ── Stats Bar ── -->
-  <section class="section-sm section-border reveal">
-    <div class="stats-bar">
-      <span>12,847 stocks analyzed</span>
-      <span class="dot">&middot;</span>
-      <span>9 AI strategies</span>
-      <span class="dot">&middot;</span>
-      <span>&lt; 50ms execution</span>
-      <span class="dot">&middot;</span>
-      <span>98% revenue share</span>
-    </div>
-  </section>
-
-  <!-- ── How It Works ── -->
-  <section id="how" class="section section-border reveal">
-    <div class="how-header">
-      <h2>How It Works</h2>
-    </div>
-    <div class="how-steps">
-      <div class="how-step">
-        <div class="how-step-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
+<!-- ═══════════════════════════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="hero noise">
+  <div class="hero-mesh"></div>
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-left">
+        <div class="scanner-badge">
+          <span class="scanner-dot"></span>
+          Scanning <span id="stock-counter">12,847</span> stocks...
         </div>
-        <h3>1. Connect</h3>
-        <p>Link your brokerage account in seconds. We support all major platforms with read-only access.</p>
+        <h1 id="typewriter-target"></h1>
+        <p class="hero-subtitle">AI-powered signals that scan the entire market, identify high-probability setups, and execute trades automatically. No emotion. No hesitation.</p>
+        <div class="hero-ctas">
+          <a href="/register" class="btn-hero-primary">Start Trading Free</a>
+          <a href="#how" class="btn-hero-secondary">See How It Works</a>
+        </div>
+        <div class="trust-row">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Bank-level encryption
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Paper trade first
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Cancel anytime
+          </span>
+        </div>
       </div>
-      <div class="how-step">
-        <div class="how-step-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
+
+      <div class="hero-right">
+        <div class="hero-chart-wrap">
+          <div class="float-badge b1">+18.4%</div>
+          <div class="float-badge b2">AI Signal</div>
+          <div class="float-badge b3">Auto-Executed</div>
+          <div class="chart-header">
+            <span class="ticker">NVDA</span>
+            <span class="price-up">+$12.34 (2.8%)</span>
+          </div>
+          <div id="hero-chart"></div>
         </div>
-        <h3>2. AI Scans</h3>
-        <p>Our models scan 12,000+ stocks in real time, identifying momentum shifts and entry points.</p>
-      </div>
-      <div class="how-step">
-        <div class="how-step-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
-          </svg>
-        </div>
-        <h3>3. Profit</h3>
-        <p>Trades execute automatically at the right moment. You keep 98% of every dollar earned.</p>
       </div>
     </div>
-  </section>
+  </div>
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </div>
+</section>
 
-  <!-- ── Strategy Visual ── -->
-  <section id="strategy" class="section section-border reveal section-dark">
-    <div class="strategy-header">
-      <h2>Every Dip, Caught. Every Peak, Sold.</h2>
-      <p>Multiple buy and sell signals across a real timeline</p>
+<!-- ═══════════════════════════════════════════════════════════════
+     STATS ROW
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item reveal">
+        <div class="stat-number"><span class="counter" data-target="847">0</span><span class="stat-suffix">+</span></div>
+        <div class="stat-label">Active Traders</div>
+      </div>
+      <div class="stat-item reveal reveal-delay-1">
+        <div class="stat-number"><span class="stat-suffix">$</span><span class="counter" data-target="2.4" data-decimal="1">0</span><span class="stat-suffix">M</span></div>
+        <div class="stat-label">Trades Executed</div>
+      </div>
+      <div class="stat-item reveal reveal-delay-2">
+        <div class="stat-number"><span class="counter" data-target="94" data-suffix="%">0</span></div>
+        <div class="stat-label">Signal Accuracy</div>
+      </div>
+      <div class="stat-item reveal reveal-delay-3">
+        <div class="stat-number"><span class="counter" data-target="12" data-suffix="ms">0</span></div>
+        <div class="stat-label">Avg Execution Speed</div>
+      </div>
     </div>
-    <div id="strategyChart" class="strategy-chart-container"></div>
-    <div class="strategy-footer">Every trade, automated. Every dip, caught.</div>
-  </section>
-  <!-- ── Pricing ── -->
-  <section id="pricing" class="section section-border reveal" style="background:#fff;">
-    <div class="pricing-header">
-      <h2>Simple Pricing</h2>
-      <p>Start free. Upgrade when you're ready. Cancel anytime.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HOW IT WORKS
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="how-section diag-lines" id="how">
+  <div class="container">
+    <div class="section-label reveal">How It Works</div>
+    <h2 class="section-title reveal">Three steps to smarter trades</h2>
+    <p class="section-subtitle reveal">No PhD required. Connect your broker, set your risk level, and let the AI handle the rest.</p>
+    <div class="steps-grid">
+      <div class="steps-connector"></div>
+      <div class="step-card reveal reveal-delay-1">
+        <div class="step-num">1</div>
+        <h3 class="step-title">Connect</h3>
+        <p class="step-desc">Link your brokerage account in seconds. We support Alpaca, Interactive Brokers, and more. Your credentials never touch our servers.</p>
+      </div>
+      <div class="step-card reveal reveal-delay-2">
+        <div class="step-num">2</div>
+        <h3 class="step-title">Configure</h3>
+        <p class="step-desc">Set your risk tolerance, position sizes, and which strategies to run. Start with paper trading to build confidence.</p>
+      </div>
+      <div class="step-card reveal reveal-delay-3">
+        <div class="step-num">3</div>
+        <h3 class="step-title">Execute</h3>
+        <p class="step-desc">The AI scans thousands of stocks in real-time, identifies setups, and executes trades automatically with strict risk management.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     BENTO FEATURES
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="features-section dot-grid" id="features">
+  <div class="container">
+    <div class="section-label reveal">Features</div>
+    <h2 class="section-title reveal">Everything you need,<br>nothing you don't</h2>
+    <p class="section-subtitle reveal">Built by traders, for traders. Every feature solves a real problem.</p>
+    <div class="bento-grid">
+      <div class="bento-card wide reveal reveal-delay-1">
+        <div class="bento-icon">&#x1F9E0;</div>
+        <h3 class="bento-title">AI Signal Engine</h3>
+        <p class="bento-desc">Multi-factor analysis combining technical indicators, volume profiles, and market microstructure data. Signals update in real-time as conditions change.</p>
+        <div class="bento-mini-chart">
+          <div class="bar" style="height:30%"></div><div class="bar" style="height:45%"></div>
+          <div class="bar" style="height:35%"></div><div class="bar" style="height:60%"></div>
+          <div class="bar" style="height:80%"></div><div class="bar" style="height:55%"></div>
+          <div class="bar" style="height:90%"></div><div class="bar" style="height:70%"></div>
+          <div class="bar" style="height:85%"></div><div class="bar red" style="height:40%"></div>
+          <div class="bar" style="height:65%"></div><div class="bar" style="height:95%"></div>
+        </div>
+      </div>
+      <div class="bento-card reveal reveal-delay-2">
+        <div class="bento-icon">&#x26A1;</div>
+        <h3 class="bento-title">Auto Execution</h3>
+        <p class="bento-desc">Sub-millisecond order routing directly to your broker. Market, limit, and trailing stop orders handled automatically.</p>
+      </div>
+
+      <div class="bento-card reveal reveal-delay-3">
+        <div class="bento-icon">&#x1F6E1;</div>
+        <h3 class="bento-title">Risk Management</h3>
+        <p class="bento-desc">Position sizing, stop-losses, and portfolio-level risk limits enforced on every trade. Never risk more than you define.</p>
+      </div>
+      <div class="bento-card reveal reveal-delay-4">
+        <div class="bento-icon">&#x1F4CA;</div>
+        <h3 class="bento-title">Live Dashboard</h3>
+        <p class="bento-desc">Real-time P&L, open positions, signal history, and performance analytics. All in one clean interface.</p>
+      </div>
+      <div class="bento-card wide reveal reveal-delay-5">
+        <div class="bento-icon">&#x1F4F1;</div>
+        <h3 class="bento-title">Alerts & Notifications</h3>
+        <p class="bento-desc">Get notified via SMS, email, or push when trades execute, signals trigger, or risk thresholds are hit. Stay informed without being glued to a screen. Configure quiet hours so you only hear what matters.</p>
+        <div class="bento-mini-chart">
+          <div class="bar" style="height:50%"></div><div class="bar" style="height:70%"></div>
+          <div class="bar red" style="height:25%"></div><div class="bar" style="height:80%"></div>
+          <div class="bar" style="height:60%"></div><div class="bar" style="height:90%"></div>
+          <div class="bar" style="height:75%"></div><div class="bar red" style="height:35%"></div>
+          <div class="bar" style="height:85%"></div><div class="bar" style="height:65%"></div>
+          <div class="bar" style="height:95%"></div><div class="bar" style="height:55%"></div>
+        </div>
+      </div>
+      <div class="bento-card reveal reveal-delay-6">
+        <div class="bento-icon">&#x1F4DC;</div>
+        <h3 class="bento-title">Backtesting</h3>
+        <p class="bento-desc">Test any strategy against years of historical data before risking real capital. See exact entries, exits, and drawdowns.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     STRATEGY CHART
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="strategy-section noise">
+  <div class="container">
+    <div class="section-label reveal">Performance</div>
+    <h2 class="section-title reveal">See the strategy in action</h2>
+    <p class="section-subtitle reveal">Real backtest data showing AI-identified entry and exit points across multiple trades.</p>
+    <div class="strategy-chart-wrap reveal">
+      <div id="strategy-chart"></div>
+      <div class="strategy-stats">
+        <div class="strategy-stat-item">
+          <div class="ss-label">Win Rate</div>
+          <div class="ss-value green">68.4%</div>
+        </div>
+        <div class="strategy-stat-item">
+          <div class="ss-label">Avg Return</div>
+          <div class="ss-value green">+4.2%</div>
+        </div>
+        <div class="strategy-stat-item">
+          <div class="ss-label">Max Drawdown</div>
+          <div class="ss-value">-8.1%</div>
+        </div>
+        <div class="strategy-stat-item">
+          <div class="ss-label">Sharpe Ratio</div>
+          <div class="ss-value">2.14</div>
+        </div>
+        <div class="strategy-stat-item">
+          <div class="ss-label">Total Trades</div>
+          <div class="ss-value">247</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PRICING
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="section-label reveal" style="text-align:center">Pricing</div>
+    <h2 class="section-title reveal" style="text-align:center">Simple, transparent pricing</h2>
+    <p class="section-subtitle reveal" style="text-align:center; margin-left:auto; margin-right:auto;">No hidden fees. No commission on your trades. Upgrade or cancel anytime.</p>
+    <div class="pricing-toggle-wrap reveal">
+      <span class="pricing-toggle-label active" id="label-monthly">Monthly</span>
+      <div class="pricing-toggle" id="pricing-toggle" onclick="togglePricing()">
+        <div class="toggle-dot"></div>
+      </div>
+      <span class="pricing-toggle-label" id="label-annual">Annual</span>
+      <span class="save-badge">Save 20%</span>
     </div>
     <div class="pricing-grid">
-      <div class="price-card">
-        <div class="price-tier">Free</div>
-        <div class="price-amount">$0<span>/mo</span></div>
-        <ul class="price-features">
+
+      <!-- Free -->
+      <div class="pricing-card reveal reveal-delay-1">
+        <div class="pricing-tier">Free</div>
+        <div class="pricing-price">$0<span class="period">/mo</span></div>
+        <p class="pricing-desc">Paper trading and basic signals. Perfect for learning the platform.</p>
+        <ul class="pricing-features">
           <li>Paper trading only</li>
-          <li>3 AI strategies</li>
-          <li>Basic market scanner</li>
-          <li>You keep 100% of gains</li>
+          <li>5 AI signals per day</li>
+          <li>Basic dashboard</li>
+          <li>Community support</li>
+          <li>1 strategy slot</li>
         </ul>
-        <a href="/signup" class="price-btn">Start Free</a>
+        <a href="/register" class="btn-pricing">Get Started</a>
       </div>
-      <div class="price-card">
-        <div class="price-tier">Starter</div>
-        <div class="price-amount">$29<span>/mo</span></div>
-        <ul class="price-features">
+      <!-- Starter -->
+      <div class="pricing-card reveal reveal-delay-2">
+        <div class="pricing-tier">Starter</div>
+        <div class="pricing-price"><span class="price-val">$29</span><span class="period">/mo</span></div>
+        <p class="pricing-desc">For traders ready to go live with a small portfolio.</p>
+        <ul class="pricing-features">
           <li>Live trading enabled</li>
-          <li>5 AI strategies</li>
-          <li>Full market scanner</li>
+          <li>25 AI signals per day</li>
+          <li>Auto-execution (up to $10K)</li>
           <li>Email alerts</li>
-          <li>You keep 80% of profits</li>
+          <li>3 strategy slots</li>
+          <li>Email support</li>
         </ul>
-        <a href="/signup" class="price-btn">Get Started</a>
+        <a href="/register" class="btn-pricing">Start Free Trial</a>
       </div>
-      <div class="price-card price-card-featured">
-        <div class="price-badge">Recommended</div>
-        <div class="price-tier">Pro</div>
-        <div class="price-amount">$99<span>/mo</span></div>
-        <ul class="price-features">
-          <li>Live trading enabled</li>
-          <li>All 9 AI strategies</li>
-          <li>Options trading (calls/puts)</li>
-          <li>Grok AI research signals</li>
-          <li>Priority execution</li>
-          <li>You keep 90% of profits</li>
-        </ul>
-        <a href="/signup" class="price-btn price-btn-active">Get Started</a>
-      </div>
-      <div class="price-card">
-        <div class="price-tier">Elite</div>
-        <div class="price-amount">$299<span>/mo</span></div>
-        <ul class="price-features">
-          <li>Everything in Pro</li>
-          <li>Custom strategy config</li>
-          <li>Dedicated support</li>
+
+      <!-- Pro (featured) -->
+      <div class="pricing-card featured reveal reveal-delay-3">
+        <div class="card-badge">Most Popular</div>
+        <div class="pricing-tier">Pro</div>
+        <div class="pricing-price"><span class="price-val">$79</span><span class="period">/mo</span></div>
+        <p class="pricing-desc">Full power for serious traders. No portfolio limits.</p>
+        <ul class="pricing-features">
+          <li>Unlimited AI signals</li>
+          <li>Auto-execution (unlimited)</li>
+          <li>SMS + push alerts</li>
+          <li>10 strategy slots</li>
+          <li>Advanced backtesting</li>
+          <li>Priority support</li>
           <li>API access</li>
-          <li>You keep 98% of profits</li>
         </ul>
-        <a href="/signup" class="price-btn">Contact Us</a>
+        <a href="/register" class="btn-pricing primary">Start Free Trial</a>
+      </div>
+      <!-- Enterprise -->
+      <div class="pricing-card reveal reveal-delay-4">
+        <div class="pricing-tier">Enterprise</div>
+        <div class="pricing-price">Custom</div>
+        <p class="pricing-desc">For funds and teams managing significant capital.</p>
+        <ul class="pricing-features">
+          <li>Everything in Pro</li>
+          <li>Dedicated infrastructure</li>
+          <li>Custom strategies</li>
+          <li>White-glove onboarding</li>
+          <li>SLA guarantee</li>
+          <li>Dedicated account manager</li>
+        </ul>
+        <a href="#support" class="btn-pricing">Contact Sales</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CTA — THE ONE BLACK SECTION
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="cta-section star-dots">
+  <div class="container">
+    <h2 class="reveal">Ready to trade smarter?</h2>
+    <p class="reveal reveal-delay-1">Join hundreds of traders already using AI to find better entries, manage risk, and execute without emotion.</p>
+    <a href="/register" class="btn-cta reveal reveal-delay-2">
+      Start Trading Free
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════════════ -->
+<footer class="footer noise" id="support">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <span class="logo-dot"></span>
+          Ferchaud
+        </div>
+        <p>AI-powered trading signals and automated execution. Built for traders who want an edge without the noise.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#">Changelog</a>
+        <a href="#">API Docs</a>
+      </div>
+      <div class="footer-col" id="sources">
+        <h4>Sources</h4>
+        <a href="#">Market Data</a>
+        <a href="#">Signal Methodology</a>
+        <a href="#">Backtests</a>
+        <a href="#">Research</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="mailto:support@ferchaud.com">Contact</a>
       </div>
     </div>
-  </section>
-  <!-- ── Final CTA ── -->
-  <section class="section section-border reveal">
-    <div class="final-cta">
-      <h2>Ready to trade smarter?</h2>
-      <a href="/signup" class="hero-cta">Get Started Free <span>&rarr;</span></a>
-      <div class="cta-sub">No credit card required</div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 Ferchaud. All rights reserved.</span>
+      <span>
+        <a href="#" style="margin-right:16px;">Privacy Policy</a>
+        <a href="#" style="margin-right:16px;">Terms of Service</a>
+        <a href="#">Risk Disclosure</a>
+      </span>
     </div>
-  </section>
-
-</main>
-
-<!-- ════ FOOTER SHELL ════ -->
-<footer class="footer-shell">
-  <div class="footer-brand">&copy; 2026 Ferchaud. All rights reserved.</div>
-  <div class="footer-links">
-    <a href="/terms">Terms</a>
-    <a href="/privacy">Privacy</a>
-    <a href="/docs">Docs</a>
-    <a href="mailto:support@ferchaud.com">Contact</a>
   </div>
 </footer>
+
+</div><!-- end .page-shell -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════════════ -->
 <script>
-/* ════════════════════════════════════════════
-   HERO CHART — Single stock with BUY / SELL
-   ════════════════════════════════════════════ */
+/* ── Theme Toggle ─────────────────────────────────────────────── */
 (function() {
-  const el = document.getElementById('heroChart');
-  if (!el) return;
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  // Re-apply chart colors
+  if (window.heroChart) initHeroChart();
+  if (window.strategyChart) initStrategyChart();
+}
 
-  const chart = LightweightCharts.createChart(el, {
-    width: el.clientWidth,
-    height: el.clientHeight,
-    layout: {
-      background: { type: 'solid', color: '#000000' },
-      textColor: 'rgba(255,255,255,0.35)',
-      fontFamily: 'Inter, sans-serif',
-      fontSize: 12,
-    },
-    grid: {
-      vertLines: { color: 'rgba(255,255,255,0.06)' },
-      horzLines: { color: 'rgba(255,255,255,0.06)' },
-    },
-    rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
-    timeScale: { borderColor: 'rgba(255,255,255,0.1)', timeVisible: false },
-    crosshair: { mode: 0 },
-    handleScroll: false,
-    handleScale: false,
+/* ── Navbar Hide/Show on Scroll ───────────────────────────────── */
+(function() {
+  const nav = document.getElementById('navbar');
+  let lastY = 0;
+  let ticking = false;
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      window.requestAnimationFrame(function() {
+        const y = window.scrollY;
+        if (y > lastY && y > 100) nav.classList.add('hidden');
+        else nav.classList.remove('hidden');
+        lastY = y;
+        ticking = false;
+      });
+      ticking = true;
+    }
   });
-  // Generate realistic price data — RKLB-like movement
-  const baseDate = new Date('2025-09-01');
-  const heroData = [];
-  let price = 14.20;
-  const points = 90;
-  // Shape: rise → dip (BUY) → rise to peak (SELL) → slight decline
-  const trajectory = [];
-  for (let i = 0; i < points; i++) {
-    const pct = i / points;
-    let trend;
-    if (pct < 0.25) trend = 0.08;        // gentle rise
-    else if (pct < 0.40) trend = -0.18;   // dip down
-    else if (pct < 0.42) trend = -0.02;   // bottom
-    else if (pct < 0.75) trend = 0.20;    // strong rise
-    else if (pct < 0.77) trend = 0.01;    // peak
-    else trend = -0.10;                    // decline
-    const noise = (Math.random() - 0.5) * 0.12;
-    price = Math.max(8, price + trend + noise);
-    const d = new Date(baseDate);
-    d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
-    heroData.push({ time: dateStr, value: parseFloat(price.toFixed(2)) });
-    trajectory.push(price);
-  }
-  // Find actual min/max indices for markers
-  let minIdx = 0, maxIdx = 0;
-  for (let i = 1; i < trajectory.length; i++) {
-    if (trajectory[i] < trajectory[minIdx]) minIdx = i;
-    if (trajectory[i] > trajectory[maxIdx]) maxIdx = i;
-  }
+})();
+</script>
 
-  const areaSeries = chart.addAreaSeries({
-    topColor: 'rgba(255, 255, 255, 0.08)',
-    bottomColor: 'rgba(10, 10, 10, 0.01)',
-    lineColor: '#ffffff',
-    lineWidth: 2,
-    crosshairMarkerVisible: false,
-  });
-  areaSeries.setData(heroData);
+<script>
+/* ── Typewriter Effect ────────────────────────────────────────── */
+(function() {
+  const target = document.getElementById('typewriter-target');
+  const text = 'Buy the dip.\nSell the peak.';
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.className = 'typewriter-cursor';
 
-  // BUY and SELL markers
-  areaSeries.setMarkers([
-    {
-      time: heroData[minIdx].time,
-      position: 'belowBar',
-      color: '#16a34a',
-      shape: 'circle',
-      text: 'BUY',
-    },
-    {
-      time: heroData[maxIdx].time,
-      position: 'aboveBar',
-      color: '#dc2626',
-      shape: 'circle',
-      text: 'SELL',
-    },
-  ]);
-  chart.timeScale().fitContent();
-  new ResizeObserver(() => {
-    chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
-  }).observe(el);
+  function type() {
+    if (i < text.length) {
+      if (text[i] === '\n') {
+        target.appendChild(document.createElement('br'));
+      } else {
+        target.appendChild(document.createTextNode(text[i]));
+      }
+      i++;
+      // Remove and re-add cursor at end
+      if (cursor.parentNode) cursor.remove();
+      target.appendChild(cursor);
+      setTimeout(type, 65 + Math.random() * 40);
+    }
+  }
+  // Small delay before starting
+  setTimeout(type, 600);
 })();
 
-/* ════════════════════════════════════════════
-   STRATEGY CHART — Multiple BUY/SELL cycles
-   ════════════════════════════════════════════ */
+/* ── Stock Counter Tick ───────────────────────────────────────── */
 (function() {
-  const el = document.getElementById('strategyChart');
-  if (!el) return;
-
-  const chart = LightweightCharts.createChart(el, {
-    width: el.clientWidth,
-    height: el.clientHeight,
-    layout: {
-      background: { type: 'solid', color: '#000000' },
-      textColor: 'rgba(255,255,255,0.35)',
-      fontFamily: 'Inter, sans-serif',
-      fontSize: 12,
-    },
-    grid: {
-      vertLines: { color: 'rgba(255,255,255,0.06)' },
-      horzLines: { color: 'rgba(255,255,255,0.06)' },
-    },
-    rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
-    timeScale: { borderColor: 'rgba(255,255,255,0.1)', timeVisible: false },
-    crosshair: { mode: 0 },
-    handleScroll: false,
-    handleScale: false,
-  });
-  // Generate longer timeline with multiple cycles
-  const baseDate = new Date('2025-03-01');
-  const data = [];
-  let price = 22.50;
-  const totalDays = 240;
-
-  // Define wave pattern: 4 cycles of dip->peak
-  const cycles = [
-    { dipAt: 0.10, peakAt: 0.22 },
-    { dipAt: 0.32, peakAt: 0.47 },
-    { dipAt: 0.55, peakAt: 0.70 },
-    { dipAt: 0.80, peakAt: 0.92 },
-  ];
-
-  for (let i = 0; i < totalDays; i++) {
-    const pct = i / totalDays;
-    let trend = 0.02; // slight upward bias
-    // Create waves
-    for (const c of cycles) {
-      const dipCenter = c.dipAt;
-      const peakCenter = c.peakAt;
-      if (Math.abs(pct - dipCenter) < 0.06) trend = -0.22;
-      else if (Math.abs(pct - peakCenter) < 0.05) trend = 0.03;
-      else if (pct > dipCenter && pct < peakCenter && Math.abs(pct - dipCenter) < 0.18) trend = 0.18;
-    }
-    const noise = (Math.random() - 0.5) * 0.15;
-    price = Math.max(15, price + trend + noise);
-    const d = new Date(baseDate);
-    d.setDate(d.getDate() + i);
-    data.push({ time: d.toISOString().split('T')[0], value: parseFloat(price.toFixed(2)) });
-  }
-  // Find local mins and maxes for each cycle
-  const markers = [];
-  const profits = ['+4.2%', '+8.1%', '+3.7%', '+5.9%'];
-
-  for (let ci = 0; ci < cycles.length; ci++) {
-    const c = cycles[ci];
-    const dipStart = Math.floor((c.dipAt - 0.06) * totalDays);
-    const dipEnd = Math.floor((c.dipAt + 0.06) * totalDays);
-    const peakStart = Math.floor((c.peakAt - 0.05) * totalDays);
-    const peakEnd = Math.floor((c.peakAt + 0.05) * totalDays);
-
-    let minI = dipStart, maxI = peakStart;
-    for (let i = dipStart; i <= dipEnd && i < totalDays; i++) {
-      if (data[i].value < data[minI].value) minI = i;
-    }
-    for (let i = peakStart; i <= peakEnd && i < totalDays; i++) {
-      if (data[i].value > data[maxI].value) maxI = i;
-    }
-
-    markers.push({
-      time: data[minI].time,
-      position: 'belowBar',
-      color: '#16a34a',
-      shape: 'circle',
-      text: 'BUY',
-    });
-    markers.push({
-      time: data[maxI].time,
-      position: 'aboveBar',
-      color: '#dc2626',
-      shape: 'circle',
-      text: profits[ci],
-    });
-  }
-  // Sort markers by time
-  markers.sort((a, b) => a.time.localeCompare(b.time));
-
-  const areaSeries = chart.addAreaSeries({
-    topColor: 'rgba(255, 255, 255, 0.06)',
-    bottomColor: 'rgba(10, 10, 10, 0.01)',
-    lineColor: '#ffffff',
-    lineWidth: 2,
-    crosshairMarkerVisible: false,
-  });
-  areaSeries.setData(data);
-  areaSeries.setMarkers(markers);
-
-  chart.timeScale().fitContent();
-  new ResizeObserver(() => {
-    chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
-  }).observe(el);
+  const el = document.getElementById('stock-counter');
+  let count = 12847;
+  setInterval(function() {
+    count += Math.floor(Math.random() * 5) + 1;
+    el.textContent = count.toLocaleString();
+  }, 200);
 })();
-/* ════════════════════════════════════════════
-   SCROLL REVEAL — IntersectionObserver
-   ════════════════════════════════════════════ */
-(function() {
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced) {
-    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
-    return;
-  }
+</script>
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
+<script>
+/* ── Scroll Reveal (IntersectionObserver) ─────────────────────── */
+(function() {
+  const reveals = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(function(el) { observer.observe(el); });
+  } else {
+    // Fallback: show everything
+    reveals.forEach(function(el) { el.classList.add('visible'); });
+  }
+})();
+
+/* ── Animated Counters ────────────────────────────────────────── */
+(function() {
+  const counters = document.querySelectorAll('.counter');
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
+        const el = entry.target;
+        const target = parseFloat(el.getAttribute('data-target'));
+        const decimal = parseInt(el.getAttribute('data-decimal') || '0');
+        const suffix = el.getAttribute('data-suffix') || '';
+        const duration = 1800;
+        const start = performance.now();
+
+        function tick(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          // Ease out cubic
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = eased * target;
+          if (decimal > 0) {
+            el.textContent = current.toFixed(decimal) + suffix;
+          } else {
+            el.textContent = Math.floor(current).toLocaleString() + suffix;
+          }
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+        observer.unobserve(el);
       }
     });
-  }, { threshold: 0.15 });
-
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  }, { threshold: 0.3 });
+  counters.forEach(function(el) { observer.observe(el); });
 })();
-
-
 </script>
+
+<script>
+/* ── Pricing Toggle ───────────────────────────────────────────── */
+var isAnnual = false;
+var monthlyPrices = { starter: 29, pro: 79 };
+var annualPrices  = { starter: 23, pro: 63 };
+
+function togglePricing() {
+  isAnnual = !isAnnual;
+  var toggle = document.getElementById('pricing-toggle');
+  var labelM = document.getElementById('label-monthly');
+  var labelA = document.getElementById('label-annual');
+
+  if (isAnnual) {
+    toggle.classList.add('annual');
+    labelM.classList.remove('active');
+    labelA.classList.add('active');
+  } else {
+    toggle.classList.remove('annual');
+    labelM.classList.add('active');
+    labelA.classList.remove('active');
+  }
+
+  var prices = isAnnual ? annualPrices : monthlyPrices;
+  var vals = document.querySelectorAll('.price-val');
+  vals.forEach(function(el) {
+    var card = el.closest('.pricing-card');
+    var tier = card.querySelector('.pricing-tier').textContent.trim().toLowerCase();
+    if (prices[tier] !== undefined) {
+      el.textContent = '$' + prices[tier];
+    }
+  });
+}
+</script>
+
+<script>
+/* ── Helper: detect dark mode for charts ──────────────────────── */
+function isDark() {
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+function chartColors() {
+  var d = isDark();
+  return {
+    bg: d ? '#111111' : '#ffffff',
+    text: d ? '#999999' : '#999999',
+    grid: d ? '#1e1e1e' : '#f0f0f0',
+    line: d ? '#22c55e' : '#22c55e',
+    area1: d ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.08)',
+    area2: 'rgba(34,197,94,0)',
+    border: d ? '#2a2a2a' : '#eaeaea',
+  };
+}
+
+/* ── Hero Chart (Lightweight Charts) ──────────────────────────── */
+function initHeroChart() {
+  var container = document.getElementById('hero-chart');
+  container.innerHTML = '';
+  var c = chartColors();
+
+  var chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth,
+    height: container.clientHeight,
+    layout: { background: { type: 'solid', color: c.bg }, textColor: c.text, fontFamily: 'Inter' },
+    grid: { vertLines: { color: c.grid }, horzLines: { color: c.grid } },
+    rightPriceScale: { borderColor: c.border },
+    timeScale: { borderColor: c.border, timeVisible: false },
+    crosshair: { mode: 0 },
+    handleScroll: false,
+    handleScale: false,
+  });
+
+  var data = [];
+  var base = 420;
+  for (var i = 0; i < 60; i++) {
+    base += (Math.random() - 0.42) * 6;
+    data.push({ time: '2025-01-' + String(i + 1).padStart(2, '0'), value: parseFloat(base.toFixed(2)) });
+  }
+
+  var series = chart.addAreaSeries({
+    lineColor: c.line,
+    topColor: c.area1,
+    bottomColor: c.area2,
+    lineWidth: 2,
+    priceLineVisible: false,
+    crosshairMarkerVisible: true,
+    crosshairMarkerRadius: 4,
+  });
+  series.setData(data);
+
+  // BUY and SELL markers
+  var buyIdx = 15;
+  var sellIdx = 38;
+  series.setMarkers([
+    { time: data[buyIdx].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp', text: 'BUY' },
+    { time: data[sellIdx].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
+  ]);
+
+  chart.timeScale().fitContent();
+  window.heroChart = chart;
+
+  // Resize handler
+  var ro = new ResizeObserver(function() {
+    chart.applyOptions({ width: container.clientWidth });
+  });
+  ro.observe(container);
+}
+
+/* ── Strategy Chart (Lightweight Charts) ──────────────────────── */
+function initStrategyChart() {
+  var container = document.getElementById('strategy-chart');
+  container.innerHTML = '';
+  var c = chartColors();
+
+  var chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth,
+    height: container.clientHeight,
+    layout: { background: { type: 'solid', color: c.bg }, textColor: c.text, fontFamily: 'Inter' },
+    grid: { vertLines: { color: c.grid }, horzLines: { color: c.grid } },
+    rightPriceScale: { borderColor: c.border },
+    timeScale: { borderColor: c.border, timeVisible: false },
+    crosshair: { mode: 0 },
+    handleScroll: false,
+    handleScale: false,
+  });
+
+  // Generate more complex data with multiple trades
+  var data2 = [];
+  var price = 180;
+  for (var j = 0; j < 120; j++) {
+    price += (Math.random() - 0.46) * 4;
+    if (price < 150) price = 150 + Math.random() * 5;
+    data2.push({ time: '2024-06-' + String(j + 1).padStart(2, '0'), value: parseFloat(price.toFixed(2)) });
+  }
+
+  var series2 = chart.addAreaSeries({
+    lineColor: c.line,
+    topColor: c.area1,
+    bottomColor: c.area2,
+    lineWidth: 2,
+    priceLineVisible: false,
+  });
+  series2.setData(data2);
+
+  // Multiple trade markers
+  series2.setMarkers([
+    { time: data2[8].time,  position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
+    { time: data2[22].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
+    { time: data2[35].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
+    { time: data2[52].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
+    { time: data2[65].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
+    { time: data2[80].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
+    { time: data2[90].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
+    { time: data2[110].time,position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
+  ]);
+
+  chart.timeScale().fitContent();
+  window.strategyChart = chart;
+
+  var ro2 = new ResizeObserver(function() {
+    chart.applyOptions({ width: container.clientWidth });
+  });
+  ro2.observe(container);
+}
+
+// Initialize both charts on load
+document.addEventListener('DOMContentLoaded', function() {
+  initHeroChart();
+  initStrategyChart();
+});
+</script>
+
 </body>
 </html>

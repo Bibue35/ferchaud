@@ -159,8 +159,10 @@ async def api_signup(request: Request, body: dict = Body(...)):
     username = body.get("username", "").strip()
     password = body.get("password", "")
     if not email or not username or not password:
-        raise HTTPException(400, "All fields required")
+        return JSONResponse({"error": "All fields required"}, status_code=400)
     result = signup_user(email, username, password)
+    if "error" in result:
+        return JSONResponse(result, status_code=400)
     response = JSONResponse(result)
     response.set_cookie("token", result["token"], httponly=True, max_age=86400 * 30, samesite="lax")
     return response
@@ -171,6 +173,8 @@ async def api_login(request: Request, body: dict = Body(...)):
     email    = body.get("email", "").strip().lower()
     password = body.get("password", "")
     result   = login_user(email, password)
+    if "error" in result:
+        return JSONResponse(result, status_code=401)
     response = JSONResponse(result)
     response.set_cookie("token", result["token"], httponly=True, max_age=86400 * 30, samesite="lax")
     return response
@@ -197,6 +201,13 @@ async def auth_x():
 @app.post("/api/auth/logout")
 async def api_logout():
     response = JSONResponse({"ok": True})
+    response.delete_cookie("token")
+    return response
+
+
+@app.get("/api/auth/logout")
+async def api_logout_get():
+    response = RedirectResponse("/login")
     response.delete_cookie("token")
     return response
 
