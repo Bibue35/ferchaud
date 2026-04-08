@@ -16,6 +16,11 @@ from core.risk import RiskEngine
 from core.portfolio import Portfolio
 from utils.logger import get_logger
 
+try:
+    from core.trade_learner import trade_learner
+except ImportError:
+    trade_learner = None
+
 log = get_logger("core.executor")
 
 
@@ -52,8 +57,34 @@ class OrderExecutor:
             return None
         side = "sell" if pos["side"] == "long" else "buy"
         qty = abs(pos["qty"])
+        entry_price = pos.get("avg_entry", 0)
+        price = self._get_price(symbol)
         log.info("Exiting %s (%s) qty=%s  reason=%s", symbol, pos["side"], qty, reason or "—")
-        return self._submit_with_retry(symbol, qty, side, "market")
+        result = self._submit_with_retry(symbol, qty, side, "market")
+
+        # Record trade in TradeLearner for feedback loop
+        if result and trade_learner:
+            try:
+                pnl = (price - entry_price) * qty if pos["side"] == "long" else (entry_price - price) * qty
+                trade_learner.record_trade({
+                    "symbol": symbol,
+                    "side": side,
+                    "entry_price": entry_price,
+                    "exit_price": price or 0,
+                    "qty": qty,
+                    "pnl": pnl if price else 0,
+                    "strategy": pos.get("strategy_tag", "unknown"),
+                    "signals_at_entry": pos.get("signals", []),
+                    "signal_score": pos.get("score", 0),
+                    "market_regime": "unknown",
+                    "volatility": 0,
+                    "volume_ratio": 0,
+                    "exit_reason": reason or "unknown",
+                })
+            except Exception:
+                pass
+
+        return result
 
     def place_limit_pair(self, symbol, bid, ask, qty):
         """Market-making: place limit buy at bid and limit sell at ask.

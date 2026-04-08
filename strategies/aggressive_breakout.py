@@ -34,6 +34,11 @@ from data.x_research import x_researcher
 from data.full_market_scanner import scanner
 from strategies.base import BaseStrategy
 
+try:
+    from core.trade_learner import trade_learner
+except ImportError:
+    trade_learner = None
+
 # Mode can be overridden per-user via trading_mode field
 GLOBAL_MODE = os.getenv("TRADING_MODE_STRATEGY", "aggressive")  # passive | aggressive
 
@@ -194,66 +199,85 @@ class AggressiveBreakoutStrategy(BaseStrategy):
         con_lo  = float(lo.rolling(self.CONSOL_PERIOD).min().iloc[-2])
 
         # ── Score signals ─────────────────────────────────────────────────────
-        sl, ss = 0, 0  # long score, short score
+        long_signals, short_signals = [], []  # named signal lists for learner
 
         # 1. Consolidation breakout
-        if px > con_hi:   sl += 2
-        if px < con_lo:   ss += 2
+        if px > con_hi:   long_signals.append("consolidation_breakout")
+        if px < con_lo:   short_signals.append("consolidation_breakout")
 
         # 2. EMA alignment
-        if ef > em_ > es:  sl += 2
-        elif ef < em_ < es: ss += 2
+        if ef > em_ > es:  long_signals.append("ema_alignment")
+        elif ef < em_ < es: short_signals.append("ema_alignment")
 
         # 3. MACD rising
-        if mh > 0 and mh > mh_p:   sl += 1
-        elif mh < 0 and mh < mh_p: ss += 1
+        if mh > 0 and mh > mh_p:   long_signals.append("macd_histogram")
+        elif mh < 0 and mh < mh_p: short_signals.append("macd_histogram")
 
         # 4. Volume spike
         if rvol >= cfg["volume_spike_mult"]:
-            sl += 1; ss += 1
+            long_signals.append("volume_spike"); short_signals.append("volume_spike")
 
         # 5. ATR expansion
         if atr_ > atr_p * 1.2:
-            sl += 1; ss += 1
+            long_signals.append("atr_expansion"); short_signals.append("atr_expansion")
 
         # 6. Bollinger breakout
-        if px > float(ub.iloc[-1]): sl += 1
-        if px < float(lb.iloc[-1]): ss += 1
+        if px > float(ub.iloc[-1]): long_signals.append("bb_breakout")
+        if px < float(lb.iloc[-1]): short_signals.append("bb_breakout")
 
         # 7. RSI filter (avoid overbought longs / oversold shorts)
-        if cfg["rsi_long_min"] <= rsi_ <= cfg["rsi_long_max"]:   sl += 1
-        if cfg["rsi_short_min"] <= rsi_ <= cfg["rsi_short_max"]: ss += 1
+        if cfg["rsi_long_min"] <= rsi_ <= cfg["rsi_long_max"]:   long_signals.append("rsi_momentum")
+        if cfg["rsi_short_min"] <= rsi_ <= cfg["rsi_short_max"]: short_signals.append("rsi_momentum")
 
         # 8. Relative volume rank
-        if rvol >= 1.0 and rvol > 1.5: sl += 1; ss += 1
+        if rvol >= 1.0 and rvol > 1.5:
+            long_signals.append("volume_rank"); short_signals.append("volume_rank")
 
         # 9. X Research sentiment
         td = x_researcher.trending_details
         if symbol in td:
             sent = td[symbol].get("sentiment", "")
-            if sent == "bullish":  sl += 2
-            elif sent == "bearish": ss += 2
+            if sent == "bullish":  long_signals.append("x_research")
+            elif sent == "bearish": short_signals.append("x_research")
 
         # 10. Scanner score
         sd = scanner.hot_details.get(symbol, {})
         if sd:
             score = sd.get("score", 0)
-            if sd.get("direction") == "long":   sl += min(3, score // 3)
-            elif sd.get("direction") == "short": ss += min(3, score // 3)
+            if sd.get("direction") == "long" and score >= 3:   long_signals.append("scanner_score")
+            elif sd.get("direction") == "short" and score >= 3: short_signals.append("scanner_score")
+
+        # ── Weighted scoring via TradeLearner ─────────────────────────────────
+        if trade_learner:
+            sl = trade_learner.get_weighted_score(long_signals)
+            ss = trade_learner.get_weighted_score(short_signals)
+        else:
+            # Fallback: original point-based scoring
+            _weight_map = {
+                "consolidation_breakout": 2, "ema_alignment": 2,
+                "macd_histogram": 1, "volume_spike": 1, "atr_expansion": 1,
+                "bb_breakout": 1, "rsi_momentum": 1, "volume_rank": 1,
+                "x_research": 2, "scanner_score": 3,
+            }
+            sl = sum(_weight_map.get(s, 1) for s in long_signals)
+            ss = sum(_weight_map.get(s, 1) for s in short_signals)
 
         # ── Decision ──────────────────────────────────────────────────────────
         min_sig = cfg["min_signals"]
         if sl >= min_sig and sl > ss:
             if sl >= cfg["options_threshold"]:
                 self._enter_options(symbol, "long", px, atr_, sl)
-            self._enter_breakout(symbol, "long", px, atr_, sl)
+            self._enter_breakout(symbol, "long", px, atr_, sl,
+                                 active_signals=long_signals)
         elif ss >= min_sig and ss > sl:
             if ss >= cfg["options_threshold"]:
                 self._enter_options(symbol, "short", px, atr_, ss)
-            self._enter_breakout(symbol, "short", px, atr_, ss)
+            self._enter_breakout(symbol, "short", px, atr_, ss,
+                                 active_signals=short_signals)
 
     def _enter_breakout(self, symbol: str, direction: str, price: float,
-                        atr_val: float, signals: int) -> None:
+                        atr_val: float, signals: float,
+                        active_signals: list = None) -> None:
         cfg = self._cfg
         equity = self.portfolio.equity
         cap = min(equity, getattr(CONFIG, "virtual_cap", 5000.0))
@@ -281,12 +305,20 @@ class AggressiveBreakoutStrategy(BaseStrategy):
             direction.upper(), symbol, price, signals, conf * 100,
             stop, tp, initial_usd, self._mode
         )
+        tag = f"breakout_{self._mode}"
         if direction == "long":
             self.executor.enter_long(symbol, qty, stop_price=stop, take_profit=tp,
-                                     strategy_tag=f"breakout_{self._mode}", confidence=conf)
+                                     strategy_tag=tag, confidence=conf)
         else:
             self.executor.enter_short(symbol, qty, stop_price=stop, take_profit=tp,
-                                      strategy_tag=f"breakout_{self._mode}", confidence=conf)
+                                      strategy_tag=tag, confidence=conf)
+
+        # Store signals + metadata on the position for TradeLearner recording on exit
+        pos = self.portfolio.positions.get(symbol)
+        if pos is not None:
+            pos["signals"] = active_signals or []
+            pos["score"] = signals
+            pos["strategy_tag"] = tag
 
     def _manage_position(self, symbol: str, pos: dict) -> None:
         df = self.feed.get_bars(symbol, timeframe="15Min", limit=20)
