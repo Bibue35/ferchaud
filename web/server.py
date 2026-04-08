@@ -646,6 +646,13 @@ async def feed_page(request: Request):
     user = require_user(request)
     return templates.TemplateResponse("feed.html", {"request": request, "user": user})
 
+@app.get("/connections", response_class=HTMLResponse)
+async def connections_page(request: Request):
+    user = require_user(request)
+    return templates.TemplateResponse("connections.html", {"request": request, "user": user})
+
+
+
 
 @app.get("/sources", response_class=HTMLResponse)
 async def sources_page(request: Request):
