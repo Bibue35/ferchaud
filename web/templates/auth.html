@@ -207,7 +207,7 @@
 
     <div id="auth-error" class="auth-error-msg"></div>
 
-    <form class="auth-form" id="auth-form" onsubmit="return handleAuth(event)">
+    <form class="auth-form" id="auth-form" method="post" onsubmit="handleAuth(event); return false;">
       {% if mode == 'signup' %}
       <div class="auth-input-group">
         <label>Username</label>
@@ -264,40 +264,70 @@ function toggleTheme() {
   document.getElementById('themeBtn').textContent = t === 'dark' ? '\u2600' : '\u263E';
 })();
 
-async function handleAuth(e) {
+function handleAuth(e) {
   e.preventDefault();
-  const form = e.target;
-  const data = Object.fromEntries(new FormData(form));
+  e.stopPropagation();
+
   const isSignup = '{{ mode }}' === 'signup';
   const url = isSignup ? '/api/auth/signup' : '/api/auth/login';
   const errEl = document.getElementById('auth-error');
   const btn = document.getElementById('auth-btn');
+  const form = document.getElementById('auth-form');
 
-  btn.textContent = 'Loading...';
+  // Collect form values directly (no FormData — avoids browser quirks)
+  const email = form.querySelector('[name="email"]').value.trim();
+  const password = form.querySelector('[name="password"]').value;
+  const data = { email, password };
+  if (isSignup) {
+    const usernameEl = form.querySelector('[name="username"]');
+    if (usernameEl) data.username = usernameEl.value.trim();
+  }
+
+  if (!email || !password) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block';
+    return false;
+  }
+
+  btn.textContent = 'Loading\u2026';
   btn.disabled = true;
   errEl.style.display = 'none';
 
-  try {
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data),
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    credentials: 'same-origin',
+  })
+  .then(function(resp) {
+    return resp.json().then(function(result) {
+      return { ok: resp.ok, status: resp.status, result };
     });
-    const result = await resp.json();
-    if (result.error) {
+  })
+  .then(function({ ok, status, result }) {
+    if (result && result.error) {
       errEl.textContent = result.error;
       errEl.style.display = 'block';
       btn.textContent = isSignup ? 'Create Account' : 'Sign In';
       btn.disabled = false;
+    } else if (result && (result.token || result.user_id)) {
+      // Success — redirect to ?next= param or dashboard
+      const params = new URLSearchParams(window.location.search);
+      window.location.replace(params.get('next') || '/dashboard');
     } else {
-      window.location.href = '/dashboard';
+      errEl.textContent = 'Unexpected response. Please try again.';
+      errEl.style.display = 'block';
+      btn.textContent = isSignup ? 'Create Account' : 'Sign In';
+      btn.disabled = false;
     }
-  } catch (err) {
-    errEl.textContent = 'Network error. Please try again.';
+  })
+  .catch(function(err) {
+    errEl.textContent = 'Connection error. Please check your internet and try again.';
     errEl.style.display = 'block';
     btn.textContent = isSignup ? 'Create Account' : 'Sign In';
     btn.disabled = false;
-  }
+  });
+
   return false;
 }
 // Click outside card -> go back to home

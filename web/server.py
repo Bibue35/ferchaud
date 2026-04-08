@@ -29,6 +29,16 @@ app = FastAPI(title="Ferchaud", docs_url=None, redoc_url=None)
 # Add session middleware (needed for OAuth state)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("JWT_SECRET", "change-me"))
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Redirect to /login on 401 for page routes; return JSON for API routes."""
+    if exc.status_code == 401:
+        path = request.url.path
+        if path.startswith("/api/"):
+            return JSONResponse({"error": "Not authenticated"}, status_code=401)
+        return RedirectResponse(f"/login?next={path}", status_code=302)
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
 # ─── OAuth Setup ──────────────────────────────────────────────────────────────
 if OAuth:
     oauth = OAuth()
