@@ -384,13 +384,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border-color: var(--text-secondary);
 }
 .bento-card.wide { grid-column: span 2; }
-.bento-icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: var(--bg-cream); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 20px; font-size: 20px;
-}
-
 .bento-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .bento-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 .bento-mini-chart {
@@ -729,16 +722,16 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="container">
     <div class="stats-grid">
       <div class="stat-item reveal">
-        <div class="stat-number"><span class="counter" data-target="847">0</span><span class="stat-suffix">+</span></div>
-        <div class="stat-label">Active Traders</div>
+        <div class="stat-number"><span class="counter" data-target="15000">0</span><span class="stat-suffix">+</span></div>
+        <div class="stat-label">Stocks Scanned Daily</div>
       </div>
       <div class="stat-item reveal reveal-delay-1">
-        <div class="stat-number"><span class="stat-suffix">$</span><span class="counter" data-target="2.4" data-decimal="1">0</span><span class="stat-suffix">M</span></div>
-        <div class="stat-label">Trades Executed</div>
+        <div class="stat-number"><span class="counter" data-target="4">0</span></div>
+        <div class="stat-label">Supported Brokers</div>
       </div>
       <div class="stat-item reveal reveal-delay-2">
-        <div class="stat-number"><span class="counter" data-target="94" data-suffix="%">0</span></div>
-        <div class="stat-label">Signal Accuracy</div>
+        <div class="stat-number"><span class="counter" data-target="24" data-suffix="/7">0</span></div>
+        <div class="stat-label">Market Monitoring</div>
       </div>
       <div class="stat-item reveal reveal-delay-3">
         <div class="stat-number"><span class="counter" data-target="12" data-suffix="ms">0</span></div>
@@ -787,7 +780,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     <p class="section-subtitle reveal">Built by traders, for traders. Every feature solves a real problem.</p>
     <div class="bento-grid">
       <div class="bento-card wide reveal reveal-delay-1">
-        <div class="bento-icon">&#x1F9E0;</div>
         <h3 class="bento-title">AI Signal Engine</h3>
         <p class="bento-desc">Multi-factor analysis combining technical indicators, volume profiles, and market microstructure data. Signals update in real-time as conditions change.</p>
         <div class="bento-mini-chart">
@@ -800,23 +792,19 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
         </div>
       </div>
       <div class="bento-card reveal reveal-delay-2">
-        <div class="bento-icon">&#x26A1;</div>
         <h3 class="bento-title">Auto Execution</h3>
         <p class="bento-desc">Sub-millisecond order routing directly to your broker. Market, limit, and trailing stop orders handled automatically.</p>
       </div>
 
       <div class="bento-card reveal reveal-delay-3">
-        <div class="bento-icon">&#x1F6E1;</div>
         <h3 class="bento-title">Risk Management</h3>
         <p class="bento-desc">Position sizing, stop-losses, and portfolio-level risk limits enforced on every trade. Never risk more than you define.</p>
       </div>
       <div class="bento-card reveal reveal-delay-4">
-        <div class="bento-icon">&#x1F4CA;</div>
         <h3 class="bento-title">Live Dashboard</h3>
         <p class="bento-desc">Real-time P&L, open positions, signal history, and performance analytics. All in one clean interface.</p>
       </div>
       <div class="bento-card wide reveal reveal-delay-5">
-        <div class="bento-icon">&#x1F4F1;</div>
         <h3 class="bento-title">Alerts & Notifications</h3>
         <p class="bento-desc">Get notified via SMS, email, or push when trades execute, signals trigger, or risk thresholds are hit. Stay informed without being glued to a screen. Configure quiet hours so you only hear what matters.</p>
         <div class="bento-mini-chart">
@@ -829,7 +817,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
         </div>
       </div>
       <div class="bento-card reveal reveal-delay-6">
-        <div class="bento-icon">&#x1F4DC;</div>
         <h3 class="bento-title">Backtesting</h3>
         <p class="bento-desc">Test any strategy against years of historical data before risking real capital. See exact entries, exits, and drawdowns.</p>
       </div>
@@ -844,7 +831,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="container">
     <div class="section-label reveal">Performance</div>
     <h2 class="section-title reveal">See the strategy in action</h2>
-    <p class="section-subtitle reveal">Real backtest data showing AI-identified entry and exit points across multiple trades.</p>
+    <p class="section-subtitle reveal">Simulated backtest showing AI-identified entry and exit points across multiple trades. Past performance does not guarantee future results.</p>
     <div class="strategy-chart-wrap reveal">
       <div id="strategy-chart"></div>
       <div class="strategy-stats">
@@ -925,7 +912,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
       <div class="pricing-card featured reveal reveal-delay-3">
         <div class="card-badge">Most Popular</div>
         <div class="pricing-tier">Pro</div>
-        <div class="pricing-price"><span class="price-val">$79</span><span class="period">/mo</span></div>
+        <div class="pricing-price"><span class="price-val">$99</span><span class="period">/mo</span></div>
         <p class="pricing-desc">Full power for serious traders. No portfolio limits.</p>
         <ul class="pricing-features">
           <li>Unlimited AI signals</li>
@@ -934,24 +921,22 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
           <li>10 strategy slots</li>
           <li>Advanced backtesting</li>
           <li>Priority support</li>
-          <li>API access</li>
         </ul>
         <a href="/register" class="btn-pricing primary">Start Free Trial</a>
       </div>
-      <!-- Enterprise -->
+      <!-- Elite -->
       <div class="pricing-card reveal reveal-delay-4">
-        <div class="pricing-tier">Enterprise</div>
-        <div class="pricing-price">Custom</div>
-        <p class="pricing-desc">For funds and teams managing significant capital.</p>
+        <div class="pricing-tier">Elite</div>
+        <div class="pricing-price"><span class="price-val">$299</span><span class="period">/mo</span></div>
+        <p class="pricing-desc">For power traders who want every possible edge.</p>
         <ul class="pricing-features">
           <li>Everything in Pro</li>
-          <li>Dedicated infrastructure</li>
-          <li>Custom strategies</li>
-          <li>White-glove onboarding</li>
-          <li>SLA guarantee</li>
-          <li>Dedicated account manager</li>
+          <li>Custom strategy config</li>
+          <li>Dedicated support</li>
+          <li>API access</li>
+          <li>You keep 98% of profits</li>
         </ul>
-        <a href="#support" class="btn-pricing">Contact Sales</a>
+        <a href="#support" class="btn-pricing">Contact Us</a>
       </div>
 
     </div>
@@ -964,7 +949,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 <section class="cta-section star-dots">
   <div class="container">
     <h2 class="reveal">Ready to trade smarter?</h2>
-    <p class="reveal reveal-delay-1">Join hundreds of traders already using AI to find better entries, manage risk, and execute without emotion.</p>
+    <p class="reveal reveal-delay-1">Use AI to find better entries, manage risk, and execute without emotion.</p>
     <a href="/register" class="btn-cta reveal reveal-delay-2">
       Start Trading Free
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -1157,8 +1142,8 @@ function toggleTheme() {
 <script>
 /* ── Pricing Toggle ───────────────────────────────────────────── */
 var isAnnual = false;
-var monthlyPrices = { starter: 29, pro: 79 };
-var annualPrices  = { starter: 23, pro: 63 };
+var monthlyPrices = { starter: 29, pro: 99, elite: 299 };
+var annualPrices  = { starter: 23, pro: 79, elite: 239 };
 
 function togglePricing() {
   isAnnual = !isAnnual;
