@@ -39,6 +39,7 @@ from strategies.options_catalyst import OptionsCatalystStrategy
 from strategies.gap_short import GapShortStrategy
 from strategies.predictive_short import PredictiveShortStrategy
 from strategies.aggressive_breakout import AggressiveBreakoutStrategy
+from strategies.alpha_combiner import AlphaCombiner, combine_signals
 from data.x_research import x_researcher
 from data.full_market_scanner import scanner
 
@@ -226,6 +227,11 @@ def main() -> None:
     log.info("Strategies active: %d", len(strategies))
     strat_names = [s.name for s in strategies]
 
+    # Alpha Combination Engine — IR = IC × √N
+    alpha_combiner = AlphaCombiner(strategies=strategies, lookback_d=20,
+                                   min_history=15, reweight_every=50)
+    log.info("Alpha Combination Engine: ON (11-step, Fundamental Law IR = IC × √N)")
+
     # Start data stream
     strat_symbols = list({s for strat in strategies for s in strat.get_symbols()})
     feed.start_stream(strat_symbols)
@@ -312,7 +318,31 @@ def main() -> None:
                         strat = futures[future]
                         log.error("[%s] thread error: %s", strat.name, exc)
 
-            # 6. Sentiment snapshot
+            # 6. Alpha Combination Engine — IR = IC × √N
+            try:
+                # Collect last signal scores from each strategy
+                raw_scores = {}
+                for strat in strategies:
+                    label = AlphaCombiner.SIGNAL_LABELS.get(
+                        getattr(strat, "name", ""), strat.__class__.__name__.lower())
+                    score = getattr(strat, "last_score", None)
+                    if score is not None:
+                        raw_scores[label] = float(score)
+                if raw_scores:
+                    mega = alpha_combiner.combine(raw_scores)
+                    log.info(
+                        "MEGA-ALPHA: signal=%s score=%.4f kelly=%.1f%% "
+                        "N_eff=%.1f IR=%.3f | %s",
+                        mega["signal"].upper(), mega["score"],
+                        mega["kelly_fraction"] * 100,
+                        mega["n_independent"], mega["ir_estimate"],
+                        mega["fundamental_law"] if "fundamental_law" in mega
+                        else f"IR=IC×√{mega['n_signals']}"
+                    )
+            except Exception as exc:
+                log.debug("Alpha combiner error: %s", exc)
+
+            # 7. Sentiment snapshot
             if sentiment and iteration % PORTFOLIO_LOG_INTERVAL == 0:
                 try:
                     top_syms = CONFIG.stock_universe[:5]
