@@ -10,7 +10,10 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from authlib.integrations.starlette_client import OAuth
+try:
+    from authlib.integrations.starlette_client import OAuth
+except ImportError:
+    OAuth = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -27,14 +30,17 @@ app = FastAPI(title="Ferchaud", docs_url=None, redoc_url=None)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("JWT_SECRET", "change-me"))
 
 # ─── OAuth Setup ──────────────────────────────────────────────────────────────
-oauth = OAuth()
-oauth.register(
-    name='google',
-    client_id=os.getenv('GOOGLE_CLIENT_ID', ''),
-    client_secret=os.getenv('GOOGLE_CLIENT_SECRET', ''),
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={'scope': 'openid email profile'},
-)
+if OAuth:
+    oauth = OAuth()
+    oauth.register(
+        name='google',
+        client_id=os.getenv('GOOGLE_CLIENT_ID', ''),
+        client_secret=os.getenv('GOOGLE_CLIENT_SECRET', ''),
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'},
+    )
+else:
+    oauth = None
 
 BASE_DIR = Path(__file__).resolve().parent
 try:
@@ -198,6 +204,8 @@ async def api_login(request: Request, body: dict = Body(...)):
 @app.get("/api/auth/google")
 async def auth_google(request: Request):
     """Redirect user to Google's OAuth consent screen."""
+    if not oauth:
+        return RedirectResponse("/login?error=OAuth+not+configured")
     redirect_uri = str(request.base_url).rstrip("/") + "/api/auth/google/callback"
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
@@ -206,6 +214,8 @@ async def auth_google(request: Request):
 async def auth_google_callback(request: Request):
     """Handle the callback from Google OAuth."""
     try:
+        if not oauth:
+            return RedirectResponse("/login?error=OAuth+not+configured")
         token = await oauth.google.authorize_access_token(request)
         user_info = token.get('userinfo')
         if not user_info:
