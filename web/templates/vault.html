@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Strategy Vault — Ferchaud</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f7;color:#1a1a1a;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+  -webkit-touch-callout:none;}
+img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+
+/* ── Watermark ────────────────────────────────────────────────── */
+#watermark{
+  position:fixed;inset:0;pointer-events:none;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#watermark-inner{
+  transform:rotate(-30deg);
+  display:grid;grid-template-columns:repeat(4,1fr);gap:40px 60px;
+  opacity:0.045;font-size:13px;font-weight:700;color:#1a1a1a;
+  letter-spacing:0.5px;white-space:nowrap;
+  padding:60px;min-width:150%;min-height:150%;
+  position:absolute;top:-25%;left:-25%;
+}
+
+/* ── Navbar ───────────────────────────────────────────────────── */
+.navbar{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);
+  background:#fff;border:1px solid #eaeaea;border-radius:16px;
+  padding:0 24px;height:52px;display:flex;align-items:center;
+  justify-content:space-between;width:calc(100% - 48px);max-width:1100px;
+  z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.04);
+}
+.nav-logo{font-weight:800;font-size:17px;letter-spacing:-0.5px;color:#1a1a1a;text-decoration:none}
+.nav-right{display:flex;align-items:center;gap:12px}
+.tier-badge{background:#1a1a1a;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:0.5px}
+.tier-badge.pro{background:#6366f1}
+.tier-badge.elite{background:linear-gradient(135deg,#1a1a1a,#444)}
+.nav-link{font-size:13px;font-weight:500;color:#666;text-decoration:none}
+.nav-link:hover{color:#1a1a1a}
+
+/* ── Page layout ─────────────────────────────────────────────── */
+.page{max-width:1100px;margin:0 auto;padding:84px 24px 60px}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.vault-header{margin-bottom:32px}
+.vault-header h1{font-size:2rem;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.vault-header p{font-size:14px;color:#666;max-width:560px;line-height:1.6}
+.vault-stats{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap}
+.vault-stat{display:flex;flex-direction:column;gap:2px}
+.vault-stat span:first-child{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.vault-stat span:last-child{font-size:12px;color:#888;font-weight:500}
+
+/* ── Warning banner ──────────────────────────────────────────── */
+.risk-banner{
+  background:#fef9ec;border:1px solid #fcd34d;border-radius:12px;
+  padding:12px 16px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:#78350f;line-height:1.5
+}
+.risk-banner svg{flex-shrink:0;margin-top:1px}
+
+/* ── Controls bar ────────────────────────────────────────────── */
+.controls{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+.search-box{flex:1;min-width:200px;position:relative}
+.search-box input{width:100%;padding:10px 14px 10px 38px;border:1px solid #eaeaea;border-radius:10px;
+  font-size:13px;background:#fff;color:#1a1a1a;outline:none;transition:border-color 0.15s;
+  -webkit-user-select:text;user-select:text}
+.search-box input:focus{border-color:#1a1a1a}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
+.filter-btn{padding:9px 14px;border:1px solid #eaeaea;border-radius:10px;background:#fff;
+  font-size:12.5px;font-weight:500;color:#444;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.filter-btn.active,.filter-btn:hover{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.filter-select{padding:9px 14px;border:1px solid #eaeaea;border-radius:10px;background:#fff;
+  font-size:12.5px;color:#444;cursor:pointer;outline:none;-webkit-user-select:auto;user-select:auto}
+
+/* ── Strategy grid ───────────────────────────────────────────── */
+.strategy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.strategy-card{
+  background:#fff;border:1px solid #eaeaea;border-radius:16px;padding:20px;
+  cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden
+}
+.strategy-card:hover{border-color:#ccc;box-shadow:0 4px 20px rgba(0,0,0,0.06);transform:translateY(-1px)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.card-number{font-size:11px;font-weight:700;color:#bbb;letter-spacing:0.5px}
+.card-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.3px;white-space:nowrap}
+.status-live{background:#dcfce7;color:#166534}
+.status-backtest{background:#fef3c7;color:#92400e}
+.status-equity_acct{background:#ede9fe;color:#4c1d95}
+.status-options_acct{background:#f3e8ff;color:#6b21a8}
+.status-futures_acct{background:#fce7f3;color:#831843}
+.status-informational{background:#f1f5f9;color:#475569}
+.card-name{font-size:15px;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px;line-height:1.3}
+.card-meta{display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.card-class{font-size:11.5px;font-weight:600;color:#666;background:#f5f3ef;padding:3px 8px;border-radius:6px}
+.card-category{font-size:11.5px;color:#999}
+.card-desc{font-size:12.5px;color:#555;line-height:1.6;margin-bottom:14px;display:-webkit-box;
+  -webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-signals{display:flex;flex-wrap:wrap;gap:5px}
+.signal-tag{font-size:11px;font-weight:500;color:#666;background:#f5f3ef;
+  padding:3px 8px;border-radius:6px;border:1px solid #ebe9e4}
+
+/* ── Strategy modal ──────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;
+  display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:#fff;border-radius:20px;width:100%;max-width:680px;
+  max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.15)
+}
+.modal-head{padding:24px 24px 16px;border-bottom:1px solid #f0eeeb;position:sticky;top:0;background:#fff;z-index:1}
+.modal-head-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.modal-num{font-size:11px;font-weight:700;color:#bbb;letter-spacing:0.5px}
+.modal-title{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;line-height:1.2}
+.modal-close{background:none;border:1px solid #eaeaea;border-radius:8px;padding:6px 8px;cursor:pointer;color:#666;
+  font-size:16px;line-height:1;transition:all 0.15s;flex-shrink:0}
+.modal-close:hover{background:#f5f3ef;color:#1a1a1a}
+.modal-badges{display:flex;gap:6px;flex-wrap:wrap}
+.modal-body{padding:20px 24px}
+.modal-section{margin-bottom:20px}
+.modal-section:last-child{margin-bottom:0}
+.modal-label{font-size:11px;font-weight:700;color:#bbb;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px}
+.modal-text{font-size:13.5px;color:#333;line-height:1.7}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-field{background:#f9f8f7;border-radius:10px;padding:12px 14px}
+.modal-field .modal-label{margin-bottom:4px}
+.modal-field .modal-text{font-size:13px}
+.modal-signals{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.modal-signal{font-size:12px;font-weight:500;color:#444;background:#f0eeeb;
+  padding:4px 10px;border-radius:8px;border:1px solid #e8e4de}
+.modal-warning{background:#fef9ec;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;font-size:12.5px;color:#78350f;margin-top:16px}
+.copy-notice{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:50px;
+  font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none
+}
+.count-label{font-size:12px;color:#888;margin-left:auto;align-self:center}
+
+/* ── Locked overlay for cards ────────────────────────────────── */
+.locked-overlay{
+  position:absolute;inset:0;background:rgba(250,249,247,0.92);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border-radius:16px;gap:8px;font-size:13px;color:#888;font-weight:500
+}
+.lock-icon{font-size:28px;opacity:0.4}
+.upgrade-link{font-size:12px;color:#6366f1;font-weight:600;text-decoration:none}
+.upgrade-link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<!-- Watermark -->
+<div id="watermark">
+  <div id="watermark-inner" id="wm"></div>
+</div>
+
+<!-- Copy notice toast -->
+<div class="copy-notice" id="copyNotice">Protected content — copying disabled</div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/" class="nav-logo">Ferchaud</a>
+  <div class="nav-right">
+    <span class="tier-badge {{ tier }}">{{ tier | upper }}</span>
+    <a href="/dashboard" class="nav-link">Dashboard</a>
+    <a href="/logout" class="nav-link">Sign out</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="vault-header">
+    <h1>Strategy Vault</h1>
+    <p>Systematic trading strategies from peer-reviewed quantitative finance research. Each strategy is documented with precise entry/exit rules, signals, and risk parameters.</p>
+    <div class="vault-stats">
+      <div class="vault-stat">
+        <span>{{ strategies | length }}</span>
+        <span>Strategies available</span>
+      </div>
+      <div class="vault-stat">
+        <span>{{ live_count }}</span>
+        <span>Live in bot</span>
+      </div>
+      <div class="vault-stat">
+        <span>16</span>
+        <span>Asset classes</span>
+      </div>
+      <div class="vault-stat">
+        <span>{{ tier | upper }}</span>
+        <span>Your access tier</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk banner -->
+  <div class="risk-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>For informational purposes only. Ferchaud is not liable for any trading losses. All strategies carry risk of loss. Past performance does not guarantee future results. You have accepted the full risk disclosure.</span>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search strategies..." autocomplete="off" spellcheck="false">
+    </div>
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="live">Live in Bot</button>
+    <button class="filter-btn" data-filter="equity">Equities</button>
+    <button class="filter-btn" data-filter="options">Options</button>
+    <button class="filter-btn" data-filter="other">Other</button>
+    <select class="filter-select" id="sortSelect">
+      <option value="id">Sort: Default</option>
+      <option value="name">Sort: A–Z</option>
+      <option value="asset">Sort: Asset Class</option>
+    </select>
+    <span class="count-label" id="countLabel">{{ strategies | length }} strategies</span>
+  </div>
+
+  <!-- Strategy grid -->
+  <div class="strategy-grid" id="grid">
+    {% for s in strategies %}
+    <div class="strategy-card" data-id="{{ s.id }}"
+         data-name="{{ s.name | lower }}"
+         data-asset="{{ s.asset_class | lower }}"
+         data-status="{{ s.status }}"
+         data-tier="{{ s.tier }}"
+         onclick="openModal({{ s.id }})">
+
+      {% if s.tier == 'elite' and tier == 'pro' %}
+      <div class="locked-overlay">
+        <div class="lock-icon">🔒</div>
+        <span>Elite Access Required</span>
+        <a href="/pricing" class="upgrade-link" onclick="event.stopPropagation()">Upgrade to Elite →</a>
+      </div>
+      {% endif %}
+
+      <div class="card-top">
+        <span class="card-number">STRATEGY #{{ s.id }}</span>
+        <span class="card-status status-{{ s.status }}">
+          {% if s.status == 'live' %}● Live{% elif s.status == 'backtest' %}◎ Backtest{% elif s.status == 'equity_acct' %}Equity{% elif s.status == 'options_acct' %}Options{% elif s.status == 'futures_acct' %}Futures{% else %}Info{% endif %}
+        </span>
+      </div>
+      <div class="card-name">{{ s.name }}</div>
+      <div class="card-meta">
+        <span class="card-class">{{ s.asset_class }}</span>
+        <span class="card-category">{{ s.category }}</span>
+      </div>
+      <div class="card-desc">{{ s.description[:220] }}{% if s.description | length > 220 %}…{% endif %}</div>
+      <div class="card-signals">
+        {% for sig in s.signals[:3] %}
+        <span class="signal-tag">{{ sig }}</span>
+        {% endfor %}
+        {% if s.signals | length > 3 %}<span class="signal-tag">+{{ s.signals | length - 3 }} more</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <div class="modal-head-top">
+        <div>
+          <div class="modal-num" id="mNum">STRATEGY #1</div>
+          <div class="modal-title" id="mTitle">Strategy Name</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-badges" id="mBadges"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-label">Description</div>
+        <div class="modal-text" id="mDesc"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Signals Used</div>
+        <div class="modal-signals" id="mSignals"></div>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-field">
+          <div class="modal-label">Entry Rule</div>
+          <div class="modal-text" id="mEntry"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">Exit Rule</div>
+          <div class="modal-text" id="mExit"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">Typical Holding Period</div>
+          <div class="modal-text" id="mHolding"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">Risk Profile</div>
+          <div class="modal-text" id="mRisk"></div>
+        </div>
+      </div>
+      <div class="modal-warning" id="mWarning" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Strategy data (server-injected, JSON only — no raw text in DOM) ──────────
+const STRATEGIES = {{ strategies_json | safe }};
+const USER_EMAIL = "{{ user.email }}";
+const USER_TIER  = "{{ tier }}";
+
+// ── Watermark ────────────────────────────────────────────────────────────────
+(function buildWatermark() {
+  const wm = document.getElementById('watermark-inner');
+  const text = `Ferchaud · ${USER_EMAIL}`;
+  let html = '';
+  for (let i = 0; i < 60; i++) html += `<span>${text}</span>`;
+  wm.innerHTML = html;
+})();
+
+// ── Copy / screenshot protection ─────────────────────────────────────────────
+document.addEventListener('copy',  e => { e.preventDefault(); showCopyNotice(); });
+document.addEventListener('cut',   e => { e.preventDefault(); showCopyNotice(); });
+document.addEventListener('contextmenu', e => {
+  if (!e.target.closest('input,select')) { e.preventDefault(); showCopyNotice(); }
+});
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && ['c','x','a','s','p','u'].includes(k)) {
+    e.preventDefault(); showCopyNotice();
+  }
+  if (e.key === 'PrintScreen') { e.preventDefault(); showCopyNotice(); }
+});
+document.addEventListener('dragstart', e => e.preventDefault());
+
+// Blur content when tab loses focus (partial screenshot deterrent)
+let blurTimer;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearTimeout(blurTimer);
+    document.getElementById('grid').style.filter = 'blur(8px)';
+    document.getElementById('modalBox').style.filter = 'blur(8px)';
+  } else {
+    blurTimer = setTimeout(() => {
+      document.getElementById('grid').style.filter = '';
+      document.getElementById('modalBox').style.filter = '';
+    }, 500);
+  }
+});
+
+function showCopyNotice() {
+  const el = document.getElementById('copyNotice');
+  el.style.opacity = '1';
+  setTimeout(() => el.style.opacity = '0', 2200);
+}
+
+// ── Filter & Search ───────────────────────────────────────────────────────────
+let activeFilter = 'all';
+const cards = () => [...document.querySelectorAll('.strategy-card')];
+
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let shown = 0;
+  cards().forEach(card => {
+    const name   = card.dataset.name || '';
+    const asset  = card.dataset.asset || '';
+    const status = card.dataset.status || '';
+    const tier   = card.dataset.tier || '';
+    let show = true;
+    if (q && !name.includes(q) && !asset.includes(q)) show = false;
+    if (activeFilter === 'live'    && status !== 'live')                          show = false;
+    if (activeFilter === 'equity'  && !['equities'].includes(asset))              show = false;
+    if (activeFilter === 'options' && asset !== 'options')                        show = false;
+    if (activeFilter === 'other'   && ['equities','options'].includes(asset))     show = false;
+    card.style.display = show ? '' : 'none';
+    if (show) shown++;
+  });
+  document.getElementById('countLabel').textContent = shown + ' strategies';
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    applyFilters();
+  });
+});
+document.getElementById('sortSelect').addEventListener('change', function() {
+  const grid = document.getElementById('grid');
+  const cardEls = [...grid.querySelectorAll('.strategy-card')];
+  cardEls.sort((a, b) => {
+    if (this.value === 'name')  return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+    if (this.value === 'asset') return (a.dataset.asset || '').localeCompare(b.dataset.asset || '');
+    return parseInt(a.dataset.id) - parseInt(b.dataset.id);
+  });
+  cardEls.forEach(c => grid.appendChild(c));
+});
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+const STATUS_LABELS = {
+  live:          ['● Live in Bot',        '#166534','#dcfce7'],
+  backtest:      ['◎ In Backtest',        '#92400e','#fef3c7'],
+  equity_acct:   ['Equity Account',       '#4c1d95','#ede9fe'],
+  options_acct:  ['Options Account',      '#6b21a8','#f3e8ff'],
+  futures_acct:  ['Futures Account',      '#831843','#fce7f3'],
+  informational: ['Institutional/Info',   '#475569','#f1f5f9'],
+};
+const CATEGORY_COLORS = {
+  Directional: ['#1d4ed8','#dbeafe'],
+  Neutral:     ['#065f46','#d1fae5'],
+  Income:      ['#92400e','#fef3c7'],
+  Hedging:     ['#374151','#f3f4f6'],
+  Arbitrage:   ['#4c1d95','#ede9fe'],
+  Volatility:  ['#831843','#fce7f3'],
+  'Event-Driven':['#92400e','#fef9ec'],
+};
+
+function openModal(id) {
+  // Block elite strategies for pro users
+  const s = STRATEGIES.find(x => x.id === id);
+  if (!s) return;
+  if (s.tier === 'elite' && USER_TIER === 'pro') return;
+
+  document.getElementById('mNum').textContent   = `STRATEGY #${s.id}`;
+  document.getElementById('mTitle').textContent = s.name;
+  document.getElementById('mDesc').textContent  = s.description;
+  document.getElementById('mEntry').textContent = s.entry;
+  document.getElementById('mExit').textContent  = s.exit;
+  document.getElementById('mHolding').textContent = s.holding_period;
+  document.getElementById('mRisk').textContent  = s.risk;
+
+  // Badges
+  const badgeEl = document.getElementById('mBadges');
+  badgeEl.innerHTML = '';
+  const mkBadge = (label, color, bg) => {
+    const span = document.createElement('span');
+    span.className = 'card-status';
+    span.style.cssText = `color:${color};background:${bg};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700`;
+    span.textContent = label;
+    return span;
+  };
+  const [sl, sc, sb] = STATUS_LABELS[s.status] || ['Info','#475569','#f1f5f9'];
+  badgeEl.appendChild(mkBadge(sl, sc, sb));
+  badgeEl.appendChild(mkBadge(s.asset_class, '#444', '#f5f3ef'));
+  const [cc, cbg] = CATEGORY_COLORS[s.category] || ['#444','#f5f3ef'];
+  badgeEl.appendChild(mkBadge(s.category, cc, cbg));
+
+  // Signals
+  const sigEl = document.getElementById('mSignals');
+  sigEl.innerHTML = '';
+  (s.signals || []).forEach(sig => {
+    const span = document.createElement('span');
+    span.className = 'modal-signal';
+    span.textContent = sig;
+    sigEl.appendChild(span);
+  });
+
+  // Warning for non-live strategies
+  const warn = document.getElementById('mWarning');
+  if (s.status === 'informational') {
+    warn.textContent = '⚠ This is an institutional or complex strategy not directly tradeable through Ferchaud. Provided for educational purposes only.';
+    warn.style.display = 'block';
+  } else if (s.status !== 'live') {
+    warn.textContent = `⚠ This strategy requires: ${sl}. Ensure you have appropriate account approvals before trading.`;
+    warn.style.display = 'block';
+  } else {
+    warn.style.display = 'none';
+  }
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('modalBox').scrollTop = 0;
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay') || e.currentTarget?.tagName === 'BUTTON') {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>

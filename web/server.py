@@ -145,6 +145,75 @@ async def legal_page(request: Request):
     return templates.TemplateResponse("legal.html", {"request": request})
 
 
+# ─── Strategy Vault ───────────────────────────────────────────────────────────
+
+@app.get("/vault", response_class=HTMLResponse)
+async def vault_page(request: Request):
+    """Strategy Vault — Pro gets 10 equity strategies, Elite gets all 151."""
+    from web.strategy_data import STRATEGIES, PRO_STRATEGIES, STATUS_LABELS
+    import json as _json
+    user = require_user(request)
+    if not user:
+        return RedirectResponse("/login")
+
+    tier = (user.subscription_tier or "free").lower()
+    if tier not in ("pro", "elite"):
+        return RedirectResponse("/pricing?reason=vault")
+
+    # Check if user has accepted the risk disclosure
+    vault_cookie = request.cookies.get("vault_accepted")
+    if vault_cookie != "1":
+        return RedirectResponse(f"/vault/legal")
+
+    # Select strategies by tier
+    if tier == "pro":
+        strategies = PRO_STRATEGIES
+    else:
+        strategies = STRATEGIES  # All 151
+
+    live_count = sum(1 for s in strategies if s.get("status") == "live")
+
+    # Serialize strategies to JSON for client-side JS (safe — no raw HTML injection)
+    strategies_json = _json.dumps(strategies, ensure_ascii=False)
+
+    return templates.TemplateResponse("vault.html", {
+        "request": request,
+        "user": user,
+        "tier": tier,
+        "strategies": strategies,
+        "strategies_json": strategies_json,
+        "live_count": live_count,
+    })
+
+
+@app.get("/vault/legal", response_class=HTMLResponse)
+async def vault_legal_page(request: Request):
+    """Risk disclosure scroll-through before accessing vault."""
+    user = require_user(request)
+    if not user:
+        return RedirectResponse("/login")
+    tier = (user.subscription_tier or "free").lower()
+    if tier not in ("pro", "elite"):
+        return RedirectResponse("/pricing?reason=vault")
+    return templates.TemplateResponse("risk_disclosure.html", {
+        "request": request,
+        "user": user,
+        "tier": tier,
+    })
+
+
+@app.post("/vault/accept")
+async def vault_accept(request: Request):
+    """Set the vault_accepted cookie and redirect to vault."""
+    user = require_user(request)
+    if not user:
+        return RedirectResponse("/login")
+    response = RedirectResponse("/vault", status_code=303)
+    # 30-day cookie — user must re-accept after 30 days
+    response.set_cookie("vault_accepted", "1", max_age=86400 * 30, httponly=True, samesite="lax")
+    return response
+
+
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     user = require_user(request)
