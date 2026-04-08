@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os, time
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, Text
+from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 _default_db = "sqlite:////tmp/quantbot.db" if os.getenv("VERCEL") else "sqlite:///data/quantbot.db"
@@ -141,6 +141,26 @@ TIERS = {
         "color": "#f59e0b",
     },
 }
+
+
+
+class BrokerConnection(Base):
+    __tablename__ = "broker_connections"
+
+    id             = Column(Integer, primary_key=True)
+    user_id        = Column(Integer, ForeignKey("users.id"), nullable=False)
+    broker_name    = Column(String, nullable=False)   # "alpaca", "tradier", etc.
+    display_name   = Column(String)                   # user's custom label
+    api_key        = Column(String)
+    api_secret     = Column(String)
+    account_id     = Column(String)                   # for brokers that need it
+    access_token   = Column(String)                   # for OAuth brokers
+    refresh_token  = Column(String)
+    extra          = Column(Text)                     # JSON for extra fields (username, etc.)
+    is_paper       = Column(Boolean, default=False)
+    is_active      = Column(Boolean, default=True)
+    created_at     = Column(DateTime, default=datetime.utcnow)
+    last_connected = Column(DateTime)
 
 
 Base.metadata.create_all(bind=engine)

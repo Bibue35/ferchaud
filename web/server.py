@@ -720,6 +720,164 @@ async def api_performance(request: Request):
         return {"error": str(e), "message": "No trade data available yet"}
 
 
+
+# ─── Broker API Routes ────────────────────────────────────────────────────────
+
+@app.get("/api/brokers")
+async def api_list_brokers():
+    """Return all available broker integrations with metadata."""
+    from core.brokers.factory import BrokerFactory
+    return BrokerFactory.list_brokers()
+
+
+@app.get("/api/connections")
+async def api_list_connections(request: Request):
+    """List the current user's connected broker accounts."""
+    user = require_user(request)
+    db = SessionLocal()
+    try:
+        from web.database import BrokerConnection
+        conns = (
+            db.query(BrokerConnection)
+            .filter(BrokerConnection.user_id == user.id, BrokerConnection.is_active == True)
+            .all()
+        )
+        return [
+            {
+                "id": c.id,
+                "broker_name": c.broker_name,
+                "display_name": c.display_name or c.broker_name,
+                "account_id": c.account_id,
+                "is_paper": c.is_paper,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+                "last_connected": c.last_connected.isoformat() if c.last_connected else None,
+            }
+            for c in conns
+        ]
+    finally:
+        db.close()
+
+
+@app.post("/api/connections")
+async def api_add_connection(request: Request, body: dict = Body(...)):
+    """Add a new broker connection for the current user.
+
+    Expected body keys: broker_name, display_name, api_key, api_secret,
+    account_id, access_token, refresh_token, extra (JSON string), is_paper
+    """
+    user = require_user(request)
+    broker_name = body.get("broker_name", "").strip()
+    if not broker_name:
+        return JSONResponse({"error": "broker_name is required"}, status_code=400)
+
+    from core.brokers.factory import BrokerFactory
+    known = {b["name"] for b in BrokerFactory.list_brokers()}
+    if broker_name not in known:
+        return JSONResponse({"error": f"Unknown broker: {broker_name}"}, status_code=400)
+
+    db = SessionLocal()
+    try:
+        from web.database import BrokerConnection
+        from datetime import datetime as _dt
+        conn = BrokerConnection(
+            user_id=user.id,
+            broker_name=broker_name,
+            display_name=body.get("display_name"),
+            api_key=body.get("api_key"),
+            api_secret=body.get("api_secret"),
+            account_id=body.get("account_id"),
+            access_token=body.get("access_token"),
+            refresh_token=body.get("refresh_token"),
+            extra=body.get("extra"),
+            is_paper=body.get("is_paper", False),
+            is_active=True,
+            created_at=_dt.utcnow(),
+        )
+        db.add(conn)
+        db.commit()
+        db.refresh(conn)
+        return {"id": conn.id, "broker_name": conn.broker_name, "status": "connected"}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+@app.delete("/api/connections/{connection_id}")
+async def api_remove_connection(request: Request, connection_id: int):
+    """Soft-delete a broker connection."""
+    user = require_user(request)
+    db = SessionLocal()
+    try:
+        from web.database import BrokerConnection
+        conn = db.query(BrokerConnection).filter(
+            BrokerConnection.id == connection_id,
+            BrokerConnection.user_id == user.id,
+        ).first()
+        if not conn:
+            return JSONResponse({"error": "Connection not found"}, status_code=404)
+        conn.is_active = False
+        db.commit()
+        return {"status": "removed"}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+@app.post("/api/connections/{connection_id}/test")
+async def api_test_connection(request: Request, connection_id: int):
+    """Test a broker connection by pinging the account endpoint."""
+    user = require_user(request)
+    db = SessionLocal()
+    try:
+        from web.database import BrokerConnection
+        from core.brokers.factory import BrokerFactory
+        from datetime import datetime as _dt
+        import json as _json
+
+        conn = db.query(BrokerConnection).filter(
+            BrokerConnection.id == connection_id,
+            BrokerConnection.user_id == user.id,
+            BrokerConnection.is_active == True,
+        ).first()
+        if not conn:
+            return JSONResponse({"error": "Connection not found"}, status_code=404)
+
+        # Build credentials dict from stored fields
+        creds: dict = {}
+        if conn.api_key:
+            creds["api_key"] = conn.api_key
+        if conn.api_secret:
+            creds["api_secret"] = conn.api_secret
+        if conn.account_id:
+            creds["account_id"] = conn.account_id
+        if conn.access_token:
+            creds["access_token"] = conn.access_token
+        if conn.extra:
+            try:
+                extra = _json.loads(conn.extra)
+                creds.update(extra)
+            except Exception:
+                pass
+
+        if conn.broker_name == "paper":
+            creds.setdefault("starting_cash", 100_000.0)
+
+        try:
+            broker = BrokerFactory.create(conn.broker_name, creds)
+            acct = broker.get_account()
+            conn.last_connected = _dt.utcnow()
+            db.commit()
+            return {"status": "ok", "account": acct}
+        except Exception as e:
+            return JSONResponse({"status": "error", "message": str(e)}, status_code=400)
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("web.server:app", host="0.0.0.0", port=3000, reload=True)
