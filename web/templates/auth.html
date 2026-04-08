@@ -310,10 +310,18 @@ function handleAuth(e) {
       errEl.style.display = 'block';
       btn.textContent = isSignup ? 'Create Account' : 'Sign In';
       btn.disabled = false;
-    } else if (result && (result.token || result.user_id)) {
+    } else if (result && (result.access_token || result.user_id)) {
       // Success — redirect to ?next= param or dashboard
       const params = new URLSearchParams(window.location.search);
       window.location.replace(params.get('next') || '/dashboard');
+    } else if (result && result.needs_confirmation) {
+      // Email confirmation required
+      errEl.textContent = result.message || 'Check your email to confirm your account.';
+      errEl.style.display = 'block';
+      errEl.style.background = 'rgba(59,130,246,0.08)';
+      errEl.style.color = 'var(--accent, #3b82f6)';
+      btn.textContent = isSignup ? 'Create Account' : 'Sign In';
+      btn.disabled = false;
     } else {
       errEl.textContent = 'Unexpected response. Please try again.';
       errEl.style.display = 'block';

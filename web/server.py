@@ -9,25 +9,18 @@ from fastapi import FastAPI, Request, Depends, HTTPException, Body
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
-try:
-    from authlib.integrations.starlette_client import OAuth
-except ImportError:
-    OAuth = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from web.auth import get_current_user, require_user, signup_user, login_user, deposit_funds, create_token
+from web.auth import get_current_user, require_user, signup_user, login_user, deposit_funds
 from web.database import SessionLocal, User, Portfolio, Trade, Deposit, TIERS
 from web.stripe_handler import (
     create_customer, create_checkout_session, create_billing_portal,
     create_deposit_intent, verify_webhook
 )
+from web.supabase_client import SUPABASE_URL
 
 app = FastAPI(title="Ferchaud", docs_url=None, redoc_url=None)
-
-# Add session middleware (needed for OAuth state)
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("JWT_SECRET", "change-me"))
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -39,85 +32,6 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         return RedirectResponse(f"/login?next={path}", status_code=302)
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
-# ─── OAuth Setup ──────────────────────────────────────────────────────────────
-if OAuth:
-    oauth = OAuth()
-
-    # Google — OpenID Connect (auto-discovery)
-    if os.getenv('GOOGLE_CLIENT_ID'):
-        oauth.register(
-            name='google',
-            client_id=os.getenv('GOOGLE_CLIENT_ID', ''),
-            client_secret=os.getenv('GOOGLE_CLIENT_SECRET', ''),
-            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-            client_kwargs={'scope': 'openid email profile'},
-        )
-
-    # Apple — Sign in with Apple (OIDC)
-    if os.getenv('APPLE_CLIENT_ID'):
-        oauth.register(
-            name='apple',
-            client_id=os.getenv('APPLE_CLIENT_ID', ''),          # Services ID (e.g. com.ferchaud.auth)
-            client_secret='',                                      # Generated dynamically below
-            authorize_url='https://appleid.apple.com/auth/authorize',
-            access_token_url='https://appleid.apple.com/auth/token',
-            client_kwargs={
-                'scope': 'name email',
-                'response_mode': 'form_post',
-            },
-        )
-
-    # X / Twitter — OAuth 2.0 PKCE
-    if os.getenv('X_CLIENT_ID'):
-        oauth.register(
-            name='twitter',
-            client_id=os.getenv('X_CLIENT_ID', ''),
-            client_secret=os.getenv('X_CLIENT_SECRET', ''),
-            authorize_url='https://twitter.com/i/oauth2/authorize',
-            access_token_url='https://api.twitter.com/2/oauth2/token',
-            api_base_url='https://api.twitter.com/2/',
-            client_kwargs={
-                'scope': 'users.read tweet.read offline.access',
-                'code_challenge_method': 'S256',
-                'token_endpoint_auth_method': 'client_secret_basic',
-            },
-        )
-else:
-    oauth = None
-
-
-def _generate_apple_client_secret():
-    """Generate a signed JWT client secret for Apple Sign-In.
-    Requires: APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY (PEM content or path).
-    """
-    import time
-    team_id = os.getenv('APPLE_TEAM_ID', '')
-    key_id = os.getenv('APPLE_KEY_ID', '')
-    client_id = os.getenv('APPLE_CLIENT_ID', '')
-    private_key = os.getenv('APPLE_PRIVATE_KEY', '')
-
-    # Support file path or raw PEM
-    if private_key and not private_key.startswith('-----'):
-        try:
-            with open(private_key) as f:
-                private_key = f.read()
-        except FileNotFoundError:
-            pass
-
-    if not all([team_id, key_id, client_id, private_key]):
-        return None
-
-    from jose import jwt as jose_jwt
-    now = int(time.time())
-    payload = {
-        'iss': team_id,
-        'iat': now,
-        'exp': now + 86400 * 180,  # 6 months max
-        'aud': 'https://appleid.apple.com',
-        'sub': client_id,
-    }
-    headers = {'kid': key_id, 'alg': 'ES256'}
-    return jose_jwt.encode(payload, private_key, algorithm='ES256', headers=headers)
 
 BASE_DIR = Path(__file__).resolve().parent
 try:
@@ -318,7 +232,22 @@ async def dashboard(request: Request):
         db.close()
 
 
-# ─── Auth APIs ────────────────────────────────────────────────────────────────
+# ─── Auth APIs (Supabase) ────────────────────────────────────────────────────
+
+def _set_auth_cookies(response, access_token: str, refresh_token: str):
+    """Set Supabase auth cookies on a response."""
+    max_age = 86400 * 30  # 30 days
+    response.set_cookie("sb-access-token", access_token, httponly=True, max_age=max_age, samesite="lax")
+    response.set_cookie("sb-refresh-token", refresh_token, httponly=True, max_age=max_age, samesite="lax")
+
+
+def _delete_auth_cookies(response):
+    """Delete Supabase auth cookies."""
+    response.delete_cookie("sb-access-token")
+    response.delete_cookie("sb-refresh-token")
+    # Also clean up legacy cookie
+    response.delete_cookie("token")
+
 
 @app.post("/api/auth/signup")
 async def api_signup(request: Request, body: dict = Body(...)):
@@ -331,7 +260,8 @@ async def api_signup(request: Request, body: dict = Body(...)):
     if "error" in result:
         return JSONResponse(result, status_code=400)
     response = JSONResponse(result)
-    response.set_cookie("token", result["token"], httponly=True, max_age=86400 * 30, samesite="lax")
+    if "access_token" in result:
+        _set_auth_cookies(response, result["access_token"], result["refresh_token"])
     return response
 
 
@@ -343,223 +273,152 @@ async def api_login(request: Request, body: dict = Body(...)):
     if "error" in result:
         return JSONResponse(result, status_code=401)
     response = JSONResponse(result)
-    response.set_cookie("token", result["token"], httponly=True, max_age=86400 * 30, samesite="lax")
+    if "access_token" in result:
+        _set_auth_cookies(response, result["access_token"], result["refresh_token"])
     return response
+
+
+# ─── OAuth via Supabase ───────────────────────────────────────────────────────
+
+def _get_site_url(request: Request) -> str:
+    """Get the site base URL for OAuth redirect_to."""
+    return str(request.base_url).rstrip("/")
 
 
 @app.get("/api/auth/google")
 async def auth_google(request: Request):
-    """Redirect user to Google's OAuth consent screen."""
-    if not oauth:
-        return RedirectResponse("/login?error=OAuth+not+configured")
-    redirect_uri = str(request.base_url).rstrip("/") + "/api/auth/google/callback"
-    return await oauth.google.authorize_redirect(request, redirect_uri)
-
-
-@app.get("/api/auth/google/callback")
-async def auth_google_callback(request: Request):
-    """Handle the callback from Google OAuth."""
-    try:
-        if not oauth:
-            return RedirectResponse("/login?error=OAuth+not+configured")
-        token = await oauth.google.authorize_access_token(request)
-        user_info = token.get('userinfo')
-        if not user_info:
-            return RedirectResponse("/login?error=google_failed")
-
-        email = user_info.get('email', '')
-        name = user_info.get('name', '')
-
-        # Find or create user
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter(User.email == email).first()
-            if not user:
-                # Create new user from Google OAuth
-                user = User(
-                    email=email,
-                    username=name.replace(' ', '').lower()[:20],
-                    hashed_password='oauth_google',  # Not used for OAuth users
-                    auth_provider='google',
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-
-            jwt_token = create_token({"sub": str(user.id), "email": email})
-            response = RedirectResponse("/dashboard")
-            response.set_cookie("token", jwt_token, httponly=True, max_age=86400 * 30, samesite="lax")
-            return response
-        finally:
-            db.close()
-    except Exception as e:
-        return RedirectResponse(f"/login?error={str(e)[:50]}")
+    """Redirect to Supabase Google OAuth."""
+    site_url = _get_site_url(request)
+    redirect_url = (
+        f"{SUPABASE_URL}/auth/v1/authorize"
+        f"?provider=google"
+        f"&redirect_to={site_url}/api/auth/callback"
+    )
+    return RedirectResponse(redirect_url)
 
 
 @app.get("/api/auth/apple")
 async def auth_apple(request: Request):
-    """Redirect user to Apple's Sign-In consent screen."""
-    if not oauth or not hasattr(oauth, 'apple'):
-        return RedirectResponse("/login?error=apple_not_configured")
-    # Generate fresh client_secret JWT for Apple
-    client_secret = _generate_apple_client_secret()
-    if not client_secret:
-        return RedirectResponse("/login?error=apple_keys_missing")
-    oauth.apple.client_secret = client_secret
-    redirect_uri = str(request.base_url).rstrip("/") + "/api/auth/apple/callback"
-    return await oauth.apple.authorize_redirect(request, redirect_uri)
-
-
-@app.post("/api/auth/apple/callback")
-@app.get("/api/auth/apple/callback")
-async def auth_apple_callback(request: Request):
-    """Handle the callback from Apple Sign-In (form_post or GET)."""
-    try:
-        if not oauth or not hasattr(oauth, 'apple'):
-            return RedirectResponse("/login?error=apple_not_configured")
-        # Refresh client_secret
-        client_secret = _generate_apple_client_secret()
-        if client_secret:
-            oauth.apple.client_secret = client_secret
-
-        token = await oauth.apple.authorize_access_token(request)
-        # Apple returns id_token — decode it for user info
-        from jose import jwt as jose_jwt
-        id_token = token.get('id_token', '')
-        if not id_token:
-            return RedirectResponse("/login?error=apple_no_token")
-        # Decode without verification (Apple's public keys would need JWKS fetch)
-        claims = jose_jwt.get_unverified_claims(id_token)
-        email = claims.get('email', '')
-        # Apple only sends name on first auth — grab from form_post body
-        form_data = {}
-        if request.method == 'POST':
-            form_data = dict(await request.form())
-        import json as _json
-        user_data = {}
-        if 'user' in form_data:
-            try:
-                user_data = _json.loads(form_data['user'])
-            except Exception:
-                pass
-        first_name = user_data.get('name', {}).get('firstName', '')
-        last_name = user_data.get('name', {}).get('lastName', '')
-        name = f"{first_name} {last_name}".strip() or email.split('@')[0]
-
-        if not email:
-            return RedirectResponse("/login?error=apple_no_email")
-
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter(User.email == email).first()
-            if not user:
-                user = User(
-                    email=email,
-                    username=name.replace(' ', '').lower()[:20] or f"apple_{email.split('@')[0][:15]}",
-                    hashed_password='oauth_apple',
-                    auth_provider='apple',
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-
-            jwt_token = create_token({"sub": str(user.id), "email": email})
-            response = RedirectResponse("/dashboard")
-            response.set_cookie("token", jwt_token, httponly=True, max_age=86400 * 30, samesite="lax")
-            return response
-        finally:
-            db.close()
-    except Exception as e:
-        return RedirectResponse(f"/login?error={str(e)[:50]}")
+    """Redirect to Supabase Apple OAuth."""
+    site_url = _get_site_url(request)
+    redirect_url = (
+        f"{SUPABASE_URL}/auth/v1/authorize"
+        f"?provider=apple"
+        f"&redirect_to={site_url}/api/auth/callback"
+    )
+    return RedirectResponse(redirect_url)
 
 
 @app.get("/api/auth/x")
 async def auth_x(request: Request):
-    """Redirect user to X/Twitter OAuth 2.0 consent screen."""
-    if not oauth or not hasattr(oauth, 'twitter'):
-        return RedirectResponse("/login?error=x_not_configured")
-    redirect_uri = str(request.base_url).rstrip("/") + "/api/auth/x/callback"
-    return await oauth.twitter.authorize_redirect(request, redirect_uri)
+    """Redirect to Supabase X/Twitter OAuth."""
+    site_url = _get_site_url(request)
+    redirect_url = (
+        f"{SUPABASE_URL}/auth/v1/authorize"
+        f"?provider=twitter"
+        f"&redirect_to={site_url}/api/auth/callback"
+    )
+    return RedirectResponse(redirect_url)
 
 
-@app.get("/api/auth/x/callback")
-async def auth_x_callback(request: Request):
-    """Handle the callback from X/Twitter OAuth 2.0."""
+@app.get("/api/auth/callback")
+async def auth_callback(request: Request):
+    """OAuth callback — serves a small HTML page that reads the URL fragment
+    (access_token, refresh_token) in JS and sets cookies, then redirects
+    to /dashboard. Supabase redirects here with tokens in the hash fragment.
+    """
+    callback_html = """<!DOCTYPE html>
+<html><head><title>Signing in...</title></head>
+<body>
+<p style="font-family:Inter,sans-serif;text-align:center;margin-top:40vh;color:#666;">Signing you in...</p>
+<script>
+(function() {
+    // Supabase puts tokens in the URL hash fragment
+    var hash = window.location.hash.substring(1);
+    if (!hash) {
+        // Check query params as fallback
+        hash = window.location.search.substring(1);
+    }
+    var params = new URLSearchParams(hash);
+    var accessToken = params.get('access_token');
+    var refreshToken = params.get('refresh_token');
+
+    if (accessToken) {
+        // POST tokens to server to set httpOnly cookies
+        fetch('/api/auth/set-session', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                access_token: accessToken,
+                refresh_token: refreshToken || ''
+            }),
+            credentials: 'same-origin'
+        }).then(function() {
+            window.location.replace('/dashboard');
+        }).catch(function() {
+            window.location.replace('/dashboard');
+        });
+    } else {
+        window.location.replace('/login?error=oauth_failed');
+    }
+})();
+</script>
+</body></html>"""
+    return HTMLResponse(callback_html)
+
+
+@app.post("/api/auth/set-session")
+async def api_set_session(request: Request, body: dict = Body(...)):
+    """Called by the OAuth callback JS to set httpOnly cookies from tokens."""
+    access_token = body.get("access_token", "")
+    refresh_token = body.get("refresh_token", "")
+    if not access_token:
+        return JSONResponse({"error": "No access token"}, status_code=400)
+
+    # Validate the token with Supabase and create/sync local profile
+    from web.supabase_client import supabase as sb
     try:
-        if not oauth or not hasattr(oauth, 'twitter'):
-            return RedirectResponse("/login?error=x_not_configured")
+        user_response = sb.auth.get_user(access_token)
+        sb_user = user_response.user
+        if not sb_user:
+            return JSONResponse({"error": "Invalid token"}, status_code=401)
 
-        token = await oauth.twitter.authorize_access_token(request)
-        access_token = token.get('access_token', '')
-        if not access_token:
-            return RedirectResponse("/login?error=x_no_token")
+        # Ensure local profile exists
+        from web.auth import _get_or_create_profile
+        email = sb_user.email or ""
+        user_metadata = sb_user.user_metadata or {}
+        username = user_metadata.get("username") or user_metadata.get("full_name", "").replace(" ", "").lower()[:20] or email.split("@")[0]
+        provider = (sb_user.app_metadata or {}).get("provider", "email")
+        _get_or_create_profile(sb_user.id, email, username, auth_provider=provider)
+    except Exception:
+        pass  # Still set cookies — get_current_user will validate later
 
-        # Fetch user profile from Twitter API v2
-        import httpx
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                'https://api.twitter.com/2/users/me',
-                params={'user.fields': 'id,name,username,profile_image_url'},
-                headers={'Authorization': f'Bearer {access_token}'},
-            )
-            if resp.status_code != 200:
-                return RedirectResponse("/login?error=x_profile_failed")
-            user_data = resp.json().get('data', {})
-
-        x_username = user_data.get('username', '')
-        x_name = user_data.get('name', '')
-        x_id = user_data.get('id', '')
-
-        if not x_username:
-            return RedirectResponse("/login?error=x_no_username")
-
-        # Use X username as email substitute (X doesn't share email via OAuth2)
-        # We create a synthetic email so our User model works
-        email = f"{x_username}@x.ferchaud.com"
-
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter(User.email == email).first()
-            if not user:
-                # Also check if there's a user with just the username
-                user = db.query(User).filter(User.username == x_username.lower()).first()
-                if not user:
-                    user = User(
-                        email=email,
-                        username=x_username.lower()[:20],
-                        hashed_password='oauth_x',
-                    auth_provider='x',
-                    )
-                    db.add(user)
-                    db.commit()
-                    db.refresh(user)
-                else:
-                    # Update email if user exists by username
-                    if user.hashed_password.startswith('oauth_'):
-                        user.email = email
-                        db.commit()
-
-            jwt_token = create_token({"sub": str(user.id), "email": email})
-            response = RedirectResponse("/dashboard")
-            response.set_cookie("token", jwt_token, httponly=True, max_age=86400 * 30, samesite="lax")
-            return response
-        finally:
-            db.close()
-    except Exception as e:
-        return RedirectResponse(f"/login?error={str(e)[:50]}")
+    response = JSONResponse({"ok": True})
+    _set_auth_cookies(response, access_token, refresh_token)
+    return response
 
 
 @app.post("/api/auth/logout")
 async def api_logout():
+    from web.supabase_client import supabase as sb
+    try:
+        sb.auth.sign_out()
+    except Exception:
+        pass
     response = JSONResponse({"ok": True})
-    response.delete_cookie("token")
+    _delete_auth_cookies(response)
     return response
 
 
 @app.get("/api/auth/logout")
 async def api_logout_get():
+    from web.supabase_client import supabase as sb
+    try:
+        sb.auth.sign_out()
+    except Exception:
+        pass
     response = RedirectResponse("/login")
-    response.delete_cookie("token")
+    _delete_auth_cookies(response)
     return response
 
 

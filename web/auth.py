@@ -1,21 +1,162 @@
-"""Authentication — JWT tokens, password hashing, user management."""
+"""Authentication — Supabase Auth with local profile sync."""
 import os
+import warnings
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-import bcrypt
-from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 
 from web.database import SessionLocal, User, Portfolio, Deposit
+from web.supabase_client import supabase
 
-SECRET_KEY = os.environ.get("JWT_SECRET", "qb-secret-change-in-production-2026")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_HOURS = 72
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+# ─── SupabaseUser wrapper ─────────────────────────────────────────────────────
 
+class SupabaseUser:
+    """Lightweight user object that mirrors the old SQLAlchemy User interface.
+
+    Attributes come from the local DB profile so existing template code
+    like ``user.email``, ``user.subscription_tier``, etc. keeps working.
+    """
+
+    def __init__(self, *, id: int, supabase_id: str, email: str, username: str,
+                 subscription_tier: str = "free", subscription_status: str = "trialing",
+                 virtual_balance: float = 0.0, total_deposited: float = 0.0,
+                 onboarding_complete: bool = False, onboarding_step: int = 0,
+                 trading_mode: str = "passive", bot_enabled: bool = False,
+                 wallet_address: Optional[str] = None, wallet_type: Optional[str] = None,
+                 stripe_customer_id: Optional[str] = None, stripe_sub_id: Optional[str] = None,
+                 revenue_share_pct: float = 0.80,
+                 gross_profit: float = 0.0, platform_cut: float = 0.0,
+                 net_profit: float = 0.0, bot_started_at=None,
+                 trial_ends_at=None, auth_provider: str = "email",
+                 created_at=None, **kwargs):
+        self.id = id
+        self.supabase_id = supabase_id
+        self.email = email
+        self.username = username
+        self.subscription_tier = subscription_tier
+        self.subscription_status = subscription_status
+        self.virtual_balance = virtual_balance
+        self.total_deposited = total_deposited
+        self.onboarding_complete = onboarding_complete
+        self.onboarding_step = onboarding_step
+        self.trading_mode = trading_mode
+        self.bot_enabled = bot_enabled
+        self.wallet_address = wallet_address
+        self.wallet_type = wallet_type
+        self.stripe_customer_id = stripe_customer_id
+        self.stripe_sub_id = stripe_sub_id
+        self.revenue_share_pct = revenue_share_pct
+        self.gross_profit = gross_profit
+        self.platform_cut = platform_cut
+        self.net_profit = net_profit
+        self.bot_started_at = bot_started_at
+        self.trial_ends_at = trial_ends_at
+        self.auth_provider = auth_provider
+        self.created_at = created_at
+
+
+def _user_from_db_row(row: User) -> SupabaseUser:
+    """Convert a SQLAlchemy User row into a SupabaseUser."""
+    return SupabaseUser(
+        id=row.id,
+        supabase_id=row.supabase_id or "",
+        email=row.email,
+        username=row.username,
+        subscription_tier=row.subscription_tier or "free",
+        subscription_status=row.subscription_status or "trialing",
+        virtual_balance=row.virtual_balance or 0.0,
+        total_deposited=row.total_deposited or 0.0,
+        onboarding_complete=row.onboarding_complete or False,
+        onboarding_step=row.onboarding_step or 0,
+        trading_mode=row.trading_mode or "passive",
+        bot_enabled=row.bot_enabled or False,
+        wallet_address=row.wallet_address,
+        wallet_type=row.wallet_type,
+        stripe_customer_id=row.stripe_customer_id,
+        stripe_sub_id=row.stripe_sub_id,
+        revenue_share_pct=row.revenue_share_pct or 0.80,
+        gross_profit=row.gross_profit or 0.0,
+        platform_cut=row.platform_cut or 0.0,
+        net_profit=row.net_profit or 0.0,
+        bot_started_at=row.bot_started_at,
+        trial_ends_at=row.trial_ends_at,
+        auth_provider=row.auth_provider or "email",
+        created_at=row.created_at,
+    )
+
+
+def _get_or_create_profile(supabase_id: str, email: str, username: str,
+                           auth_provider: str = "email") -> SupabaseUser:
+    """Look up or create a local User profile linked to a Supabase auth user."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.supabase_id == supabase_id).first()
+        if not user:
+            # Check if there's an existing user with the same email (migration case)
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                # Link existing profile to Supabase
+                user.supabase_id = supabase_id
+                user.auth_provider = auth_provider
+                db.commit()
+                db.refresh(user)
+            else:
+                # Ensure unique username
+                base_username = username or email.split("@")[0]
+                final_username = base_username[:20]
+                counter = 1
+                while db.query(User).filter(User.username == final_username).first():
+                    suffix = str(counter)
+                    final_username = base_username[:20 - len(suffix)] + suffix
+                    counter += 1
+
+                user = User(
+                    email=email,
+                    username=final_username,
+                    hashed_password="supabase_managed",
+                    auth_provider=auth_provider,
+                    supabase_id=supabase_id,
+                )
+                db.add(user)
+                db.flush()
+
+                # Create default portfolio
+                portfolio = Portfolio(user_id=user.id, value=0.0, cash=0.0)
+                db.add(portfolio)
+                db.commit()
+                db.refresh(user)
+
+        return _user_from_db_row(user)
+    finally:
+        db.close()
+
+
+# ─── Deprecated helpers (backward compat) ─────────────────────────────────────
+
+def hash_password(password: str) -> str:
+    """Deprecated: Supabase handles password hashing. Kept for backward compat."""
+    warnings.warn("hash_password is deprecated — Supabase manages passwords", DeprecationWarning, stacklevel=2)
+    import bcrypt
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    """Deprecated: Supabase handles password verification. Kept for backward compat."""
+    warnings.warn("verify_password is deprecated — Supabase manages passwords", DeprecationWarning, stacklevel=2)
+    import bcrypt
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def create_token(data: dict) -> str:
+    """Deprecated: Supabase issues JWTs. Kept for backward compat."""
+    warnings.warn("create_token is deprecated — Supabase issues tokens", DeprecationWarning, stacklevel=2)
+    return ""
+
+
+# ─── Core auth functions ──────────────────────────────────────────────────────
 
 def get_db():
     db = SessionLocal()
@@ -25,47 +166,37 @@ def get_db():
         db.close()
 
 
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+def get_current_user(request: Request, token: Optional[str] = None) -> Optional[SupabaseUser]:
+    """Validate the Supabase session from cookies and return a SupabaseUser.
 
+    Reads ``sb-access-token`` and ``sb-refresh-token`` cookies, validates the
+    access token with Supabase, and returns the linked local profile.
+    """
+    access_token = request.cookies.get("sb-access-token")
+    refresh_token = request.cookies.get("sb-refresh-token")
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
-
-
-def create_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def get_current_user(request: Request, token: Optional[str] = None):
-    """Get current user from JWT token (cookie or header)."""
-    # Try cookie first
-    if not token:
-        token = request.cookies.get("token")
-    # Then Authorization header
-    if not token:
-        auth = request.headers.get("authorization", "")
-        if auth.startswith("Bearer "):
-            token = auth[7:]
-    if not token:
+    if not access_token:
         return None
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
+        # Validate the access token with Supabase
+        user_response = supabase.auth.get_user(access_token)
+        sb_user = user_response.user
+        if not sb_user:
             return None
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == int(user_id)).first()
-        db.close()
-        return user
-    except (JWTError, Exception):
+
+        supabase_id = sb_user.id
+        email = sb_user.email or ""
+        user_metadata = sb_user.user_metadata or {}
+        username = user_metadata.get("username", email.split("@")[0])
+        provider = (sb_user.app_metadata or {}).get("provider", "email")
+
+        return _get_or_create_profile(supabase_id, email, username, auth_provider=provider)
+    except Exception:
         return None
 
 
-def require_user(request: Request, token: Optional[str] = None):
+def require_user(request: Request, token: Optional[str] = None) -> SupabaseUser:
     """Require authenticated user — raises 401 if not logged in."""
     user = get_current_user(request, token)
     if not user:
@@ -74,45 +205,81 @@ def require_user(request: Request, token: Optional[str] = None):
 
 
 def signup_user(email: str, username: str, password: str, full_name: str = "") -> dict:
-    """Create a new user."""
-    db = SessionLocal()
+    """Create a new user via Supabase Auth."""
     try:
-        if db.query(User).filter(User.email == email).first():
+        response = supabase.auth.sign_up({
+            "email": email,
+            "password": password,
+            "options": {
+                "data": {
+                    "username": username,
+                    "full_name": full_name,
+                }
+            }
+        })
+
+        if not response.user:
+            return {"error": "Signup failed — please try again"}
+
+        # Check if email confirmation is required
+        if response.user.identities is not None and len(response.user.identities) == 0:
             return {"error": "Email already registered"}
-        if db.query(User).filter(User.username == username).first():
-            return {"error": "Username already taken"}
 
-        user = User(
-            email=email, username=username,
-            hashed_password=hash_password(password),
-        )
-        db.add(user)
-        db.flush()
+        session = response.session
+        if not session:
+            # Email confirmation required — user created but not yet confirmed
+            return {
+                "message": "Check your email to confirm your account",
+                "user_id": response.user.id,
+                "username": username,
+                "needs_confirmation": True,
+            }
 
-        # Create default portfolio
-        portfolio = Portfolio(user_id=user.id, value=0.0, cash=0.0)
-        db.add(portfolio)
-        db.commit()
+        # Session available — create local profile
+        supabase_id = response.user.id
+        profile = _get_or_create_profile(supabase_id, email, username)
 
-        token = create_token({"sub": str(user.id), "email": email})
-        return {"token": token, "user_id": user.id, "username": username}
+        return {
+            "access_token": session.access_token,
+            "refresh_token": session.refresh_token,
+            "user_id": profile.id,
+            "username": profile.username,
+        }
     except Exception as e:
-        db.rollback()
-        return {"error": str(e)}
-    finally:
-        db.close()
+        error_msg = str(e)
+        if "already registered" in error_msg.lower() or "already been registered" in error_msg.lower():
+            return {"error": "Email already registered"}
+        return {"error": error_msg}
 
 
 def login_user(email: str, password: str) -> dict:
-    db = SessionLocal()
+    """Sign in via Supabase Auth."""
     try:
-        user = db.query(User).filter(User.email == email).first()
-        if not user or not verify_password(password, user.hashed_password):
+        response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password,
+        })
+
+        if not response.user or not response.session:
             return {"error": "Invalid email or password"}
-        token = create_token({"sub": str(user.id), "email": email})
-        return {"token": token, "user_id": user.id, "username": user.username}
-    finally:
-        db.close()
+
+        supabase_id = response.user.id
+        user_metadata = response.user.user_metadata or {}
+        username = user_metadata.get("username", email.split("@")[0])
+        provider = (response.user.app_metadata or {}).get("provider", "email")
+        profile = _get_or_create_profile(supabase_id, email, username, auth_provider=provider)
+
+        return {
+            "access_token": response.session.access_token,
+            "refresh_token": response.session.refresh_token,
+            "user_id": profile.id,
+            "username": profile.username,
+        }
+    except Exception as e:
+        error_msg = str(e)
+        if "invalid" in error_msg.lower() or "credentials" in error_msg.lower():
+            return {"error": "Invalid email or password"}
+        return {"error": error_msg}
 
 
 def deposit_funds(user_id: int, amount: float) -> dict:
