@@ -1,1311 +1,1139 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ferchaud — AI-Powered Trading</title>
+<title>Ferchaud -- AI-Powered Trading</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-/* ═══════════════════════════════════════════════════════════════
-   RESET & CSS VARIABLES
-   ═══════════════════════════════════════════════════════════════ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg: #fefefe;
-  --bg-warm: #faf9f7;
-  --bg-cream: #f5f3ef;
-  --surface: #ffffff;
-  --border: #eaeaea;
+  --bg-page: #f0eeeb;
+  --bg-section: #ffffff;
+  --bg-alt: #f8f7f5;
+  --bg-dark: #1a1a1a;
+  --border: #e2dfd9;
   --text: #1a1a1a;
-  --text-secondary: #666666;
-  --muted: #999999;
+  --text-secondary: #6b6560;
+  --muted: #a09a92;
   --accent: #1a1a1a;
-  --green: #22c55e;
-  --red: #ef4444;
-  --shell-bg: #e8e8e8;
-  --radius: 20px;
-  --nav-height: 64px;
+  --green: #16a34a;
+  --red: #dc2626;
+  --radius: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.04);
 }
 
-/* DARK THEME */
 [data-theme="dark"] {
-  --bg: #0a0a0a;
-  --bg-warm: #111111;
-  --bg-cream: #1a1a1a;
-  --surface: #111111;
-  --border: #2a2a2a;
-  --text: #f0f0f0;
+  --bg-page: #111111;
+  --bg-section: #1a1a1a;
+  --bg-alt: #222222;
+  --bg-dark: #000000;
+  --border: #333333;
+  --text: #e8e8e8;
   --text-secondary: #999999;
-  --muted: #666666;
-  --accent: #ffffff;
-  --shell-bg: #000000;
+  --muted: #777777;
+  --accent: #e8e8e8;
+  --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.2);
 }
-[data-theme="dark"] .navbar { background: rgba(10,10,10,0.92) !important; border-color: #2a2a2a !important; }
-[data-theme="dark"] .cta-section { background: #ffffff !important; }
-[data-theme="dark"] .cta-section h2,
-[data-theme="dark"] .cta-section p { color: #0a0a0a !important; }
-[data-theme="dark"] .cta-section .btn-cta { background: #0a0a0a !important; color: #fff !important; }
-[data-theme="dark"] .icon-sun { display: none; }
-[data-theme="dark"] .icon-moon { display: block; }
-[data-theme="dark"] .pricing-card.featured { border-color: #fff; }
-[data-theme="dark"] .pricing-card.featured .card-badge { background: #fff; color: #000; }
 
-/* ═══════════════════════════════════════════════════════════════
-   BASE STYLES
-   ═══════════════════════════════════════════════════════════════ */
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-page);
   color: var(--text);
-  background: var(--shell-bg);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
 }
+
 a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-.page-shell {
-  margin: 76px 12px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.page-shell > section, .page-shell > footer {
-  background: var(--bg);
+
+/* -- SECTION CARDS -- */
+.section-card {
+  background: var(--bg-section);
   border-radius: var(--radius);
-  overflow: hidden;
+  box-shadow: var(--shadow);
+  max-width: 1280px;
+  margin: 0 auto 12px;
+  padding: 100px 64px;
   position: relative;
+  overflow: hidden;
 }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+.section-card.alt { background: var(--bg-alt); }
+.section-card.dark {
+  background: var(--bg-dark);
+  color: #ffffff;
+}
+.section-card.dark .text-secondary { color: #999; }
+.section-card.dark .text-muted { color: #666; }
 
-/* ═══════════════════════════════════════════════════════════════
-   TEXTURE OVERLAYS
-   ═══════════════════════════════════════════════════════════════ */
-.noise::after {
-  content: ''; position: absolute; inset: 0; z-index: 1;
-  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  opacity: 0.4;
+.container { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--muted); }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* -- TEXTURE OVERLAYS -- */
+.grain { position: relative; }
+.grain::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border-radius: var(--radius);
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 }
-.dot-grid::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-  background-size: 24px 24px;
+
+.dots { position: relative; }
+.dots::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border-radius: var(--radius);
+  background-image: radial-gradient(circle, #d4d0c8 0.6px, transparent 0.6px);
+  background-size: 16px 16px;
   opacity: 0.5;
-  pointer-events: none;
 }
-.diag-lines::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background: repeating-linear-gradient(
-    -45deg, transparent, transparent 10px,
-    var(--border) 10px, var(--border) 10.5px
-  );
+[data-theme="dark"] .dots::after { opacity: 0.15; }
+
+.lines { position: relative; }
+.lines::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border-radius: var(--radius);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, #e8e4de 39px, #e8e4de 40px);
   opacity: 0.3;
-  pointer-events: none;
 }
-.star-dots::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events: none;
+[data-theme="dark"] .lines::after {
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, #333 39px, #333 40px);
+  opacity: 0.2;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NAVBAR
-   ═══════════════════════════════════════════════════════════════ */
-.navbar {
-  position: fixed; top: 8px; left: 12px; right: 12px; z-index: 1000;
-  height: var(--nav-height);
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px;
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), background 0.3s, border-color 0.3s;
+.crosshatch { position: relative; }
+.crosshatch::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border-radius: var(--radius);
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 19px, #ddd8d0 19px, #ddd8d0 20px),
+    repeating-linear-gradient(-45deg, transparent, transparent 19px, #ddd8d0 19px, #ddd8d0 20px);
+  opacity: 0.15;
 }
-.navbar.hidden { transform: translateY(-120%); }
-.nav-logo {
-  font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+[data-theme="dark"] .crosshatch::after {
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 19px, #333 19px, #333 20px),
+    repeating-linear-gradient(-45deg, transparent, transparent 19px, #333 19px, #333 20px);
+  opacity: 0.1;
+}
+
+/* -- NAVBAR -- */
+.navbar {
+  position: fixed; top: 12px; left: 12px; right: 12px; z-index: 1000;
+  background: var(--bg-section);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0 28px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.navbar-brand {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.5px;
   display: flex; align-items: center; gap: 8px;
 }
-.nav-logo .logo-dot {
-  width: 10px; height: 10px; background: var(--green);
-  border-radius: 50%; display: inline-block;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-.nav-links { display: flex; align-items: center; gap: 28px; }
-.nav-links a {
+.navbar-brand svg { width: 22px; height: 22px; }
+.navbar-links { display: flex; align-items: center; gap: 28px; }
+.navbar-links a {
   font-size: 14px; font-weight: 500; color: var(--text-secondary);
   transition: color 0.2s;
 }
-.nav-links a:hover { color: var(--text); }
+.navbar-links a:hover { color: var(--text); }
 
-.nav-actions { display: flex; align-items: center; gap: 12px; }
+.btn-nav {
+  font-size: 13px; font-weight: 600;
+  padding: 8px 18px; border-radius: 10px;
+  background: var(--accent); color: var(--bg-section);
+  border: none; cursor: pointer; transition: opacity 0.2s;
+}
+.btn-nav:hover { opacity: 0.85; }
+
 .theme-toggle {
   width: 36px; height: 36px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s;
-  color: var(--text-secondary);
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); transition: all 0.2s;
 }
-.theme-toggle:hover { background: var(--bg-cream); }
-.theme-toggle svg { width: 18px; height: 18px; }
-.icon-moon { display: none; }
-.btn-signin {
-  font-size: 14px; font-weight: 500; color: var(--text-secondary);
-  padding: 8px 16px; border-radius: 10px; transition: color 0.2s, background 0.2s;
-}
-.btn-signin:hover { color: var(--text); background: var(--bg-cream); }
-.btn-get-started {
-  font-size: 14px; font-weight: 600; color: #fff;
-  background: var(--accent); padding: 8px 20px; border-radius: 10px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-get-started:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
+.theme-toggle:hover { border-color: var(--text); color: var(--text); }
+.theme-toggle svg { width: 16px; height: 16px; }
+
+.mobile-menu-btn {
+  display: none; width: 36px; height: 36px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: transparent; cursor: pointer;
+  align-items: center; justify-content: center;
+  color: var(--text);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   HERO SECTION
-   ═══════════════════════════════════════════════════════════════ */
-.hero { background: var(--bg-warm); padding: 100px 0 80px; min-height: 90vh; display: flex; align-items: center; }
-.hero-mesh {
-  position: absolute; inset: 0; z-index: 0;
-  background:
-    radial-gradient(circle at 20% 50%, rgba(34,197,94,0.07) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(59,130,246,0.05) 0%, transparent 50%),
-    radial-gradient(circle at 50% 80%, rgba(245,158,11,0.04) 0%, transparent 50%);
-  animation: meshShift 15s ease-in-out infinite;
-}
-@keyframes meshShift {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  33% { transform: scale(1.1) rotate(1deg); }
-  66% { transform: scale(0.95) rotate(-1deg); }
-}
+/* -- HERO -- */
+.hero { padding-top: 120px; }
 .hero-grid {
-  position: relative; z-index: 2;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 64px; align-items: center; min-height: 480px;
 }
-.hero-left h1 {
-  font-size: 56px; font-weight: 800; letter-spacing: -2px;
-  line-height: 1.08; margin-bottom: 20px; min-height: 130px;
+.hero-eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 2.5px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 20px;
 }
-.typewriter-cursor {
-  display: inline-block; width: 3px; height: 52px;
-  background: var(--green); margin-left: 4px;
-  animation: blink 0.8s step-end infinite;
+.hero h1 {
+  font-size: 52px; font-weight: 700; letter-spacing: -1.5px;
+  line-height: 1.1; margin-bottom: 24px;
+}
+.hero h1 .line { display: block; }
+.hero h1 .cursor {
+  display: inline-block; width: 2px; height: 46px;
+  background: var(--accent); margin-left: 4px;
+  animation: blink 1s step-end infinite;
   vertical-align: text-bottom;
 }
-@keyframes blink { 50% { opacity: 0; } }
-
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 .hero-subtitle {
-  font-size: 18px; color: var(--text-secondary); line-height: 1.6;
-  margin-bottom: 32px; max-width: 440px;
+  font-size: 17px; color: var(--text-secondary);
+  max-width: 380px; line-height: 1.7; margin-bottom: 36px;
 }
-.hero-ctas { display: flex; gap: 12px; margin-bottom: 40px; }
-.btn-hero-primary {
-  font-size: 16px; font-weight: 600; color: #fff;
-  background: var(--accent); padding: 14px 32px; border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-hero-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-}
-.btn-hero-secondary {
-  font-size: 16px; font-weight: 500; color: var(--text);
-  background: var(--surface); border: 1px solid var(--border);
-  padding: 14px 32px; border-radius: 12px;
-  transition: transform 0.2s, border-color 0.2s;
-}
-.btn-hero-secondary:hover {
-  transform: translateY(-2px);
-  border-color: var(--text-secondary);
-}
-.scanner-badge {
+
+.btn-primary {
   display: inline-flex; align-items: center; gap: 8px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 100px; padding: 8px 16px; font-size: 13px;
-  color: var(--text-secondary); font-weight: 500;
-  margin-bottom: 24px;
+  font-size: 15px; font-weight: 600; font-family: inherit;
+  padding: 16px 28px; border-radius: 12px;
+  background: var(--accent); color: var(--bg-section);
+  border: none; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-primary svg { width: 16px; height: 16px; }
+
+.hero-subcta {
+  margin-top: 14px; font-size: 13px; color: var(--muted);
 }
 
-.scanner-dot {
-  width: 8px; height: 8px; background: var(--green);
-  border-radius: 50%; animation: pulse-dot 1.5s ease-in-out infinite;
-}
-.trust-row {
-  display: flex; gap: 24px; align-items: center;
-  font-size: 13px; color: var(--muted);
-}
-.trust-row span { display: flex; align-items: center; gap: 6px; }
-.trust-row svg { width: 14px; height: 14px; opacity: 0.5; }
-
-/* Hero Chart Area */
 .hero-chart-wrap {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
-  transition: box-shadow 0.3s;
+  position: relative; width: 100%; height: 400px;
+  border-radius: 12px; overflow: hidden;
 }
-.hero-chart-wrap:hover { box-shadow: 0 12px 48px rgba(0,0,0,0.1); }
-.chart-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px;
+.hero-chart-wrap::after {
+  content: ''; position: absolute; inset: 0; z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to right, var(--bg-section) 0%, transparent 8%, transparent 92%, var(--bg-section) 100%);
 }
-.chart-header .ticker { font-weight: 700; font-size: 16px; }
-.chart-header .price-up { color: var(--green); font-weight: 600; font-size: 14px; }
-#hero-chart { width: 100%; height: 280px; border-radius: 8px; overflow: hidden; }
-
-/* Floating badges */
-.float-badge {
-  position: absolute; z-index: 10;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 100px; padding: 6px 14px;
-  font-size: 12px; font-weight: 600;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-  animation: floatBob 3s ease-in-out infinite;
-}
-.float-badge.b1 { top: -12px; right: 30px; color: var(--green); animation-delay: 0s; }
-.float-badge.b2 { bottom: 60px; left: -20px; color: var(--accent); animation-delay: 0.8s; }
-.float-badge.b3 { bottom: -8px; right: 60px; color: var(--green); animation-delay: 1.6s; }
-@keyframes floatBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+.hero-chart-label {
+  margin-top: 12px; font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--muted); text-align: center;
 }
 
-/* Scroll indicator */
-.scroll-indicator {
-  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-  z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
-}
-.scroll-indicator svg {
-  width: 20px; height: 20px; animation: bounceDown 1.8s ease-in-out infinite;
-}
-@keyframes bounceDown {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(6px); }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   STATS ROW
-   ═══════════════════════════════════════════════════════════════ */
-.stats-section { background: var(--surface); padding: 60px 0; }
+/* -- STATS -- */
 .stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px;
   text-align: center;
 }
-.stat-item { position: relative; }
-.stat-item:not(:last-child)::after {
-  content: ''; position: absolute; right: -16px; top: 10%;
-  height: 80%; width: 1px; background: var(--border);
-}
-.stat-number {
-  font-size: 42px; font-weight: 800; letter-spacing: -1.5px;
+.stat-item h3 {
+  font-size: 42px; font-weight: 700; letter-spacing: -1.5px;
   margin-bottom: 6px;
+  font-family: 'JetBrains Mono', monospace;
 }
-.stat-number .stat-suffix { font-size: 28px; }
-.stat-label { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+.stat-item p { font-size: 14px; color: var(--text-secondary); }
 
-/* ═══════════════════════════════════════════════════════════════
-   HOW IT WORKS
-   ═══════════════════════════════════════════════════════════════ */
-.how-section { background: var(--bg-cream); padding: 100px 0; }
+/* -- HOW IT WORKS -- */
 .section-label {
-  font-size: 12px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 2px; color: var(--muted); margin-bottom: 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 2.5px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
 }
-
 .section-title {
-  font-size: 40px; font-weight: 800; letter-spacing: -1.5px;
-  margin-bottom: 16px; line-height: 1.15;
+  font-size: 36px; font-weight: 700; letter-spacing: -1px;
+  margin-bottom: 16px;
 }
-.section-subtitle {
-  font-size: 17px; color: var(--text-secondary); line-height: 1.6;
-  max-width: 520px; margin-bottom: 60px;
+.section-desc {
+  font-size: 16px; color: var(--text-secondary);
+  max-width: 520px; line-height: 1.7; margin-bottom: 60px;
 }
+.section-desc.centered { margin-left: auto; margin-right: auto; text-align: center; }
+.section-title.centered { text-align: center; }
+.section-label.centered { text-align: center; }
+
 .steps-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px;
-  position: relative;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
 }
 .step-card {
-  position: relative; z-index: 2;
-  text-align: center; padding: 40px 24px;
-}
-.step-num {
-  width: 56px; height: 56px; border-radius: 16px;
-  background: var(--accent); color: var(--bg);
-  font-size: 22px; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 20px;
-}
-.step-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-.step-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
-.steps-connector {
-  position: absolute; top: 68px; left: 20%; right: 20%;
-  height: 2px; z-index: 1;
-  background: repeating-linear-gradient(90deg, var(--border) 0, var(--border) 8px, transparent 8px, transparent 16px);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   BENTO FEATURES GRID
-   ═══════════════════════════════════════════════════════════════ */
-.features-section { background: var(--surface); padding: 100px 0; }
-.bento-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: auto auto;
-  gap: 16px;
-}
-.bento-card {
-  background: var(--bg-warm);
+  padding: 32px; border-radius: 14px;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 32px;
-  position: relative; z-index: 2;
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s, border-color 0.3s;
-  overflow: hidden;
+  background: var(--bg-section);
+  transition: all 0.3s ease;
 }
-.bento-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-  border-color: var(--text-secondary);
+.step-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.step-number {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--bg-alt); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 20px;
 }
-.bento-card.wide { grid-column: span 2; }
-.bento-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-.bento-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
-.bento-mini-chart {
-  margin-top: 20px; height: 60px;
-  display: flex; align-items: flex-end; gap: 3px;
+[data-theme="dark"] .step-number { background: #333; }
+.step-card h4 {
+  font-size: 17px; font-weight: 600; margin-bottom: 10px;
 }
-.bento-mini-chart .bar {
-  flex: 1; border-radius: 3px 3px 0 0;
-  background: var(--green); opacity: 0.6;
-  transition: opacity 0.3s;
+.step-card p {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.7;
 }
-.bento-card:hover .bento-mini-chart .bar { opacity: 1; }
-.bento-mini-chart .bar.red { background: var(--red); }
 
-/* ═══════════════════════════════════════════════════════════════
-   STRATEGY CHART
-   ═══════════════════════════════════════════════════════════════ */
-.strategy-section { background: var(--bg-cream); padding: 100px 0; }
+/* -- FEATURES -- */
+.features-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.feature-card {
+  padding: 32px; border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-section);
+  transition: all 0.3s ease;
+}
+.feature-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.feature-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--bg-alt); display: flex;
+  align-items: center; justify-content: center;
+  margin-bottom: 18px;
+}
+[data-theme="dark"] .feature-icon { background: #333; }
+.feature-icon svg { width: 20px; height: 20px; color: var(--text); }
+.feature-card h4 {
+  font-size: 16px; font-weight: 600; margin-bottom: 8px;
+}
+.feature-card p {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.65;
+}
+
+/* -- STRATEGY CHART -- */
 .strategy-chart-wrap {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
+  position: relative; width: 100%; height: 420px;
+  border-radius: 12px; overflow: hidden;
   margin-top: 40px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
 }
-#strategy-chart { width: 100%; height: 340px; border-radius: 8px; overflow: hidden; }
-.strategy-stats {
-  display: flex; gap: 32px; margin-top: 16px; padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.strategy-stat-item .ss-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.strategy-stat-item .ss-value { font-size: 18px; font-weight: 700; }
-.strategy-stat-item .ss-value.green { color: var(--green); }
-
-/* ═══════════════════════════════════════════════════════════════
-   PRICING
-   ═══════════════════════════════════════════════════════════════ */
-.pricing-section { background: var(--surface); padding: 100px 0; }
-.pricing-toggle-wrap {
-  display: flex; align-items: center; justify-content: center;
-  gap: 12px; margin-bottom: 48px;
-}
-.pricing-toggle-label { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
-.pricing-toggle-label.active { color: var(--text); font-weight: 600; }
-.pricing-toggle {
-  width: 48px; height: 26px; border-radius: 100px;
-  background: var(--border); position: relative; cursor: pointer;
-  transition: background 0.3s;
-}
-.pricing-toggle.annual { background: var(--green); }
-.pricing-toggle .toggle-dot {
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #fff; position: absolute; top: 3px; left: 3px;
-  transition: transform 0.3s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-}
-.pricing-toggle.annual .toggle-dot { transform: translateX(22px); }
-.save-badge {
-  font-size: 11px; font-weight: 600; color: var(--green);
-  background: rgba(34,197,94,0.1); padding: 3px 8px; border-radius: 6px;
+.strategy-chart-wrap .chart-grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.3;
 }
 
+/* -- PRICING -- */
 .pricing-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 20px; align-items: start;
 }
 .pricing-card {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 16px; padding: 32px 24px;
-  position: relative;
-  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  padding: 32px 28px; border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-section);
+  transition: all 0.3s ease;
+  display: flex; flex-direction: column;
 }
-.pricing-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.06);
-  border-color: var(--text-secondary);
-}
-.pricing-card.featured {
-  border: 2px solid transparent;
-  background-image: linear-gradient(var(--bg), var(--bg)),
-    linear-gradient(135deg, var(--accent), var(--green), var(--accent));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-.card-badge {
-  position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
-  background: var(--accent); color: var(--bg); font-size: 11px;
-  font-weight: 700; padding: 4px 14px; border-radius: 100px;
-  text-transform: uppercase; letter-spacing: 0.5px;
-}
-.pricing-tier { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
-.pricing-price { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; }
-.pricing-price .period { font-size: 14px; font-weight: 500; color: var(--muted); }
+.pricing-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 
-.pricing-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
-.pricing-features { list-style: none; margin-bottom: 28px; }
+.pricing-card.recommended {
+  border: 2px solid var(--accent);
+  position: relative;
+  padding-top: 44px;
+}
+.pricing-badge {
+  position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: var(--bg-section);
+  font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; padding: 6px 16px;
+  border-radius: 0 0 10px 10px;
+}
+.pricing-name {
+  font-size: 15px; font-weight: 600; margin-bottom: 4px;
+}
+.pricing-price {
+  font-size: 40px; font-weight: 700; letter-spacing: -1.5px;
+  margin-bottom: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.pricing-price span { font-size: 16px; font-weight: 500; color: var(--muted); }
+.pricing-period { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+.pricing-features {
+  list-style: none; flex: 1; margin-bottom: 28px;
+}
 .pricing-features li {
-  font-size: 13px; color: var(--text-secondary); padding: 6px 0;
-  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--text-secondary);
+  padding: 7px 0; display: flex; align-items: flex-start; gap: 10px;
+  line-height: 1.5;
 }
 .pricing-features li::before {
-  content: ''; width: 16px; height: 16px; flex-shrink: 0;
-  background: var(--green); border-radius: 50%;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  content: ''; display: block; flex-shrink: 0;
+  width: 16px; height: 16px; margin-top: 2px;
+  border-radius: 50%; border: 1.5px solid var(--green);
+  background: transparent;
 }
 .btn-pricing {
-  display: block; width: 100%; text-align: center;
-  padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
-  border: 1px solid var(--border); color: var(--text);
-  transition: all 0.2s;
+  width: 100%; padding: 12px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; font-family: inherit;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text); cursor: pointer; transition: all 0.2s;
 }
-.btn-pricing:hover { border-color: var(--accent); background: var(--bg-cream); }
-.btn-pricing.primary {
-  background: var(--accent); color: var(--bg); border-color: var(--accent);
+.btn-pricing:hover { background: var(--bg-alt); }
+.btn-pricing.filled {
+  background: var(--accent); color: var(--bg-section);
+  border-color: var(--accent);
 }
-.btn-pricing.primary:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
+.btn-pricing.filled:hover { opacity: 0.85; background: var(--accent); }
 
-/* ═══════════════════════════════════════════════════════════════
-   CTA SECTION — THE ONE BLACK SECTION
-   ═══════════════════════════════════════════════════════════════ */
-.cta-section {
-  background: #0a0a0a !important; padding: 100px 0; text-align: center;
-}
+/* -- CTA DARK SECTION -- */
+.cta-section { text-align: center; }
 .cta-section h2 {
-  font-size: 44px; font-weight: 800; letter-spacing: -1.5px;
-  color: #ffffff; margin-bottom: 16px;
+  font-size: 40px; font-weight: 700; letter-spacing: -1.2px;
+  margin-bottom: 16px; color: #fff;
 }
-.cta-section p {
-  font-size: 17px; color: #999; margin-bottom: 36px; max-width: 440px; margin-left: auto; margin-right: auto;
-}
+.cta-section p { color: #999; font-size: 17px; margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.7; }
 .btn-cta {
   display: inline-flex; align-items: center; gap: 8px;
-  background: #ffffff; color: #0a0a0a;
-  font-size: 16px; font-weight: 600;
-  padding: 16px 36px; border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  animation: ctaPulse 3s ease-in-out infinite;
+  padding: 16px 32px; border-radius: 12px;
+  background: #ffffff; color: #1a1a1a;
+  font-size: 15px; font-weight: 600; font-family: inherit;
+  border: none; cursor: pointer; transition: all 0.2s;
 }
-.btn-cta:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 32px rgba(255,255,255,0.15);
-}
-@keyframes ctaPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.1); }
-  50% { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
-}
+.btn-cta:hover { opacity: 0.9; transform: translateY(-1px); }
 
-/* ═══════════════════════════════════════════════════════════════
-   FOOTER
-   ═══════════════════════════════════════════════════════════════ */
-.footer { background: var(--bg-cream) !important; padding: 60px 0 32px; }
-.footer-grid {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
-  margin-bottom: 48px;
+/* -- FOOTER -- */
+.footer {
+  max-width: 1280px; margin: 0 auto;
+  padding: 48px 64px 36px;
 }
-.footer-brand { max-width: 280px; }
-.footer-brand .nav-logo { margin-bottom: 16px; }
-.footer-brand p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
-.footer-col h4 {
-  font-size: 12px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px;
+.footer-grid {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px; margin-bottom: 40px;
+}
+.footer-brand { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+.footer-desc { font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 260px; }
+
+.footer-col h5 {
+  font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
 }
 .footer-col a {
   display: block; font-size: 14px; color: var(--text-secondary);
-  padding: 4px 0; transition: color 0.2s;
+  padding: 5px 0; transition: color 0.2s;
 }
 .footer-col a:hover { color: var(--text); }
 .footer-bottom {
   border-top: 1px solid var(--border); padding-top: 24px;
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 13px; color: var(--muted);
 }
+.footer-bottom p { font-size: 13px; color: var(--muted); }
+.footer-bottom-links { display: flex; gap: 24px; }
+.footer-bottom-links a { font-size: 13px; color: var(--muted); transition: color 0.2s; }
+.footer-bottom-links a:hover { color: var(--text); }
 
-/* ═══════════════════════════════════════════════════════════════
-   SCROLL REVEAL ANIMATIONS
-   ═══════════════════════════════════════════════════════════════ */
-.reveal {
-  opacity: 0; transform: translateY(28px);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+/* -- ANIMATIONS -- */
+.fade-up {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
 }
-.reveal.visible { opacity: 1; transform: translateY(0); }
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
-.reveal-delay-5 { transition-delay: 0.5s; }
-.reveal-delay-6 { transition-delay: 0.6s; }
+.fade-up.visible { opacity: 1; transform: translateY(0); }
 
-/* ═══════════════════════════════════════════════════════════════
-   REDUCED MOTION
-   ═══════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+  .fade-up { opacity: 1; transform: none; transition: none; }
+  .hero h1 .cursor { animation: none; }
+  .step-card, .feature-card, .pricing-card, .btn-primary, .btn-cta {
+    transition: none;
   }
-  .reveal { opacity: 1; transform: none; }
-  .hero-mesh { animation: none; }
-  .typewriter-cursor { animation: none; opacity: 1; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════════ */
+/* -- MOBILE MENU -- */
+.mobile-nav {
+  display: none; position: fixed; top: 76px; left: 12px; right: 12px;
+  background: var(--bg-section); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 28px; z-index: 999;
+  box-shadow: var(--shadow-hover); flex-direction: column; gap: 4px;
+}
+.mobile-nav.open { display: flex; }
+.mobile-nav a {
+  display: block; padding: 10px 0; font-size: 15px;
+  font-weight: 500; color: var(--text-secondary);
+}
+.mobile-nav a:hover { color: var(--text); }
+
+/* -- RESPONSIVE -- */
 @media (max-width: 768px) {
-  .container { padding: 0 20px; }
-  .page-shell { margin: 68px 8px 8px; }
-  .navbar { left: 8px; right: 8px; padding: 0 16px; }
-  .nav-links { display: none; }
-  .hero { padding: 60px 0 60px; min-height: auto; }
+  .navbar { left: 8px; right: 8px; top: 8px; padding: 0 16px; }
+  .navbar-links { display: none; }
+  .mobile-menu-btn { display: flex; }
+  .section-card { padding: 60px 24px; margin: 0 8px 8px; }
+  .hero { padding-top: 90px; }
   .hero-grid { grid-template-columns: 1fr; gap: 40px; }
-  .hero-left h1 { font-size: 36px; min-height: 90px; }
-  .typewriter-cursor { height: 34px; }
-  .hero-subtitle { font-size: 16px; }
-  #hero-chart { height: 220px; }
-  .float-badge.b2 { display: none; }
+  .hero h1 { font-size: 36px; }
+  .hero h1 .cursor { height: 32px; }
+  .hero-chart-wrap { height: 280px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
-  .stat-item:not(:last-child)::after { display: none; }
-  .stat-number { font-size: 32px; }
-  .steps-grid { grid-template-columns: 1fr; gap: 24px; }
-  .steps-connector { display: none; }
-  .section-title { font-size: 30px; }
-  .bento-grid { grid-template-columns: 1fr; }
-  .bento-card.wide { grid-column: span 1; }
-  #strategy-chart { height: 250px; }
-  .strategy-stats { flex-wrap: wrap; gap: 16px; }
-  .pricing-grid { grid-template-columns: 1fr; gap: 12px; }
-  .cta-section h2 { font-size: 30px; }
+  .stat-item h3 { font-size: 32px; }
+  .steps-grid { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .strategy-chart-wrap { height: 300px; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .section-title { font-size: 28px; }
+  .cta-section h2 { font-size: 30px; }
+}
+
+@media (max-width: 480px) {
+  .pricing-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
 }
 
+/* Hero radial glow */
+.hero-section { position: relative; }
+.hero-section::before {
+  content: ''; position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(22,163,74,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     NAVBAR
-     ═══════════════════════════════════════════════════════════════ -->
-<nav class="navbar" id="navbar">
-  <div class="nav-logo">
-    <span class="logo-dot"></span>
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="#" class="navbar-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+      <polyline points="16 7 22 7 22 13"/>
+    </svg>
     Ferchaud
-  </div>
-  <div class="nav-links">
+  </a>
+  <div class="navbar-links">
+    <a href="#how-it-works">How It Works</a>
     <a href="#features">Features</a>
+    <a href="#strategy">Strategy</a>
     <a href="#pricing">Pricing</a>
-    <a href="#sources">Sources</a>
-    <a href="#support">Support</a>
-  </div>
-  <div class="nav-actions">
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
       </svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </svg>
     </button>
-    <a href="/login" class="btn-signin">Sign In</a>
-    <a href="/register" class="btn-get-started">Get Started</a>
+    <a href="/login"><button class="btn-nav">Log In</button></a>
   </div>
+  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
 </nav>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     PAGE SHELL
-     ═══════════════════════════════════════════════════════════════ -->
-<div class="page-shell">
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="#how-it-works">How It Works</a>
+  <a href="#features">Features</a>
+  <a href="#strategy">Strategy</a>
+  <a href="#pricing">Pricing</a>
+  <a href="/login">Log In</a>
+</div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     HERO
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="hero noise">
-  <div class="hero-mesh"></div>
+<!-- HERO SECTION -->
+<section class="section-card hero-section hero grain" style="margin-top: 80px">
   <div class="container">
     <div class="hero-grid">
-      <div class="hero-left">
-        <div class="scanner-badge">
-          <span class="scanner-dot"></span>
-          Scanning <span id="stock-counter">12,847</span> stocks...
-        </div>
-        <h1 id="typewriter-target"></h1>
-        <p class="hero-subtitle">AI-powered signals that scan the entire market, identify high-probability setups, and execute trades automatically. No emotion. No hesitation.</p>
-        <div class="hero-ctas">
-          <a href="/register" class="btn-hero-primary">Start Trading Free</a>
-          <a href="#how" class="btn-hero-secondary">See How It Works</a>
-        </div>
-        <div class="trust-row">
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Bank-level encryption
-          </span>
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Paper trade first
-          </span>
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Cancel anytime
-          </span>
-        </div>
+      <div class="fade-up">
+        <div class="hero-eyebrow">AI-POWERED TRADING</div>
+        <h1>
+          <span class="line" id="heroLine1"></span>
+          <span class="line" id="heroLine2"></span>
+          <span class="cursor" id="heroCursor"></span>
+        </h1>
+        <p class="hero-subtitle">
+          Algorithmic signals that detect momentum shifts in real time. 
+          Enter at support, exit at resistance -- automatically.
+        </p>
+        <a href="/register">
+          <button class="btn-primary">
+            Start Trading
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </a>
+        <p class="hero-subcta">Paper trading available -- No credit card required</p>
       </div>
-
-      <div class="hero-right">
-        <div class="hero-chart-wrap">
-          <div class="float-badge b1">+18.4%</div>
-          <div class="float-badge b2">AI Signal</div>
-          <div class="float-badge b3">Auto-Executed</div>
-          <div class="chart-header">
-            <span class="ticker">NVDA</span>
-            <span class="price-up">+$12.34 (2.8%)</span>
-          </div>
-          <div id="hero-chart"></div>
-        </div>
+      <div class="fade-up" style="transition-delay: 0.15s">
+        <div class="hero-chart-wrap" id="heroChartContainer"></div>
+        <p class="hero-chart-label">$RKLB -- +18.4% captured</p>
       </div>
     </div>
   </div>
-  <div class="scroll-indicator">
-    <span>Scroll</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
-  </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     STATS ROW
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="stats-section">
+<!-- STATS SECTION -->
+<section class="section-card alt lines">
   <div class="container">
     <div class="stats-grid">
-      <div class="stat-item reveal">
-        <div class="stat-number"><span class="counter" data-target="15000">0</span><span class="stat-suffix">+</span></div>
-        <div class="stat-label">Stocks Scanned Daily</div>
+      <div class="stat-item fade-up">
+        <h3><span class="counter" data-target="12847">0</span></h3>
+        <p>Trades executed</p>
       </div>
-      <div class="stat-item reveal reveal-delay-1">
-        <div class="stat-number"><span class="counter" data-target="4">0</span></div>
-        <div class="stat-label">Supported Brokers</div>
+      <div class="stat-item fade-up" style="transition-delay: 0.1s">
+        <h3><span class="counter" data-target="67" data-suffix="%">0</span></h3>
+        <p>Win rate (all strategies)</p>
       </div>
-      <div class="stat-item reveal reveal-delay-2">
-        <div class="stat-number"><span class="counter" data-target="24" data-suffix="/7">0</span></div>
-        <div class="stat-label">Market Monitoring</div>
+      <div class="stat-item fade-up" style="transition-delay: 0.2s">
+        <h3><span class="counter" data-target="3" data-suffix="ms">0</span></h3>
+        <p>Avg signal latency</p>
       </div>
-      <div class="stat-item reveal reveal-delay-3">
-        <div class="stat-number"><span class="counter" data-target="12" data-suffix="ms">0</span></div>
-        <div class="stat-label">Avg Execution Speed</div>
+      <div class="stat-item fade-up" style="transition-delay: 0.3s">
+        <h3><span class="counter" data-target="2100" data-prefix="$" data-suffix="+">0</span></h3>
+        <p>Users on the platform</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     HOW IT WORKS
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="how-section diag-lines" id="how">
+<!-- HOW IT WORKS -->
+<section class="section-card dots" id="how-it-works">
   <div class="container">
-    <div class="section-label reveal">How It Works</div>
-    <h2 class="section-title reveal">Three steps to smarter trades</h2>
-    <p class="section-subtitle reveal">No PhD required. Connect your broker, set your risk level, and let the AI handle the rest.</p>
+    <div class="section-label centered fade-up">HOW IT WORKS</div>
+    <h2 class="section-title centered fade-up">Three steps to smarter trades</h2>
+    <p class="section-desc centered fade-up">
+      Connect your broker, choose a strategy, and let the algorithm handle entries and exits with precision timing.
+    </p>
     <div class="steps-grid">
-      <div class="steps-connector"></div>
-      <div class="step-card reveal reveal-delay-1">
-        <div class="step-num">1</div>
-        <h3 class="step-title">Connect</h3>
-        <p class="step-desc">Link your brokerage account in seconds. We support Alpaca, Interactive Brokers, and more. Your credentials never touch our servers.</p>
+      <div class="step-card fade-up">
+        <div class="step-number">01</div>
+        <h4>Connect Your Broker</h4>
+        <p>Link your Alpaca or Robinhood account with API keys. Your credentials are encrypted and never stored in plain text. Takes under 2 minutes.</p>
       </div>
-      <div class="step-card reveal reveal-delay-2">
-        <div class="step-num">2</div>
-        <h3 class="step-title">Configure</h3>
-        <p class="step-desc">Set your risk tolerance, position sizes, and which strategies to run. Start with paper trading to build confidence.</p>
+      <div class="step-card fade-up" style="transition-delay: 0.1s">
+        <div class="step-number">02</div>
+        <h4>Select a Strategy</h4>
+        <p>Choose from momentum, mean-reversion, or breakout strategies. Each one is backtested on historical data so you can review past performance.</p>
       </div>
-      <div class="step-card reveal reveal-delay-3">
-        <div class="step-num">3</div>
-        <h3 class="step-title">Execute</h3>
-        <p class="step-desc">The AI scans thousands of stocks in real-time, identifies setups, and executes trades automatically with strict risk management.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     BENTO FEATURES
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="features-section dot-grid" id="features">
-  <div class="container">
-    <div class="section-label reveal">Features</div>
-    <h2 class="section-title reveal">Everything you need,<br>nothing you don't</h2>
-    <p class="section-subtitle reveal">Built by traders, for traders. Every feature solves a real problem.</p>
-    <div class="bento-grid">
-      <div class="bento-card wide reveal reveal-delay-1">
-        <h3 class="bento-title">AI Signal Engine</h3>
-        <p class="bento-desc">Multi-factor analysis combining technical indicators, volume profiles, and market microstructure data. Signals update in real-time as conditions change.</p>
-        <div class="bento-mini-chart">
-          <div class="bar" style="height:30%"></div><div class="bar" style="height:45%"></div>
-          <div class="bar" style="height:35%"></div><div class="bar" style="height:60%"></div>
-          <div class="bar" style="height:80%"></div><div class="bar" style="height:55%"></div>
-          <div class="bar" style="height:90%"></div><div class="bar" style="height:70%"></div>
-          <div class="bar" style="height:85%"></div><div class="bar red" style="height:40%"></div>
-          <div class="bar" style="height:65%"></div><div class="bar" style="height:95%"></div>
-        </div>
-      </div>
-      <div class="bento-card reveal reveal-delay-2">
-        <h3 class="bento-title">Auto Execution</h3>
-        <p class="bento-desc">Sub-millisecond order routing directly to your broker. Market, limit, and trailing stop orders handled automatically.</p>
-      </div>
-
-      <div class="bento-card reveal reveal-delay-3">
-        <h3 class="bento-title">Risk Management</h3>
-        <p class="bento-desc">Position sizing, stop-losses, and portfolio-level risk limits enforced on every trade. Never risk more than you define.</p>
-      </div>
-      <div class="bento-card reveal reveal-delay-4">
-        <h3 class="bento-title">Live Dashboard</h3>
-        <p class="bento-desc">Real-time P&L, open positions, signal history, and performance analytics. All in one clean interface.</p>
-      </div>
-      <div class="bento-card wide reveal reveal-delay-5">
-        <h3 class="bento-title">Alerts & Notifications</h3>
-        <p class="bento-desc">Get notified via SMS, email, or push when trades execute, signals trigger, or risk thresholds are hit. Stay informed without being glued to a screen. Configure quiet hours so you only hear what matters.</p>
-        <div class="bento-mini-chart">
-          <div class="bar" style="height:50%"></div><div class="bar" style="height:70%"></div>
-          <div class="bar red" style="height:25%"></div><div class="bar" style="height:80%"></div>
-          <div class="bar" style="height:60%"></div><div class="bar" style="height:90%"></div>
-          <div class="bar" style="height:75%"></div><div class="bar red" style="height:35%"></div>
-          <div class="bar" style="height:85%"></div><div class="bar" style="height:65%"></div>
-          <div class="bar" style="height:95%"></div><div class="bar" style="height:55%"></div>
-        </div>
-      </div>
-      <div class="bento-card reveal reveal-delay-6">
-        <h3 class="bento-title">Backtesting</h3>
-        <p class="bento-desc">Test any strategy against years of historical data before risking real capital. See exact entries, exits, and drawdowns.</p>
+      <div class="step-card fade-up" style="transition-delay: 0.2s">
+        <div class="step-number">03</div>
+        <h4>Deploy and Monitor</h4>
+        <p>Activate live or paper trading. The algorithm scans for signals, executes trades, and sends you notifications. You stay in control at all times.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     STRATEGY CHART
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="strategy-section noise">
+<!-- FEATURES -->
+<section class="section-card alt crosshatch" id="features">
   <div class="container">
-    <div class="section-label reveal">Performance</div>
-    <h2 class="section-title reveal">See the strategy in action</h2>
-    <p class="section-subtitle reveal">Simulated backtest showing AI-identified entry and exit points across multiple trades. Past performance does not guarantee future results.</p>
-    <div class="strategy-chart-wrap reveal">
-      <div id="strategy-chart"></div>
-      <div class="strategy-stats">
-        <div class="strategy-stat-item">
-          <div class="ss-label">Win Rate</div>
-          <div class="ss-value green">68.4%</div>
+    <div class="section-label centered fade-up">FEATURES</div>
+    <h2 class="section-title centered fade-up">Built for serious traders</h2>
+    <p class="section-desc centered fade-up">
+      Every tool you need to analyze, execute, and track trades with institutional-grade precision.
+    </p>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Avg Return</div>
-          <div class="ss-value green">+4.2%</div>
+        <h4>Real-Time Signals</h4>
+        <p>Sub-5ms signal generation using technical indicators, volume analysis, and price action patterns across multiple timeframes.</p>
+      </div>
+      <div class="feature-card fade-up" style="transition-delay: 0.08s">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Max Drawdown</div>
-          <div class="ss-value">-8.1%</div>
+        <h4>Live Dashboard</h4>
+        <p>Monitor positions, P&L, and signal history in one view. Every trade is logged with entry price, exit price, and rationale.</p>
+      </div>
+      <div class="feature-card fade-up" style="transition-delay: 0.16s">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Sharpe Ratio</div>
-          <div class="ss-value">2.14</div>
+        <h4>Risk Management</h4>
+        <p>Configurable stop-loss, take-profit, and position sizing. Set max drawdown limits and the system halts trading automatically.</p>
+      </div>
+      <div class="feature-card fade-up" style="transition-delay: 0.24s">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Total Trades</div>
-          <div class="ss-value">247</div>
+        <h4>Backtesting Engine</h4>
+        <p>Test strategies against years of historical data before risking real capital. View detailed metrics including Sharpe ratio and max drawdown.</p>
+      </div>
+      <div class="feature-card fade-up" style="transition-delay: 0.32s">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
+        <h4>Smart Alerts</h4>
+        <p>Get notified via SMS, email, or Discord when signals fire, trades execute, or risk thresholds are approached. Never miss a move.</p>
+      </div>
+      <div class="feature-card fade-up" style="transition-delay: 0.40s">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        </div>
+        <h4>Paper Trading</h4>
+        <p>Practice with simulated capital before going live. Identical execution logic, zero financial risk. Perfect for testing new strategies.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     PRICING
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="pricing-section" id="pricing">
+<!-- STRATEGY CHART -->
+<section class="section-card" id="strategy">
   <div class="container">
-    <div class="section-label reveal" style="text-align:center">Pricing</div>
-    <h2 class="section-title reveal" style="text-align:center">Simple, transparent pricing</h2>
-    <p class="section-subtitle reveal" style="text-align:center; margin-left:auto; margin-right:auto;">No hidden fees. No commission on your trades. Upgrade or cancel anytime.</p>
-    <div class="pricing-toggle-wrap reveal">
-      <span class="pricing-toggle-label active" id="label-monthly">Monthly</span>
-      <div class="pricing-toggle" id="pricing-toggle" onclick="togglePricing()">
-        <div class="toggle-dot"></div>
-      </div>
-      <span class="pricing-toggle-label" id="label-annual">Annual</span>
-      <span class="save-badge">Save 20%</span>
+    <div class="section-label fade-up">STRATEGY PERFORMANCE</div>
+    <h2 class="section-title fade-up">Momentum breakout -- 6 month backtest</h2>
+    <p class="section-desc fade-up">
+      Historical performance of our momentum strategy on mid-cap equities. 
+      Green markers indicate buy signals at support levels, red markers at resistance exits.
+      Past performance does not guarantee future results.
+    </p>
+    <div class="strategy-chart-wrap fade-up" style="transition-delay: 0.1s">
+      <div class="chart-grid-bg"></div>
+      <div id="strategyChartContainer" style="position:relative;z-index:1;width:100%;height:100%"></div>
     </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section-card alt grain" id="pricing">
+  <div class="container">
+    <div class="section-label centered fade-up">PRICING</div>
+    <h2 class="section-title centered fade-up">Simple, transparent pricing</h2>
+    <p class="section-desc centered fade-up">
+      Start free, upgrade when you need more. No hidden fees, no commission markups.
+    </p>
     <div class="pricing-grid">
-
-      <!-- Free -->
-      <div class="pricing-card reveal reveal-delay-1">
-        <div class="pricing-tier">Free</div>
-        <div class="pricing-price">$0<span class="period">/mo</span></div>
-        <p class="pricing-desc">Paper trading and basic signals. Perfect for learning the platform.</p>
+      <!-- FREE -->
+      <div class="pricing-card fade-up">
+        <div class="pricing-name">Free</div>
+        <div class="pricing-price">$0</div>
+        <div class="pricing-period">forever</div>
         <ul class="pricing-features">
           <li>Paper trading only</li>
-          <li>5 AI signals per day</li>
+          <li>1 active strategy</li>
           <li>Basic dashboard</li>
           <li>Community support</li>
-          <li>1 strategy slot</li>
+          <li>Delayed signals (15 min)</li>
         </ul>
-        <a href="/register" class="btn-pricing">Get Started</a>
+        <button class="btn-pricing" onclick="window.location='/register'">Get Started</button>
       </div>
-      <!-- Starter -->
-      <div class="pricing-card reveal reveal-delay-2">
-        <div class="pricing-tier">Starter</div>
-        <div class="pricing-price"><span class="price-val">$29</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">For traders ready to go live with a small portfolio.</p>
+      <!-- STARTER -->
+      <div class="pricing-card fade-up" style="transition-delay: 0.08s">
+        <div class="pricing-name">Starter</div>
+        <div class="pricing-price">$29<span>/mo</span></div>
+        <div class="pricing-period">billed monthly</div>
         <ul class="pricing-features">
-          <li>Live trading enabled</li>
-          <li>25 AI signals per day</li>
-          <li>Auto-execution (up to $10K)</li>
+          <li>Live trading with 1 broker</li>
+          <li>3 active strategies</li>
+          <li>Real-time signals</li>
           <li>Email alerts</li>
-          <li>3 strategy slots</li>
+          <li>Basic backtesting</li>
           <li>Email support</li>
         </ul>
-        <a href="/register" class="btn-pricing">Start Free Trial</a>
+        <button class="btn-pricing" onclick="window.location='/register'">Start Free Trial</button>
       </div>
 
-      <!-- Pro (featured) -->
-      <div class="pricing-card featured reveal reveal-delay-3">
-        <div class="card-badge">Most Popular</div>
-        <div class="pricing-tier">Pro</div>
-        <div class="pricing-price"><span class="price-val">$99</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">Full power for serious traders. No portfolio limits.</p>
+      <!-- PRO -->
+      <div class="pricing-card recommended fade-up" style="transition-delay: 0.16s">
+        <div class="pricing-badge">Recommended</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price">$99<span>/mo</span></div>
+        <div class="pricing-period">billed monthly</div>
         <ul class="pricing-features">
-          <li>Unlimited AI signals</li>
-          <li>Auto-execution (unlimited)</li>
-          <li>SMS + push alerts</li>
-          <li>10 strategy slots</li>
-          <li>Advanced backtesting</li>
+          <li>Live trading with multiple brokers</li>
+          <li>10 active strategies</li>
+          <li>Real-time signals + SMS alerts</li>
+          <li>Full backtesting engine</li>
+          <li>Advanced risk management</li>
           <li>Priority support</li>
+          <li>Custom stop-loss / take-profit</li>
         </ul>
-        <a href="/register" class="btn-pricing primary">Start Free Trial</a>
+        <button class="btn-pricing filled" onclick="window.location='/register'">Start Free Trial</button>
       </div>
-      <!-- Elite -->
-      <div class="pricing-card reveal reveal-delay-4">
-        <div class="pricing-tier">Elite</div>
-        <div class="pricing-price"><span class="price-val">$299</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">For power traders who want every possible edge.</p>
+
+      <!-- ELITE -->
+      <div class="pricing-card fade-up" style="transition-delay: 0.24s">
+        <div class="pricing-name">Elite</div>
+        <div class="pricing-price">$299<span>/mo</span></div>
+        <div class="pricing-period">billed monthly</div>
         <ul class="pricing-features">
           <li>Everything in Pro</li>
-          <li>Custom strategy config</li>
-          <li>Dedicated support</li>
+          <li>Unlimited strategies</li>
+          <li>Custom strategy builder</li>
           <li>API access</li>
-          <li>You keep 98% of profits</li>
+          <li>Dedicated account manager</li>
+          <li>White-glove onboarding</li>
+          <li>Discord + SMS + email alerts</li>
         </ul>
-        <a href="#support" class="btn-pricing">Contact Us</a>
+        <button class="btn-pricing" onclick="window.location='/register'">Contact Sales</button>
       </div>
-
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     CTA — THE ONE BLACK SECTION
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="cta-section star-dots">
+<!-- CTA DARK SECTION -->
+<section class="section-card dark cta-section">
   <div class="container">
-    <h2 class="reveal">Ready to trade smarter?</h2>
-    <p class="reveal reveal-delay-1">Use AI to find better entries, manage risk, and execute without emotion.</p>
-    <a href="/register" class="btn-cta reveal reveal-delay-2">
-      Start Trading Free
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </a>
+    <div class="fade-up">
+      <h2>Ready to trade smarter?</h2>
+      <p>Join thousands of traders using algorithmic signals to find better entries and exits. Start with paper trading -- zero risk.</p>
+      <a href="/register">
+        <button class="btn-cta">
+          Create Free Account
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </a>
+    </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     FOOTER
-     ═══════════════════════════════════════════════════════════════ -->
-<footer class="footer noise" id="support">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <div class="nav-logo">
-          <span class="logo-dot"></span>
-          Ferchaud
-        </div>
-        <p>AI-powered trading signals and automated execution. Built for traders who want an edge without the noise.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Product</h4>
-        <a href="#features">Features</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#">Changelog</a>
-        <a href="#">API Docs</a>
-      </div>
-      <div class="footer-col" id="sources">
-        <h4>Sources</h4>
-        <a href="#">Market Data</a>
-        <a href="#">Signal Methodology</a>
-        <a href="#">Backtests</a>
-        <a href="#">Research</a>
-      </div>
-      <div class="footer-col">
-        <h4>Company</h4>
-        <a href="#">About</a>
-        <a href="#">Blog</a>
-        <a href="#">Careers</a>
-        <a href="mailto:support@ferchaud.com">Contact</a>
-      </div>
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Ferchaud</div>
+      <p class="footer-desc">Algorithmic trading signals for momentum and mean-reversion strategies. Built for retail traders who want institutional-grade tools.</p>
     </div>
-
-    <div class="footer-bottom">
-      <span>&copy; 2026 Ferchaud. All rights reserved.</span>
-      <span>
-        <a href="#" style="margin-right:16px;">Privacy Policy</a>
-        <a href="#" style="margin-right:16px;">Terms of Service</a>
-        <a href="#">Risk Disclosure</a>
-      </span>
+    <div class="footer-col">
+      <h5>Product</h5>
+      <a href="#features">Features</a>
+      <a href="#strategy">Strategy</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/login">Dashboard</a>
+    </div>
+    <div class="footer-col">
+      <h5>Resources</h5>
+      <a href="#">Documentation</a>
+      <a href="#">API Reference</a>
+      <a href="#">Status Page</a>
+      <a href="#">Changelog</a>
+    </div>
+    <div class="footer-col">
+      <h5>Company</h5>
+      <a href="#">About</a>
+      <a href="#">Blog</a>
+      <a href="#">Careers</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>2026 Ferchaud. All rights reserved.</p>
+    <div class="footer-bottom-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Risk Disclosure</a>
     </div>
   </div>
 </footer>
 
-</div><!-- end .page-shell -->
-
-<!-- ═══════════════════════════════════════════════════════════════
-     JAVASCRIPT
-     ═══════════════════════════════════════════════════════════════ -->
 <script>
-/* ── Theme Toggle ─────────────────────────────────────────────── */
+// ── THEME TOGGLE ──
 (function() {
-  const saved = localStorage.getItem('theme');
-  if (saved) document.documentElement.setAttribute('data-theme', saved);
-})();
-function toggleTheme() {
   const html = document.documentElement;
-  const current = html.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
-  // Re-apply chart colors
-  if (window.heroChart) initHeroChart();
-  if (window.strategyChart) initStrategyChart();
-}
+  const stored = localStorage.getItem('ferchaud-theme');
+  if (stored === 'dark') html.setAttribute('data-theme', 'dark');
 
-/* ── Navbar Hide/Show on Scroll ───────────────────────────────── */
-(function() {
-  const nav = document.getElementById('navbar');
-  let lastY = 0;
-  let ticking = false;
-  window.addEventListener('scroll', function() {
-    if (!ticking) {
-      window.requestAnimationFrame(function() {
-        const y = window.scrollY;
-        if (y > lastY && y > 100) nav.classList.add('hidden');
-        else nav.classList.remove('hidden');
-        lastY = y;
-        ticking = false;
-      });
-      ticking = true;
+  const toggle = document.getElementById('themeToggle');
+  const sunIcon = document.getElementById('sunIcon');
+  const moonIcon = document.getElementById('moonIcon');
+
+  function updateIcons() {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    sunIcon.style.display = isDark ? 'none' : 'block';
+    moonIcon.style.display = isDark ? 'block' : 'none';
+  }
+  updateIcons();
+
+  toggle.addEventListener('click', function() {
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      html.removeAttribute('data-theme');
+      localStorage.setItem('ferchaud-theme', 'light');
+    } else {
+      html.setAttribute('data-theme', 'dark');
+      localStorage.setItem('ferchaud-theme', 'dark');
     }
+    updateIcons();
+    rebuildCharts();
   });
 })();
-</script>
 
-<script>
-/* ── Typewriter Effect ────────────────────────────────────────── */
+// ── MOBILE MENU ──
 (function() {
-  const target = document.getElementById('typewriter-target');
-  const text = 'Buy the dip.\nSell the peak.';
-  let i = 0;
-  const cursor = document.createElement('span');
-  cursor.className = 'typewriter-cursor';
+  const btn = document.getElementById('mobileMenuBtn');
+  const nav = document.getElementById('mobileNav');
+  btn.addEventListener('click', function() {
+    nav.classList.toggle('open');
+  });
+  nav.querySelectorAll('a').forEach(function(a) {
+    a.addEventListener('click', function() { nav.classList.remove('open'); });
+  });
+})();
 
+// ── TYPEWRITER ──
+(function() {
+  const line1 = 'Buy the dip.';
+  const line2 = 'Sell the peak.';
+  const el1 = document.getElementById('heroLine1');
+  const el2 = document.getElementById('heroLine2');
+  const cursor = document.getElementById('heroCursor');
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (prefersReduced) {
+    el1.textContent = line1;
+    el2.textContent = line2;
+    return;
+  }
+
+  let i = 0;
+  const full = line1 + '\n' + line2;
   function type() {
-    if (i < text.length) {
-      if (text[i] === '\n') {
-        target.appendChild(document.createElement('br'));
-      } else {
-        target.appendChild(document.createTextNode(text[i]));
-      }
+    if (i <= full.length) {
+      const text = full.substring(0, i);
+      const parts = text.split('\n');
+      el1.textContent = parts[0] || '';
+      el2.textContent = parts[1] || '';
       i++;
-      // Remove and re-add cursor at end
-      if (cursor.parentNode) cursor.remove();
-      target.appendChild(cursor);
-      setTimeout(type, 65 + Math.random() * 40);
+      setTimeout(type, 50);
     }
   }
-  // Small delay before starting
   setTimeout(type, 600);
 })();
 
-/* ── Stock Counter Tick ───────────────────────────────────────── */
+// ── INTERSECTION OBSERVER (fade-up) ──
 (function() {
-  const el = document.getElementById('stock-counter');
-  let count = 12847;
-  setInterval(function() {
-    count += Math.floor(Math.random() * 5) + 1;
-    el.textContent = count.toLocaleString();
-  }, 200);
-})();
-</script>
-
-<script>
-/* ── Scroll Reveal (IntersectionObserver) ─────────────────────── */
-(function() {
-  const reveals = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-    reveals.forEach(function(el) { observer.observe(el); });
-  } else {
-    // Fallback: show everything
-    reveals.forEach(function(el) { el.classList.add('visible'); });
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) {
+    document.querySelectorAll('.fade-up').forEach(function(el) {
+      el.classList.add('visible');
+    });
+    return;
   }
-})();
-
-/* ── Animated Counters ────────────────────────────────────────── */
-(function() {
-  const counters = document.querySelectorAll('.counter');
   const observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        const el = entry.target;
-        const target = parseFloat(el.getAttribute('data-target'));
-        const decimal = parseInt(el.getAttribute('data-decimal') || '0');
-        const suffix = el.getAttribute('data-suffix') || '';
-        const duration = 1800;
-        const start = performance.now();
-
-        function tick(now) {
-          const elapsed = now - start;
-          const progress = Math.min(elapsed / duration, 1);
-          // Ease out cubic
-          const eased = 1 - Math.pow(1 - progress, 3);
-          const current = eased * target;
-          if (decimal > 0) {
-            el.textContent = current.toFixed(decimal) + suffix;
-          } else {
-            el.textContent = Math.floor(current).toLocaleString() + suffix;
-          }
-          if (progress < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-        observer.unobserve(el);
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.3 });
-  counters.forEach(function(el) { observer.observe(el); });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-up').forEach(function(el) {
+    observer.observe(el);
+  });
 })();
-</script>
 
-<script>
-/* ── Pricing Toggle ───────────────────────────────────────────── */
-var isAnnual = false;
-var monthlyPrices = { starter: 29, pro: 99, elite: 299 };
-var annualPrices  = { starter: 23, pro: 79, elite: 239 };
+// ── COUNTER ANIMATION ──
+(function() {
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const counters = document.querySelectorAll('.counter');
 
-function togglePricing() {
-  isAnnual = !isAnnual;
-  var toggle = document.getElementById('pricing-toggle');
-  var labelM = document.getElementById('label-monthly');
-  var labelA = document.getElementById('label-annual');
+  function animateCounter(el) {
+    const target = parseInt(el.getAttribute('data-target'));
+    const prefix = el.getAttribute('data-prefix') || '';
+    const suffix = el.getAttribute('data-suffix') || '';
+    const duration = 2000;
+    const steps = 60;
+    const increment = target / steps;
+    let current = 0;
+    let step = 0;
 
-  if (isAnnual) {
-    toggle.classList.add('annual');
-    labelM.classList.remove('active');
-    labelA.classList.add('active');
-  } else {
-    toggle.classList.remove('annual');
-    labelM.classList.add('active');
-    labelA.classList.remove('active');
+    if (prefersReduced) {
+      el.textContent = prefix + target.toLocaleString() + suffix;
+      return;
+    }
+
+    const timer = setInterval(function() {
+      step++;
+      current = Math.min(Math.round(increment * step), target);
+      el.textContent = prefix + current.toLocaleString() + suffix;
+      if (step >= steps) clearInterval(timer);
+    }, duration / steps);
   }
 
-  var prices = isAnnual ? annualPrices : monthlyPrices;
-  var vals = document.querySelectorAll('.price-val');
-  vals.forEach(function(el) {
-    var card = el.closest('.pricing-card');
-    var tier = card.querySelector('.pricing-tier').textContent.trim().toLowerCase();
-    if (prices[tier] !== undefined) {
-      el.textContent = '$' + prices[tier];
-    }
-  });
-}
-</script>
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
 
-<script>
-/* ── Helper: detect dark mode for charts ──────────────────────── */
-function isDark() {
-  return document.documentElement.getAttribute('data-theme') === 'dark';
+  counters.forEach(function(c) { observer.observe(c); });
+})();
+
+// ── CHART DATA GENERATION ──
+function generateRealisticData(startPrice, numPoints, startDate, trend) {
+  const data = [];
+  let price = startPrice;
+  const d = new Date(startDate);
+
+  for (let i = 0; i < numPoints; i++) {
+    // Skip weekends
+    while (d.getDay() === 0 || d.getDay() === 6) {
+      d.setDate(d.getDate() + 1);
+    }
+
+    // Realistic price movement with drift
+    const drift = trend * 0.002;
+    const volatility = 0.015 + Math.random() * 0.01;
+    const shock = (Math.random() - 0.5) * 2 * volatility;
+
+    // Add mean-reversion and momentum components
+    const meanLevel = startPrice * (1 + drift * i);
+    const reversion = (meanLevel - price) * 0.01;
+    const momentum = i > 2 ? (data[data.length - 1].value - data[Math.max(0, data.length - 3)].value) * 0.1 : 0;
+
+    price = price * (1 + shock + drift) + reversion + momentum;
+    price = Math.max(price * 0.7, price); // floor
+
+    data.push({
+      time: d.toISOString().split('T')[0],
+      value: parseFloat(price.toFixed(2))
+    });
+    d.setDate(d.getDate() + 1);
+  }
+  return data;
 }
-function chartColors() {
-  var d = isDark();
+
+function findLocalExtremes(data, windowSize) {
+  const markers = [];
+  for (let i = windowSize; i < data.length - windowSize; i++) {
+    let isMin = true, isMax = true;
+    for (let j = i - windowSize; j <= i + windowSize; j++) {
+      if (j === i) continue;
+      if (data[j].value <= data[i].value) isMin = false;
+      if (data[j].value >= data[i].value) isMax = false;
+    }
+    if (isMin) {
+      markers.push({
+        time: data[i].time,
+        position: 'belowBar',
+        color: '#16a34a',
+        shape: 'circle',
+        text: 'BUY'
+      });
+    }
+    if (isMax) {
+      markers.push({
+        time: data[i].time,
+        position: 'aboveBar',
+        color: '#dc2626',
+        shape: 'circle',
+        text: 'SELL'
+      });
+    }
+  }
+  return markers;
+}
+
+// ── CHART THEME HELPERS ──
+function getChartColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   return {
-    bg: d ? '#111111' : '#ffffff',
-    text: d ? '#999999' : '#999999',
-    grid: d ? '#1e1e1e' : '#f0f0f0',
-    line: d ? '#22c55e' : '#22c55e',
-    area1: d ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.08)',
-    area2: 'rgba(34,197,94,0)',
-    border: d ? '#2a2a2a' : '#eaeaea',
+    bg: isDark ? '#1a1a1a' : '#ffffff',
+    text: isDark ? '#777777' : '#a09a92',
+    grid: isDark ? '#2a2a2a' : '#f0eeeb',
+    line: isDark ? '#22c55e' : '#16a34a',
+    areaTop: isDark ? 'rgba(34,197,94,0.3)' : 'rgba(22,163,74,0.25)',
+    areaBottom: isDark ? 'rgba(34,197,94,0.0)' : 'rgba(22,163,74,0.0)',
+    crosshair: isDark ? '#555' : '#ccc'
   };
 }
 
-/* ── Hero Chart (Lightweight Charts) ──────────────────────────── */
-function initHeroChart() {
-  var container = document.getElementById('hero-chart');
+// ── BUILD CHARTS ──
+var heroChart = null;
+var strategyChart = null;
+var heroData = generateRealisticData(14.20, 90, '2025-10-01', 1);
+var strategyData = generateRealisticData(28.50, 130, '2025-07-01', 0.8);
+var heroMarkers = findLocalExtremes(heroData, 5);
+var strategyMarkers = findLocalExtremes(strategyData, 6);
+
+function createChart(containerId, data, markers, height) {
+  var container = document.getElementById(containerId);
+  if (!container) return null;
   container.innerHTML = '';
-  var c = chartColors();
+  var colors = getChartColors();
 
   var chart = LightweightCharts.createChart(container, {
     width: container.clientWidth,
-    height: container.clientHeight,
-    layout: { background: { type: 'solid', color: c.bg }, textColor: c.text, fontFamily: 'Inter' },
-    grid: { vertLines: { color: c.grid }, horzLines: { color: c.grid } },
-    rightPriceScale: { borderColor: c.border },
-    timeScale: { borderColor: c.border, timeVisible: false },
-    crosshair: { mode: 0 },
+    height: height || container.clientHeight || 400,
+    layout: {
+      background: { type: 'solid', color: 'transparent' },
+      textColor: colors.text,
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11
+    },
+    grid: {
+      vertLines: { color: colors.grid, style: 3 },
+      horzLines: { color: colors.grid, style: 3 }
+    },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal,
+      vertLine: { color: colors.crosshair, width: 1, style: 2, labelBackgroundColor: colors.line },
+      horzLine: { color: colors.crosshair, width: 1, style: 2, labelBackgroundColor: colors.line }
+    },
+    rightPriceScale: {
+      borderVisible: false,
+      scaleMargins: { top: 0.1, bottom: 0.1 }
+    },
+    timeScale: {
+      borderVisible: false,
+      timeVisible: false
+    },
     handleScroll: false,
-    handleScale: false,
+    handleScale: false
   });
 
-  var data = [];
-  var base = 420;
-  for (var i = 0; i < 60; i++) {
-    base += (Math.random() - 0.42) * 6;
-    data.push({ time: '2025-01-' + String(i + 1).padStart(2, '0'), value: parseFloat(base.toFixed(2)) });
-  }
-
-  var series = chart.addAreaSeries({
-    lineColor: c.line,
-    topColor: c.area1,
-    bottomColor: c.area2,
+  var areaSeries = chart.addAreaSeries({
+    lineColor: colors.line,
+    topColor: colors.areaTop,
+    bottomColor: colors.areaBottom,
     lineWidth: 2,
-    priceLineVisible: false,
     crosshairMarkerVisible: true,
     crosshairMarkerRadius: 4,
-  });
-  series.setData(data);
-
-  // BUY and SELL markers
-  var buyIdx = 15;
-  var sellIdx = 38;
-  series.setMarkers([
-    { time: data[buyIdx].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp', text: 'BUY' },
-    { time: data[sellIdx].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-  ]);
-
-  chart.timeScale().fitContent();
-  window.heroChart = chart;
-
-  // Resize handler
-  var ro = new ResizeObserver(function() {
-    chart.applyOptions({ width: container.clientWidth });
-  });
-  ro.observe(container);
-}
-
-/* ── Strategy Chart (Lightweight Charts) ──────────────────────── */
-function initStrategyChart() {
-  var container = document.getElementById('strategy-chart');
-  container.innerHTML = '';
-  var c = chartColors();
-
-  var chart = LightweightCharts.createChart(container, {
-    width: container.clientWidth,
-    height: container.clientHeight,
-    layout: { background: { type: 'solid', color: c.bg }, textColor: c.text, fontFamily: 'Inter' },
-    grid: { vertLines: { color: c.grid }, horzLines: { color: c.grid } },
-    rightPriceScale: { borderColor: c.border },
-    timeScale: { borderColor: c.border, timeVisible: false },
-    crosshair: { mode: 0 },
-    handleScroll: false,
-    handleScale: false,
-  });
-
-  // Generate more complex data with multiple trades
-  var data2 = [];
-  var price = 180;
-  for (var j = 0; j < 120; j++) {
-    price += (Math.random() - 0.46) * 4;
-    if (price < 150) price = 150 + Math.random() * 5;
-    data2.push({ time: '2024-06-' + String(j + 1).padStart(2, '0'), value: parseFloat(price.toFixed(2)) });
-  }
-
-  var series2 = chart.addAreaSeries({
-    lineColor: c.line,
-    topColor: c.area1,
-    bottomColor: c.area2,
-    lineWidth: 2,
+    crosshairMarkerBorderColor: colors.line,
+    crosshairMarkerBackgroundColor: colors.bg,
     priceLineVisible: false,
+    lastValueVisible: false
   });
-  series2.setData(data2);
 
-  // Multiple trade markers
-  series2.setMarkers([
-    { time: data2[8].time,  position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[22].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-    { time: data2[35].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[52].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-    { time: data2[65].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[80].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-    { time: data2[90].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[110].time,position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-  ]);
-
+  areaSeries.setData(data);
+  if (markers && markers.length > 0) {
+    areaSeries.setMarkers(markers);
+  }
   chart.timeScale().fitContent();
-  window.strategyChart = chart;
 
-  var ro2 = new ResizeObserver(function() {
-    chart.applyOptions({ width: container.clientWidth });
-  });
-  ro2.observe(container);
+  return chart;
 }
 
-// Initialize both charts on load
+function rebuildCharts() {
+  if (heroChart) { heroChart.remove(); heroChart = null; }
+  if (strategyChart) { strategyChart.remove(); strategyChart = null; }
+  heroChart = createChart('heroChartContainer', heroData, heroMarkers);
+  strategyChart = createChart('strategyChartContainer', strategyData, strategyMarkers);
+}
+
+// Init charts on load
 document.addEventListener('DOMContentLoaded', function() {
-  initHeroChart();
-  initStrategyChart();
+  heroChart = createChart('heroChartContainer', heroData, heroMarkers);
+  strategyChart = createChart('strategyChartContainer', strategyData, strategyMarkers);
+});
+
+// Resize handler
+var resizeTimeout;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(function() {
+    rebuildCharts();
+  }, 200);
 });
 </script>
 

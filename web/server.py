@@ -9,10 +9,12 @@ from fastapi import FastAPI, Request, Depends, HTTPException, Body
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
+from authlib.integrations.starlette_client import OAuth
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from web.auth import get_current_user, require_user, signup_user, login_user, deposit_funds
+from web.auth import get_current_user, require_user, signup_user, login_user, deposit_funds, create_token
 from web.database import SessionLocal, User, Portfolio, Trade, Deposit, TIERS
 from web.stripe_handler import (
     create_customer, create_checkout_session, create_billing_portal,
@@ -20,6 +22,19 @@ from web.stripe_handler import (
 )
 
 app = FastAPI(title="Ferchaud", docs_url=None, redoc_url=None)
+
+# Add session middleware (needed for OAuth state)
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("JWT_SECRET", "change-me"))
+
+# ─── OAuth Setup ──────────────────────────────────────────────────────────────
+oauth = OAuth()
+oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID', ''),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET', ''),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 try:
@@ -181,21 +196,63 @@ async def api_login(request: Request, body: dict = Body(...)):
 
 
 @app.get("/api/auth/google")
-async def auth_google():
-    # TODO: Implement Google OAuth
-    return RedirectResponse("/login?error=oauth_coming_soon")
+async def auth_google(request: Request):
+    """Redirect user to Google's OAuth consent screen."""
+    redirect_uri = str(request.base_url).rstrip("/") + "/api/auth/google/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@app.get("/api/auth/google/callback")
+async def auth_google_callback(request: Request):
+    """Handle the callback from Google OAuth."""
+    try:
+        token = await oauth.google.authorize_access_token(request)
+        user_info = token.get('userinfo')
+        if not user_info:
+            return RedirectResponse("/login?error=google_failed")
+
+        email = user_info.get('email', '')
+        name = user_info.get('name', '')
+
+        # Find or create user
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            if not user:
+                # Create new user from Google OAuth
+                user = User(
+                    email=email,
+                    username=name.replace(' ', '').lower()[:20],
+                    hashed_password='oauth_google',  # Not used for OAuth users
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+
+            jwt_token = create_token({"sub": str(user.id), "email": email})
+            response = RedirectResponse("/dashboard")
+            response.set_cookie("token", jwt_token, httponly=True, max_age=86400 * 30, samesite="lax")
+            return response
+        finally:
+            db.close()
+    except Exception as e:
+        return RedirectResponse(f"/login?error={str(e)[:50]}")
 
 
 @app.get("/api/auth/apple")
-async def auth_apple():
-    # TODO: Implement Apple OAuth
-    return RedirectResponse("/login?error=oauth_coming_soon")
+async def auth_apple(request: Request):
+    """Apple Sign-In requires Apple Developer Program setup.
+    User needs to configure: APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID
+    """
+    return RedirectResponse("/login?error=apple_setup_required")
 
 
 @app.get("/api/auth/x")
-async def auth_x():
-    # TODO: Implement X OAuth
-    return RedirectResponse("/login?error=oauth_coming_soon")
+async def auth_x(request: Request):
+    """X/Twitter OAuth requires developer portal setup.
+    User needs to configure: X_CLIENT_ID, X_CLIENT_SECRET
+    """
+    return RedirectResponse("/login?error=x_setup_required")
 
 
 @app.post("/api/auth/logout")
@@ -325,6 +382,47 @@ async def api_deposit(request: Request, body: dict = Body(...)):
         raise HTTPException(400, "Minimum deposit $50")
     result = deposit_funds(user.id, amount)
     return result
+
+
+# ─── Stripe Checkout API ──────────────────────────────────────────────────────
+
+@app.post("/api/checkout")
+async def create_checkout(request: Request, body: dict = Body(...)):
+    """Create a Stripe Checkout session for subscription."""
+    user = require_user(request)
+    tier = body.get("tier", "pro")
+
+    import stripe
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+
+    if not stripe.api_key:
+        raise HTTPException(400, "Stripe not configured")
+
+    # Price mapping — create these in Stripe Dashboard
+    prices = {
+        "starter": os.getenv("STRIPE_PRICE_STARTER", ""),
+        "pro": os.getenv("STRIPE_PRICE_PRO", ""),
+        "elite": os.getenv("STRIPE_PRICE_ELITE", ""),
+    }
+
+    price_id = prices.get(tier)
+    if not price_id:
+        raise HTTPException(400, f"Invalid tier: {tier}")
+
+    base_url = str(request.base_url).rstrip("/")
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=f"{base_url}/dashboard?subscribed=1",
+            cancel_url=f"{base_url}/pricing",
+            customer_email=user.email,
+            metadata={"user_id": str(user.id), "tier": tier},
+        )
+        return {"url": session.url}
+    except Exception as e:
+        raise HTTPException(400, str(e))
 
 
 # ─── Subscription APIs ────────────────────────────────────────────────────────
