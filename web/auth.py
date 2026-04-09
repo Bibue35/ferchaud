@@ -286,8 +286,6 @@ def deposit_funds(user_id: int, amount: float) -> dict:
     """Add funds to user's virtual balance."""
     if amount <= 0:
         return {"error": "Amount must be positive"}
-    if amount > 10000:
-        return {"error": "Max deposit is $10,000 per transaction"}
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.id == user_id).first()
