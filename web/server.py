@@ -297,17 +297,6 @@ async def auth_google(request: Request):
     return RedirectResponse(redirect_url)
 
 
-@app.get("/api/auth/apple")
-async def auth_apple(request: Request):
-    """Redirect to Supabase Apple OAuth."""
-    site_url = _get_site_url(request)
-    redirect_url = (
-        f"{SUPABASE_URL}/auth/v1/authorize"
-        f"?provider=apple"
-        f"&redirect_to={site_url}/api/auth/callback"
-    )
-    return RedirectResponse(redirect_url)
-
 
 @app.get("/api/auth/x")
 async def auth_x(request: Request):
@@ -495,6 +484,50 @@ async def onboarding_tier(request: Request, body: dict = Body(...)):
         db.close()
     return {"ok": True}
 
+
+
+
+@app.post("/api/wallet/connect")
+async def wallet_connect(request: Request, body: dict = Body(...)):
+    """Save a connected Web3 wallet address to the user profile."""
+    user = require_user(request)
+    address = body.get("address", "").strip()
+    wallet_type = body.get("wallet_type", "unknown").strip()
+    if not address or not address.startswith("0x"):
+        return JSONResponse({"error": "Invalid wallet address"}, status_code=400)
+    db = SessionLocal()
+    try:
+        u = db.query(User).filter(User.id == user.id).first()
+        if not u:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        u.wallet_address = address
+        u.wallet_type = wallet_type
+        db.commit()
+        return {"ok": True, "address": address, "wallet_type": wallet_type}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+@app.delete("/api/wallet/disconnect")
+async def wallet_disconnect(request: Request):
+    """Remove a connected wallet from the user profile."""
+    user = require_user(request)
+    db = SessionLocal()
+    try:
+        u = db.query(User).filter(User.id == user.id).first()
+        if u:
+            u.wallet_address = None
+            u.wallet_type = None
+            db.commit()
+        return {"ok": True}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        db.close()
 
 @app.post("/api/onboarding/wallet")
 async def onboarding_wallet(request: Request, body: dict = Body(...)):
