@@ -467,6 +467,27 @@ async def bot_status(request: Request):
 
 # ─── Onboarding APIs ──────────────────────────────────────────────────────────
 
+@app.post("/api/onboarding/profile")
+async def onboarding_profile(request: Request, body: dict = Body(...)):
+    """Save user's onboarding profile answers (steps 1–5)."""
+    user = require_user(request)
+    db = SessionLocal()
+    try:
+        u = db.query(User).filter(User.id == user.id).first()
+        fields = ['trading_goal', 'risk_tolerance', 'experience_level', 'investment_horizon', 'starting_capital']
+        for f in fields:
+            if f in body:
+                setattr(u, f, body[f])
+        u.onboarding_step = max(u.onboarding_step or 0, body.get('step', 0))
+        db.commit()
+        return {"ok": True}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
 @app.post("/api/onboarding/tier")
 async def onboarding_tier(request: Request, body: dict = Body(...)):
     user = require_user(request)

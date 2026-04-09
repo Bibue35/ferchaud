@@ -7,6 +7,7 @@
   <script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -31,7 +32,7 @@
     body {
       background: #e8e8e8; color: var(--text); font-family: 'Inter', sans-serif;
       min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center; justify-content: flex-start; padding: 2rem 0 4rem;
       background-image: radial-gradient(#d4d4d4 0.8px, transparent 0.8px);
       background-size: 20px 20px;
     }
@@ -40,345 +41,668 @@
       background-image: radial-gradient(rgba(255,255,255,0.03) 0.8px, transparent 0.8px);
       background-size: 20px 20px;
     }
-    .wizard { width: 100%; max-width: 560px; padding: 0 1.5rem; }
-    /* Progress bar */
-    .progress-bar { display: flex; gap: 8px; margin-bottom: 2.5rem; }
-    .progress-step { flex: 1; height: 4px; background: var(--border); border-radius: 50px; transition: background 0.4s, box-shadow 0.4s; }
-    .progress-step.done { background: #fff; }
-    .progress-step.active { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
 
-    /* Card */
-    .card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
-      padding: 2.5rem; animation: fadeIn 0.35s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .card { transition: opacity 0.3s ease, transform 0.3s ease; }
-    .card.fade-out { opacity: 0; transform: translateY(-10px); }
-
-    .step-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-secondary);
-      text-transform: uppercase; margin-bottom: 0.75rem;
-    }
-    .step-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text); }
-    .step-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
-
-    /* Tier cards */
-    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
-    .tier-card {
-      border: 1.5px solid var(--border); border-radius: 24px; padding: 1.25rem;
-      cursor: pointer; transition: all 0.2s; position: relative;
-    }
-    .tier-card:hover, .hover-lift:hover { border-color: var(--border-hover); background: var(--bg-cream); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
-    .tier-card.selected {
-      border-color: transparent;
-      background: var(--bg-cream);
-      border: 1.5px solid transparent;
-      background-image: linear-gradient(var(--surface), var(--surface)), var(--gradient-primary);
-      background-origin: border-box;
-      background-clip: padding-box, border-box;
-      box-shadow: 0 0 20px var(--accent-glow);
-    }    .tier-card .badge {
-      position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
-      padding: 3px 10px; border-radius: 50px;
-      background: #fff; color: #08090a;
-    }
-    .tier-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
-    .tier-price { font-size: 1.4rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-    .tier-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
-    .tier-share { font-size: 12px; color: var(--green); font-weight: 600; }
-    .tier-desc { font-size: 11px; color: var(--muted); margin-top: 6px; }
-
-    /* Input / button */
-    input {
-      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 50px; color: var(--text); font-family: 'Inter', sans-serif;
-      font-size: 0.9rem; padding: 0.8rem 1.25rem; margin-bottom: 1rem;
-      outline: none; transition: border 0.2s;
-    }
-    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-    input::placeholder { color: var(--muted); }
-
-    .btn {
-      width: 100%; padding: 0.875rem; border-radius: 50px; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700;
-      transition: all 0.2s; margin-top: 0.5rem;
-    }
-    .btn-primary {
-      background: var(--accent); color: var(--surface);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }    .btn-outline {
-      background: transparent; color: var(--text); border: 1px solid var(--border);
-    }
-    .btn-outline:hover { border-color: var(--border-strong); color: var(--text); }
-    .btn-green { background: var(--green); color: white; }
-    .btn-green:hover { background: #15803d; }
-
-    /* Wallet buttons */
-    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
-    .wallet-btn {
-      background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 24px;
-      padding: 1rem; display: flex; flex-direction: column; align-items: center;
-      gap: 8px; cursor: pointer; transition: all 0.2s;
-    }
-    .wallet-btn:hover { border-color: var(--border-hover); background: var(--bg-cream); }
-    .wallet-btn img { width: 36px; height: 36px; border-radius: 50px; }
-    .wallet-btn span { font-size: 12px; font-weight: 600; color: var(--text); }
-    .wallet-btn.connected { border-color: var(--green); }
-    .wallet-connected {
-      background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25);
-      border-radius: 50px; padding: 0.75rem 1rem; font-size: 13px;
-      color: var(--green); display: flex; align-items: center; gap: 8px;
-      margin-bottom: 1rem; display: none;
-    }
-    .wallet-connected .dot {
-      width: 8px; height: 8px; background: var(--green); border-radius: 50%;
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .skip-link {
-      text-align: center; margin-top: 1rem; font-size: 13px;
-      color: var(--muted); cursor: pointer;
-    }
-    .skip-link:hover { color: var(--text); }
-
+    /* ── Layout ─────────────────────────────────────── */
+    .wizard { width: 100%; max-width: 640px; padding: 0 1.5rem; }
     .logo {
       text-align: center; font-size: 1.3rem; font-weight: 900;
       letter-spacing: -0.5px; margin-bottom: 2rem; color: var(--text);
     }
-    .logo span { color: var(--text); }
 
-    .success-icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
-    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
-    .feature-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
-    .feature-list li::before { content: "\2713"; color: var(--green); font-weight: 700; }
+    /* ── Progress bar ───────────────────────────────── */
+    .progress-wrap { margin-bottom: 0.75rem; }
+    .progress-bar { display: flex; gap: 6px; }
+    .progress-step {
+      flex: 1; height: 4px; background: var(--border);
+      border-radius: 50px; transition: background 0.4s, box-shadow 0.4s;
+    }
+    .progress-step.done { background: var(--green); }
+    .progress-step.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+    .progress-label {
+      text-align: right; font-size: 11px; color: var(--muted);
+      font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;
+    }
+
+    /* ── Slide container ────────────────────────────── */
+    .steps-viewport { overflow: hidden; position: relative; }
+    .steps-track {
+      display: flex; transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .step-pane { min-width: 100%; flex-shrink: 0; }
+
+    /* ── Card shell ─────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px; padding: 2.25rem 2.25rem 2rem;
+    }
+    .step-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 0.6rem;
+    }
+    .step-emoji { font-size: 2.5rem; margin-bottom: 0.6rem; display: block; }
+    .step-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.4rem; color: var(--text); line-height: 1.2; }
+    .step-sub { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.75rem; line-height: 1.6; }
+
+    /* ── Generic choice grid ────────────────────────── */
+    .choice-grid {
+      display: grid; gap: 10px; margin-bottom: 1.5rem;
+    }
+    .choice-grid.cols-1 { grid-template-columns: 1fr; }
+    .choice-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .choice-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 500px) {
+      .choice-grid.cols-2, .choice-grid.cols-3 { grid-template-columns: 1fr; }
+      .card { padding: 1.5rem 1.25rem 1.5rem; }
+    }
+    @media (min-width: 501px) and (max-width: 680px) {
+      .choice-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Choice card ────────────────────────────────── */
+    .choice-card {
+      position: relative; border: 1.5px solid var(--border); border-radius: 16px;
+      padding: 1.1rem 1rem; cursor: pointer; transition: all 0.18s ease;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; min-height: 110px;
+      background: var(--surface);
+    }
+    .choice-card:hover {
+      border-color: var(--border-strong); transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+    }
+    .choice-card.selected {
+      border-color: var(--green);
+      background: rgba(34,197,94,0.06);
+      box-shadow: 0 0 0 2px rgba(34,197,94,0.18);
+    }
+    .choice-card .check-badge {
+      position: absolute; top: 8px; right: 8px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--green); color: #fff;
+      font-size: 11px; display: flex; align-items: center; justify-content: center;
+      font-weight: 900; opacity: 0; transform: scale(0.6);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .choice-card.selected .check-badge { opacity: 1; transform: scale(1); }
+    .choice-emoji { font-size: 1.75rem; margin-bottom: 0.45rem; display: block; line-height: 1; }
+    .choice-title { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+    .choice-sub { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+
+    /* ── Tier cards (step 6) ────────────────────────── */
+    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+    @media (max-width: 500px) { .tier-grid { grid-template-columns: 1fr; } }
+    .tier-card {
+      border: 1.5px solid var(--border); border-radius: 16px; padding: 1.2rem 1rem;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .tier-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+    .tier-card.selected {
+      border-color: transparent;
+      background-image: linear-gradient(var(--surface), var(--surface)), var(--gradient-primary);
+      background-origin: border-box; background-clip: padding-box, border-box;
+      box-shadow: 0 0 18px var(--accent-glow);
+    }
+    .tier-badge {
+      position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
+      padding: 3px 9px; border-radius: 50px; background: #fff; color: #08090a;
+    }
+    .tier-name { font-weight: 700; font-size: 1rem; margin-bottom: 3px; }
+    .tier-price { font-size: 1.35rem; font-weight: 800; margin-bottom: 3px; }
+    .tier-price span { font-size: 0.78rem; font-weight: 400; color: var(--muted); }
+    .tier-share { font-size: 12px; color: var(--green); font-weight: 600; }
+    .tier-desc { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+    /* ── Buttons ────────────────────────────────────── */
+    .btn {
+      width: 100%; padding: 0.875rem; border-radius: 50px; border: none;
+      cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.95rem;
+      font-weight: 700; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.14); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--border-strong); }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { background: #16a34a; transform: translateY(-1px); }
+
+    /* ── Back button ────────────────────────────────── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px; background: none;
+      border: none; cursor: pointer; color: var(--muted); font-size: 13px;
+      font-weight: 600; font-family: 'Inter', sans-serif;
+      padding: 0; margin-bottom: 1.25rem; transition: color 0.15s;
+    }
+    .back-btn:hover { color: var(--text); }
+    .back-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+
+    /* ── Summary card (step 7) ──────────────────────── */
+    .summary-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.75rem; }
+    .summary-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface-2); border-radius: 12px; padding: 0.7rem 1rem;
+      font-size: 13px;
+    }
+    .summary-row .label { color: var(--muted); font-weight: 500; }
+    .summary-row .value { color: var(--text); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+    /* ── Confetti canvas ────────────────────────────── */
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+    /* ── Footer ─────────────────────────────────────── */
+    .page-footer {
+      text-align: center; padding: 20px 0 8px; font-size: 11px; color: var(--muted);
+    }
+    .page-footer a { color: var(--text-secondary); font-size: 11px; }
+    footer { text-align: center; padding: 10px 24px 24px; font-size: 12px; color: var(--muted); }
+    footer a { color: var(--muted); font-size: 12px; }
+    .footer-links { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
   </style>
 </head>
 <body>
-<div class="wizard page-enter">
+<div class="wizard">
   <div class="logo">Ferchaud</div>
 
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-step active" id="ps1"></div>
-    <div class="progress-step" id="ps2"></div>
-    <div class="progress-step" id="ps3"></div>
-    <div class="progress-step" id="ps4"></div>
-  </div>
-  <!-- STEP 1: Welcome + choose plan -->
-  <div class="card" id="step1">
-    <div class="step-label">Step 1 of 4</div>
-    <div class="step-title">Choose your plan</div>
-    <div class="step-sub">Pick the plan that fits your trading goals. Lower monthly cost = higher revenue share taken by us. Higher cost = you keep almost everything.</div>
-
-    <div class="tier-grid">
-      <div class="tier-card hover-lift" onclick="selectTier('free', this)">
-        <div class="tier-name">Free</div>
-        <div class="tier-price">$0<span>/mo</span></div>
-        <div class="tier-share">You keep 70%</div>
-        <div class="tier-desc">Great to start. We take 30% of profits.</div>
-      </div>
-      <div class="tier-card hover-lift" onclick="selectTier('starter', this)">
-        <div class="tier-name">Starter</div>
-        <div class="tier-price">$29<span>/mo</span></div>
-        <div class="tier-share">You keep 80%</div>
-        <div class="tier-desc">14-day free trial. We take 20% of profits.</div>
-      </div>
-      <div class="tier-card hover-lift selected" onclick="selectTier('pro', this)">
-        <div class="badge">Popular</div>
-        <div class="tier-name">Pro</div>
-        <div class="tier-price">$99<span>/mo</span></div>
-        <div class="tier-share">You keep 90%</div>
-        <div class="tier-desc">Options trading + Grok AI. We take 10%.</div>
-      </div>
-      <div class="tier-card hover-lift" onclick="selectTier('elite', this)">
-        <div class="tier-name">Elite</div>
-        <div class="tier-price">$299<span>/mo</span></div>
-        <div class="tier-share">You keep 98%</div>
-        <div class="tier-desc">Maximum returns. We take only 2%.</div>
-      </div>
+  <!-- Progress bar (7 steps) -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-step active" id="ps1"></div>
+      <div class="progress-step" id="ps2"></div>
+      <div class="progress-step" id="ps3"></div>
+      <div class="progress-step" id="ps4"></div>
+      <div class="progress-step" id="ps5"></div>
+      <div class="progress-step" id="ps6"></div>
+      <div class="progress-step" id="ps7"></div>
     </div>
-    <button class="btn btn-primary" onclick="goStep(2)">Continue</button>
+    <div class="progress-label" id="progressLabel">Step 1 of 7</div>
   </div>
-  <!-- STEP 2: Connect wallet -->
-  <div class="card" id="step2" style="display:none">
-    <div class="step-label">Step 2 of 4</div>
-    <div class="step-title">Connect a wallet</div>
-    <div class="step-sub">Link your crypto wallet to deposit funds instantly. Your keys remain yours — we only read your address.</div>
 
-    <div class="wallet-connected" id="walletConnected">
-      <div class="dot"></div>
-      <span id="walletAddr">Connected</span>
-    </div>
+  <!-- Slide viewport -->
+  <div class="steps-viewport">
+    <div class="steps-track" id="stepsTrack">
 
-    <div class="wallet-grid">
-      <div class="wallet-btn" onclick="connectWallet('metamask')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
-        <span>MetaMask</span>
+      <!-- ══════════════════════════════════════════════ -->
+      <!-- STEP 1 — Trading Goal                         -->
+      <!-- ══════════════════════════════════════════════ -->
+      <div class="step-pane" id="step1">
+        <div class="card">
+          <div class="step-label">Step 1 of 7</div>
+          <span class="step-emoji">👋</span>
+          <div class="step-title">Why are you here?</div>
+          <div class="step-sub">Tell us your main goal so we can personalise your experience.</div>
+
+          <div class="choice-grid cols-1" id="goal-grid">
+            <div class="choice-card" data-value="grow" onclick="pickGoal(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🚀</span>
+              <div class="choice-title">Grow my wealth</div>
+              <div class="choice-sub">I want to build long-term wealth</div>
+            </div>
+            <div class="choice-card" data-value="income" onclick="pickGoal(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">💰</span>
+              <div class="choice-title">Generate income</div>
+              <div class="choice-sub">I want passive income from trading</div>
+            </div>
+            <div class="choice-card" data-value="learn" onclick="pickGoal(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">📚</span>
+              <div class="choice-title">Learn to trade</div>
+              <div class="choice-sub">I want to understand markets</div>
+            </div>
+            <div class="choice-card" data-value="protect" onclick="pickGoal(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🛡️</span>
+              <div class="choice-title">Protect my savings</div>
+              <div class="choice-sub">I want to beat inflation</div>
+            </div>
+            <div class="choice-card" data-value="active" onclick="pickGoal(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">⚡</span>
+              <div class="choice-title">Active trading</div>
+              <div class="choice-sub">I want to trade actively and frequently</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="wallet-btn" onclick="connectWallet('coinbase')">
-        <img src="https://altcoinsbox.com/wp-content/uploads/2023/01/coinbase-wallet-logo.png" alt="Coinbase">
-        <span>Coinbase</span>
+
+      <!-- ══════════════════════════════════════════════ -->
+      <!-- STEP 2 — Risk Tolerance                       -->
+      <!-- ══════════════════════════════════════════════ -->
+      <div class="step-pane" id="step2">
+        <div class="card">
+          <button class="back-btn" onclick="goStep(1)">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <div class="step-label">Step 2 of 7</div>
+          <span class="step-emoji">⚖️</span>
+          <div class="step-title">How much risk can you handle?</div>
+          <div class="step-sub">Be honest — this shapes which strategies the bot uses on your portfolio.</div>
+
+          <div class="choice-grid cols-1" id="risk-grid">
+            <div class="choice-card" data-value="conservative" onclick="pickRisk(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🟢</span>
+              <div class="choice-title">Conservative</div>
+              <div class="choice-sub">Protect capital, small steady gains</div>
+            </div>
+            <div class="choice-card" data-value="moderate" onclick="pickRisk(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🔵</span>
+              <div class="choice-title">Moderate</div>
+              <div class="choice-sub">Balanced growth and protection</div>
+            </div>
+            <div class="choice-card" data-value="balanced" onclick="pickRisk(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🟡</span>
+              <div class="choice-title">Balanced</div>
+              <div class="choice-sub">Growth-focused, comfortable with swings</div>
+            </div>
+            <div class="choice-card" data-value="aggressive" onclick="pickRisk(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🟠</span>
+              <div class="choice-title">Aggressive</div>
+              <div class="choice-sub">High growth, accept big drawdowns</div>
+            </div>
+            <div class="choice-card" data-value="maximum" onclick="pickRisk(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🔴</span>
+              <div class="choice-title">Maximum</div>
+              <div class="choice-sub">All-in — I can handle 50%+ drops</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="wallet-btn" onclick="connectWallet('phantom')">
-        <img src="https://cryptologos.cc/logos/solana-sol-logo.png" alt="Phantom">
-        <span>Phantom (SOL)</span>
+
+      <!-- ══════════════════════════════════════════════ -->
+      <!-- STEP 3 — Experience Level                     -->
+      <!-- ══════════════════════════════════════════════ -->
+      <div class="step-pane" id="step3">
+        <div class="card">
+          <button class="back-btn" onclick="goStep(2)">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <div class="step-label">Step 3 of 7</div>
+          <span class="step-emoji">🎓</span>
+          <div class="step-title">What's your experience level?</div>
+          <div class="step-sub">We'll tailor the interface and explanations to what you already know.</div>
+
+          <div class="choice-grid cols-1" id="exp-grid">
+            <div class="choice-card" data-value="beginner" onclick="pickExp(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">📖</span>
+              <div class="choice-title">Complete beginner</div>
+              <div class="choice-sub">Never traded before</div>
+            </div>
+            <div class="choice-card" data-value="some" onclick="pickExp(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🌱</span>
+              <div class="choice-title">Some experience</div>
+              <div class="choice-sub">I've bought stocks or crypto before</div>
+            </div>
+            <div class="choice-card" data-value="intermediate" onclick="pickExp(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">📊</span>
+              <div class="choice-title">Intermediate</div>
+              <div class="choice-sub">I understand charts and options basics</div>
+            </div>
+            <div class="choice-card" data-value="advanced" onclick="pickExp(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🧠</span>
+              <div class="choice-title">Advanced</div>
+              <div class="choice-sub">I trade regularly and know derivatives</div>
+            </div>
+            <div class="choice-card" data-value="professional" onclick="pickExp(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🏆</span>
+              <div class="choice-title">Professional</div>
+              <div class="choice-sub">I work in finance or trade full-time</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="wallet-btn" onclick="connectWallet('walletconnect')">
-        <img src="https://avatars.githubusercontent.com/u/37784886" alt="WalletConnect">
-        <span>WalletConnect</span>
+
+      <!-- ══════════════════════════════════════════════ -->
+      <!-- STEP 4 — Investment Horizon                   -->
+      <!-- ══════════════════════════════════════════════ -->
+      <div class="step-pane" id="step4">
+        <div class="card">
+          <button class="back-btn" onclick="goStep(3)">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <div class="step-label">Step 4 of 7</div>
+          <span class="step-emoji">🕐</span>
+          <div class="step-title">What's your time horizon?</div>
+          <div class="step-sub">How long are you planning to keep money in the platform?</div>
+
+          <div class="choice-grid cols-2" id="horizon-grid">
+            <div class="choice-card" data-value="short" onclick="pickHorizon(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">⚡</span>
+              <div class="choice-title">Short-term</div>
+              <div class="choice-sub">Days to weeks</div>
+            </div>
+            <div class="choice-card" data-value="medium" onclick="pickHorizon(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">📅</span>
+              <div class="choice-title">Medium-term</div>
+              <div class="choice-sub">Months</div>
+            </div>
+            <div class="choice-card" data-value="long" onclick="pickHorizon(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🌱</span>
+              <div class="choice-title">Long-term</div>
+              <div class="choice-sub">1–5 years</div>
+            </div>
+            <div class="choice-card" data-value="very_long" onclick="pickHorizon(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🏔️</span>
+              <div class="choice-title">Very long-term</div>
+              <div class="choice-sub">5+ years</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <button class="btn btn-primary" id="step2Next" onclick="goStep(3)">Continue</button>
-    <div class="skip-link" onclick="goStep(3)">Skip for now</div>
-  </div>
-  <!-- STEP 3: Fund account -->
-  <div class="card" id="step3" style="display:none">
-    <div class="step-label">Step 3 of 4</div>
-    <div class="step-title">Fund your account</div>
-    <div class="step-sub">Add funds to start trading. Minimum $50. Your balance is virtual — the bot trades on your behalf using Alpaca paper trading.</div>
 
-    <input type="number" id="depositAmount" placeholder="Amount in USD (min $50)" min="50" value="100">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.2rem">
-      <button class="btn btn-outline" onclick="setAmt(50)" style="margin:0;padding:0.55rem;border-radius:50px">$50</button>
-      <button class="btn btn-outline" onclick="setAmt(100)" style="margin:0;padding:0.55rem;border-radius:50px">$100</button>
-      <button class="btn btn-outline" onclick="setAmt(500)" style="margin:0;padding:0.55rem;border-radius:50px">$500</button>
-      <button class="btn btn-outline" onclick="setAmt(1000)" style="margin:0;padding:0.55rem;border-radius:50px">$1K</button>
-    </div>
+      <!-- ══════════════════════════════════════════════ -->
+      <!-- STEP 5 — Starting Capital                     -->
+      <!-- ══════════════════════════════════════════════ -->
+      <div class="step-pane" id="step5">
+        <div class="card">
+          <button class="back-btn" onclick="goStep(4)">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <div class="step-label">Step 5 of 7</div>
+          <span class="step-emoji">💵</span>
+          <div class="step-title">How much are you starting with?</div>
+          <div class="step-sub">Approximate is fine — this helps us set realistic return expectations.</div>
 
-    <div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:6px">
-      <span>🔒</span> Secured by Stripe. Card data never touches our servers.
-    </div>
+          <div class="choice-grid cols-2" id="capital-grid">
+            <div class="choice-card" data-value="under_500" onclick="pickCapital(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🪙</span>
+              <div class="choice-title">Under $500</div>
+              <div class="choice-sub">Just getting started</div>
+            </div>
+            <div class="choice-card" data-value="500_2500" onclick="pickCapital(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">💳</span>
+              <div class="choice-title">$500 – $2,500</div>
+              <div class="choice-sub">Small starter capital</div>
+            </div>
+            <div class="choice-card" data-value="2500_10k" onclick="pickCapital(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">📈</span>
+              <div class="choice-title">$2,500 – $10K</div>
+              <div class="choice-sub">Serious about it</div>
+            </div>
+            <div class="choice-card" data-value="10k_50k" onclick="pickCapital(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">💼</span>
+              <div class="choice-title">$10K – $50K</div>
+              <div class="choice-sub">Significant deployment</div>
+            </div>
+            <div class="choice-card" style="grid-column: 1 / -1;" data-value="50k_plus" onclick="pickCapital(this)">
+              <div class="check-badge">✓</div>
+              <span class="choice-emoji">🏦</span>
+              <div class="choice-title">$50,000+</div>
+              <div class="choice-sub">High-net-worth / institutional scale</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <button class="btn btn-primary" onclick="submitDeposit()">Add Funds</button>
-    <div class="skip-link" onclick="goStep(4)">Skip — I'll fund later</div>
-  </div>
-  <!-- STEP 4: All done -->
-  <div class="card" id="step4" style="display:none">
-    <div class="success-icon">🔥</div>
-    <div class="step-label">You're all set!</div>
-    <div class="step-title">Welcome to Ferchaud</div>
-    <div class="step-sub">Your bot is running 24/7 scanning thousands of stocks for breakout opportunities.</div>
+      <!-- ══════════════════════════════════════════════ -->
+      <!-- STEP 6 — Choose Plan                          -->
+      <!-- ══════════════════════════════════════════════ -->
+      <div class="step-pane" id="step6">
+        <div class="card">
+          <button class="back-btn" onclick="goStep(5)">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+          <div class="step-label">Step 6 of 7</div>
+          <span class="step-emoji">🎯</span>
+          <div class="step-title">Choose your plan</div>
+          <div class="step-sub">Lower cost = higher revenue share taken by us. Higher cost = you keep almost everything.</div>
 
-    <ul class="feature-list">
-      <li>Full market scanner — 12,000+ stocks monitored</li>
-      <li>Grok AI research — live X (Twitter) signals</li>
-      <li>Options trading on high-conviction plays</li>
-      <li>Real-time P&L dashboard</li>
-    </ul>
+          <div class="tier-grid">
+            <div class="tier-card" id="tier-free" onclick="selectTier('free', this)">
+              <div class="tier-name">Free</div>
+              <div class="tier-price">$0<span>/mo</span></div>
+              <div class="tier-share">You keep 70%</div>
+              <div class="tier-desc">Great to start. We take 30% of profits.</div>
+            </div>
+            <div class="tier-card" id="tier-starter" onclick="selectTier('starter', this)">
+              <div class="tier-name">Starter</div>
+              <div class="tier-price">$29<span>/mo</span></div>
+              <div class="tier-share">You keep 80%</div>
+              <div class="tier-desc">14-day free trial. We take 20% of profits.</div>
+            </div>
+            <div class="tier-card selected" id="tier-pro" onclick="selectTier('pro', this)">
+              <div class="tier-badge">Popular</div>
+              <div class="tier-name">Pro</div>
+              <div class="tier-price">$99<span>/mo</span></div>
+              <div class="tier-share">You keep 90%</div>
+              <div class="tier-desc">Options + Grok AI. We take 10%.</div>
+            </div>
+            <div class="tier-card" id="tier-elite" onclick="selectTier('elite', this)">
+              <div class="tier-name">Elite</div>
+              <div class="tier-price">$299<span>/mo</span></div>
+              <div class="tier-share">You keep 98%</div>
+              <div class="tier-desc">Maximum returns. We take only 2%.</div>
+            </div>
+          </div>
 
-    <button class="btn btn-primary" onclick="finish()">Open Dashboard</button>
-  </div>
+          <button class="btn btn-primary" id="tierConfirmBtn" onclick="confirmTier()">Confirm Plan &amp; Continue</button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════ -->
+      <!-- STEP 7 — All Set!                             -->
+      <!-- ══════════════════════════════════════════════ -->
+      <div class="step-pane" id="step7">
+        <div class="card">
+          <div class="step-label" style="text-align:center;">You're all set! 🎉</div>
+          <div style="text-align:center; font-size:3.5rem; margin: 0.5rem 0 0.75rem;">🔥</div>
+          <div class="step-title" style="text-align:center; font-size:1.5rem;">Welcome to Ferchaud</div>
+          <div class="step-sub" style="text-align:center; margin-bottom:1.5rem;">
+            Here's what you told us. Your bot is being calibrated right now.
+          </div>
+
+          <div class="summary-grid" id="summaryGrid">
+            <!-- Rows injected by JS -->
+          </div>
+
+          <button class="btn btn-green" id="finishBtn" onclick="finish()">
+            Open My Dashboard &rarr;
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /steps-track -->
+  </div><!-- /steps-viewport -->
+</div><!-- /wizard -->
+
+<div class="page-footer">
+  By continuing you agree to our <a href="/legal">Terms &amp; Privacy Policy</a>
 </div>
-<script>
-let selectedTier = 'pro';
+<footer>
+  <div class="footer-links">
+    <a href="/#features">Features</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/sources">Sources</a>
+    <a href="/legal">Legal</a>
+    <a href="mailto:support@ferchaud.com">Support</a>
+  </div>
+  <p>&copy; 2026 Ferchaud</p>
+</footer>
 
+<script>
+// ── State ──────────────────────────────────────────────────
+const profile = {
+  trading_goal: null,
+  risk_tolerance: null,
+  experience_level: null,
+  investment_horizon: null,
+  starting_capital: null,
+};
+let selectedTier = 'pro';
+let currentStep = 1;
+const TOTAL_STEPS = 7;
+
+// Human-readable labels for the summary card
+const LABELS = {
+  trading_goal: {
+    grow: '🚀 Grow my wealth', income: '💰 Generate income',
+    learn: '📚 Learn to trade', protect: '🛡️ Protect my savings', active: '⚡ Active trading',
+  },
+  risk_tolerance: {
+    conservative: '🟢 Conservative', moderate: '🔵 Moderate',
+    balanced: '🟡 Balanced', aggressive: '🟠 Aggressive', maximum: '🔴 Maximum',
+  },
+  experience_level: {
+    beginner: '📖 Complete beginner', some: '🌱 Some experience',
+    intermediate: '📊 Intermediate', advanced: '🧠 Advanced', professional: '🏆 Professional',
+  },
+  investment_horizon: {
+    short: '⚡ Short-term (days–weeks)', medium: '📅 Medium-term (months)',
+    long: '🌱 Long-term (1–5 years)', very_long: '🏔️ Very long-term (5+ years)',
+  },
+  starting_capital: {
+    under_500: '🪙 Under $500', '500_2500': '💳 $500–$2,500',
+    '2500_10k': '📈 $2,500–$10K', '10k_50k': '💼 $10K–$50K', '50k_plus': '🏦 $50,000+',
+  },
+};
+const SUMMARY_KEYS = [
+  { key: 'trading_goal',       label: 'Goal' },
+  { key: 'risk_tolerance',     label: 'Risk tolerance' },
+  { key: 'experience_level',   label: 'Experience' },
+  { key: 'investment_horizon', label: 'Time horizon' },
+  { key: 'starting_capital',   label: 'Starting capital' },
+  { key: 'tier',               label: 'Plan' },
+];
+const TIER_LABELS = {
+  free: '🆓 Free', starter: '🔵 Starter $29/mo',
+  pro: '🟣 Pro $99/mo', elite: '🟡 Elite $299/mo',
+};
+
+// ── Navigation ──────────────────────────────────────────────
+function goStep(n) {
+  if (n < 1 || n > TOTAL_STEPS) return;
+  currentStep = n;
+  const track = document.getElementById('stepsTrack');
+  track.style.transform = `translateX(-${(n - 1) * 100}%)`;
+  // Update progress dots
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const ps = document.getElementById('ps' + i);
+    if (!ps) continue;
+    ps.className = 'progress-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  document.getElementById('progressLabel').textContent = `Step ${n} of ${TOTAL_STEPS}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Generic card picker ─────────────────────────────────────
+function pickCard(gridId, card, profileKey, nextStep) {
+  const grid = document.getElementById(gridId);
+  grid.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  profile[profileKey] = card.dataset.value;
+  // Save to server, then advance
+  saveProfile({ [profileKey]: card.dataset.value, step: currentStep })
+    .then(() => setTimeout(() => goStep(nextStep), 300));
+}
+
+// ── Step-specific pickers ───────────────────────────────────
+function pickGoal(card)    { pickCard('goal-grid',    card, 'trading_goal',       2); }
+function pickRisk(card)    { pickCard('risk-grid',    card, 'risk_tolerance',     3); }
+function pickExp(card)     { pickCard('exp-grid',     card, 'experience_level',   4); }
+function pickHorizon(card) { pickCard('horizon-grid', card, 'investment_horizon', 5); }
+function pickCapital(card) { pickCard('capital-grid', card, 'starting_capital',   6); }
+
+// ── Tier (step 6) ───────────────────────────────────────────
 function selectTier(tier, el) {
   selectedTier = tier;
   document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
 }
 
-function goStep(n) {
-  // Fade out current visible card
-  var current = document.querySelector('.card[style*="display: block"], .card:not([style*="display: none"]):not([style])');
-  if (current && current.id !== 'step' + n) {
-    current.classList.add('fade-out');
-  }
-  setTimeout(function() {
-    [1,2,3,4].forEach(i => {
-      var el = document.getElementById('step' + i);
-      el.style.display = i === n ? 'block' : 'none';
-      el.classList.remove('fade-out');
-      const ps = document.getElementById('ps' + i);
-      if (ps) {
-        ps.className = 'progress-step';
-        if (i < n) ps.classList.add('done');
-        if (i === n) ps.classList.add('active');
-      }
+async function confirmTier() {
+  const btn = document.getElementById('tierConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    await fetch('/api/onboarding/tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: selectedTier }),
     });
-    // Re-trigger fadeIn animation on the new step
-    var newStep = document.getElementById('step' + n);
-    newStep.style.animation = 'none';
-    newStep.offsetHeight;
-    newStep.style.animation = '';
-  }, 250);
-  if (n === 2) saveTier();
-}
-
-function saveTier() {
-  fetch('/api/onboarding/tier', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({tier: selectedTier})
-  });
-}
-async function connectWallet(type) {
-  if (type === 'metamask') {
-    if (!window.ethereum) { alert('MetaMask not found. Install it at metamask.io'); return; }
-    try {
-      const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
-      const addr = accounts[0];
-      await fetch('/api/onboarding/wallet', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({wallet_address: addr, wallet_type: 'metamask'})
-      });
-      showWalletConnected(addr);
-    } catch(e) { alert('Connection rejected'); }
-  } else if (type === 'phantom') {
-    if (!window.solana) { alert('Phantom not found. Install it at phantom.app'); return; }
-    try {
-      const resp = await window.solana.connect();
-      const addr = resp.publicKey.toString();
-      await fetch('/api/onboarding/wallet', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({wallet_address: addr, wallet_type: 'phantom'})
-      });
-      showWalletConnected(addr);
-    } catch(e) { alert('Connection rejected'); }
-  } else {
-    alert(type + ' integration coming soon. Use MetaMask or Phantom for now.');
+    buildSummary();
+    goStep(7);
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Confirm Plan & Continue';
   }
 }
-function showWalletConnected(addr) {
-  const short = addr.slice(0, 6) + '...' + addr.slice(-4);
-  document.getElementById('walletAddr').textContent = short + ' connected';
-  document.getElementById('walletConnected').style.display = 'flex';
-}
 
-function setAmt(v) { document.getElementById('depositAmount').value = v; }
-
-async function submitDeposit() {
-  const amount = parseFloat(document.getElementById('depositAmount').value);
-  if (!amount || amount < 50) { alert('Minimum deposit is $50'); return; }
-  const resp = await fetch('/api/deposit', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({amount})
+// ── Summary (step 7) ────────────────────────────────────────
+function buildSummary() {
+  const grid = document.getElementById('summaryGrid');
+  grid.innerHTML = '';
+  const data = { ...profile, tier: selectedTier };
+  SUMMARY_KEYS.forEach(({ key, label }) => {
+    const raw = data[key];
+    if (!raw) return;
+    const dict = key === 'tier' ? TIER_LABELS : (LABELS[key] || {});
+    const displayVal = dict[raw] || raw;
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    row.innerHTML = `<span class="label">${label}</span><span class="value">${displayVal}</span>`;
+    grid.appendChild(row);
   });
-  if (resp.ok) { goStep(4); }
-  else { alert('Deposit failed. Please try again.'); }
 }
 
+// ── Finish ──────────────────────────────────────────────────
 async function finish() {
-  await fetch('/api/onboarding/complete', {method: 'POST'});
-  window.location.href = '/dashboard';
+  const btn = document.getElementById('finishBtn');
+  btn.disabled = true;
+  btn.textContent = 'Launching…';
+  launchConfetti();
+  await fetch('/api/onboarding/complete', { method: 'POST' });
+  setTimeout(() => { window.location.href = '/dashboard'; }, 2200);
+}
+
+// ── Confetti ────────────────────────────────────────────────
+function launchConfetti() {
+  if (typeof confetti !== 'function') return;
+  const count = 220, defaults = { origin: { y: 0.6 } };
+  function fire(particleRatio, opts) {
+    confetti(Object.assign({}, defaults, opts, {
+      particleCount: Math.floor(count * particleRatio),
+    }));
+  }
+  fire(0.25, { spread: 26, startVelocity: 55, colors: ['#22c55e', '#16a34a'] });
+  fire(0.20, { spread: 60, colors: ['#3b82f6', '#8b5cf6'] });
+  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8, colors: ['#fbbf24', '#f59e0b'] });
+  fire(0.10, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+  fire(0.10, { spread: 120, startVelocity: 45 });
+}
+
+// ── API helper ──────────────────────────────────────────────
+async function saveProfile(payload) {
+  try {
+    await fetch('/api/onboarding/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (_) { /* non-blocking */ }
 }
 </script>
-<div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--muted);">
-  By continuing you agree to our <a href="/legal" style="color:var(--text-secondary);font-size:11px;">Terms &amp; Privacy Policy</a>
-</div>
-<footer style="text-align:center;padding:16px 24px 24px;font-size:12px;color:var(--muted);">
-  <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
-    <a href="/#features" style="color:var(--muted);font-size:12px;">Features</a>
-    <a href="/pricing" style="color:var(--muted);font-size:12px;">Pricing</a>
-    <a href="/sources" style="color:var(--muted);font-size:12px;">Sources</a>
-    <a href="/legal" style="color:var(--muted);font-size:12px;">Legal</a>
-    <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-size:12px;">Support</a>
-  </div>
-  <p>&copy; 2026 Ferchaud</p>
-</footer>
 </body>
 </html>

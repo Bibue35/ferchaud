@@ -47,6 +47,13 @@ class User(Base):
     onboarding_complete = Column(Boolean, default=False)
     onboarding_step     = Column(Integer, default=0)
 
+    # Onboarding profile
+    trading_goal       = Column(String, nullable=True)   # grow | income | learn | protect | active
+    risk_tolerance     = Column(String, nullable=True)   # conservative | moderate | balanced | aggressive | maximum
+    experience_level   = Column(String, nullable=True)   # beginner | some | intermediate | advanced | professional
+    investment_horizon = Column(String, nullable=True)   # short | medium | long | very_long
+    starting_capital   = Column(String, nullable=True)   # under_500 | 500_2500 | 2500_10k | 10k_50k | 50k_plus
+
     # Trading balance
     virtual_balance  = Column(Float, default=0.0)
     total_deposited  = Column(Float, default=0.0)
