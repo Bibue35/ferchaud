@@ -10,699 +10,634 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg: #fefefe; --bg-warm: #faf9f7; --bg-cream: #f5f3ef;
-      --surface: #ffffff; --surface-2: #f5f3ef; --surface-3: #ebebeb;
-      --border: #eaeaea; --border-hover: #d4d4d4; --border-strong: #a3a3a3;
-      --accent: #1a1a1a; --accent-light: #333;
-      --accent-glow: rgba(0,0,0,0.06);
-      --gradient-primary: linear-gradient(135deg, #1a1a1a, #333);
-      --text: #1a1a1a; --text-secondary: #666666;
-      --muted: #999999; --green: #22c55e; --red: #ef4444;
+      --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f3f2ef;
+      --border: #e8e8e4; --border-hover: #c8c8c0;
+      --text: #111111; --text-2: #555555; --muted: #999999;
+      --green: #22c55e; --green-glow: rgba(34,197,94,0.14);
+      --accent: #111111; --accent-glow: rgba(0,0,0,0.05);
     }
     [data-theme="dark"] {
-      --bg: #0a0a0a; --bg-warm: #111111; --bg-cream: #1a1a1a;
-      --surface: #111111; --surface-2: #1a1a1a; --surface-3: #282828;
-      --border: #2a2a2a; --border-hover: #3a3a3a; --border-strong: #555;
-      --text: #f0f0f0; --text-secondary: #999; --muted: #666;
-      --accent: #fff; --accent-light: #e0e0e0; --accent-glow: rgba(255,255,255,0.06);
-      --gradient-primary: linear-gradient(135deg, #e8e8e8, #fff);
-      --green: #22c55e; --red: #ef4444;
+      --bg: #0c0c0c; --surface: #161616; --surface-2: #1e1e1e;
+      --border: #2a2a2a; --border-hover: #444;
+      --text: #f2f2f2; --text-2: #aaaaaa; --muted: #666666;
+      --accent: #f2f2f2; --accent-glow: rgba(255,255,255,0.06);
     }
+
+    html, body { height: 100%; }
     body {
-      background: #e8e8e8; color: var(--text); font-family: 'Inter', sans-serif;
-      min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-start; padding: 2rem 0 4rem;
-      background-image: radial-gradient(#d4d4d4 0.8px, transparent 0.8px);
-      background-size: 20px 20px;
-    }
-    [data-theme="dark"] body {
-      background: #000;
-      background-image: radial-gradient(rgba(255,255,255,0.03) 0.8px, transparent 0.8px);
-      background-size: 20px 20px;
-    }
-
-    /* ── Layout ─────────────────────────────────────── */
-    .wizard { width: 100%; max-width: 640px; padding: 0 1.5rem; }
-    .logo {
-      text-align: center; font-size: 1.3rem; font-weight: 900;
-      letter-spacing: -0.5px; margin-bottom: 2rem; color: var(--text);
-    }
-
-    /* ── Progress bar ───────────────────────────────── */
-    .progress-wrap { margin-bottom: 0.75rem; }
-    .progress-bar { display: flex; gap: 6px; }
-    .progress-step {
-      flex: 1; height: 4px; background: var(--border);
-      border-radius: 50px; transition: background 0.4s, box-shadow 0.4s;
-    }
-    .progress-step.done { background: var(--green); }
-    .progress-step.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
-    .progress-label {
-      text-align: right; font-size: 11px; color: var(--muted);
-      font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;
-    }
-
-    /* ── Slide container ────────────────────────────── */
-    .steps-viewport { overflow: hidden; position: relative; }
-    .steps-track {
-      display: flex; transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .step-pane { min-width: 100%; flex-shrink: 0; }
-
-    /* ── Card shell ─────────────────────────────────── */
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 24px; padding: 2.25rem 2.25rem 2rem;
-    }
-    .step-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-      color: var(--muted); text-transform: uppercase; margin-bottom: 0.6rem;
-    }
-    .step-emoji { font-size: 2.5rem; margin-bottom: 0.6rem; display: block; }
-    .step-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.4rem; color: var(--text); line-height: 1.2; }
-    .step-sub { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.75rem; line-height: 1.6; }
-
-    /* ── Generic choice grid ────────────────────────── */
-    .choice-grid {
-      display: grid; gap: 10px; margin-bottom: 1.5rem;
-    }
-    .choice-grid.cols-1 { grid-template-columns: 1fr; }
-    .choice-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-    .choice-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-    @media (max-width: 500px) {
-      .choice-grid.cols-2, .choice-grid.cols-3 { grid-template-columns: 1fr; }
-      .card { padding: 1.5rem 1.25rem 1.5rem; }
-    }
-    @media (min-width: 501px) and (max-width: 680px) {
-      .choice-grid.cols-3 { grid-template-columns: 1fr 1fr; }
-    }
-
-    /* ── Choice card ────────────────────────────────── */
-    .choice-card {
-      position: relative; border: 1.5px solid var(--border); border-radius: 16px;
-      padding: 1.1rem 1rem; cursor: pointer; transition: all 0.18s ease;
+      min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
       display: flex; flex-direction: column; align-items: center;
-      justify-content: center; text-align: center; min-height: 110px;
-      background: var(--surface);
+      -webkit-font-smoothing: antialiased;
     }
-    .choice-card:hover {
-      border-color: var(--border-strong); transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.07);
-    }
-    .choice-card.selected {
-      border-color: var(--green);
-      background: rgba(34,197,94,0.06);
-      box-shadow: 0 0 0 2px rgba(34,197,94,0.18);
-    }
-    .choice-card .check-badge {
-      position: absolute; top: 8px; right: 8px;
-      width: 20px; height: 20px; border-radius: 50%;
-      background: var(--green); color: #fff;
-      font-size: 11px; display: flex; align-items: center; justify-content: center;
-      font-weight: 900; opacity: 0; transform: scale(0.6);
-      transition: opacity 0.2s, transform 0.2s;
-    }
-    .choice-card.selected .check-badge { opacity: 1; transform: scale(1); }
-    .choice-emoji { font-size: 1.75rem; margin-bottom: 0.45rem; display: block; line-height: 1; }
-    .choice-title { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
-    .choice-sub { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
 
-    /* ── Tier cards (step 6) ────────────────────────── */
-    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
-    @media (max-width: 500px) { .tier-grid { grid-template-columns: 1fr; } }
-    .tier-card {
-      border: 1.5px solid var(--border); border-radius: 16px; padding: 1.2rem 1rem;
-      cursor: pointer; transition: all 0.2s; position: relative;
+    /* Ambient blobs */
+    .blob { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(90px); opacity: 0.3; transition: all 1.4s ease; }
+    .blob-1 { width: 700px; height: 700px; top: -250px; left: -250px; background: radial-gradient(circle, rgba(34,197,94,0.35) 0%, transparent 65%); }
+    .blob-2 { width: 600px; height: 600px; bottom: -200px; right: -200px; background: radial-gradient(circle, rgba(99,102,241,0.28) 0%, transparent 65%); }
+    [data-theme="dark"] .blob-1 { opacity: 0.16; }
+    [data-theme="dark"] .blob-2 { opacity: 0.12; }
+
+    /* Fixed top bar */
+    .top-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(247,247,245,0.88);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid var(--border);
+      height: 62px; padding: 0 20px;
+      display: flex; align-items: center; gap: 16px;
     }
-    .tier-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+    [data-theme="dark"] .top-bar { background: rgba(12,12,12,0.88); }
+
+    .top-bar-back {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1.5px solid var(--border); background: var(--surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--text-2); flex-shrink: 0;
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      opacity: 0; pointer-events: none;
+    }
+    .top-bar-back.show { opacity: 1; pointer-events: auto; }
+    .top-bar-back:hover { border-color: var(--border-hover); color: var(--text); transform: scale(1.08); }
+    .top-bar-back:active { transform: scale(0.92); }
+
+    .top-progress-wrap { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+    .top-progress-track {
+      height: 4px; background: var(--border); border-radius: 50px; overflow: hidden; position: relative;
+    }
+    .top-progress-fill {
+      position: absolute; top: 0; left: 0; height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 50px;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 0 10px rgba(34,197,94,0.55);
+    }
+    .top-step-label {
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      letter-spacing: 0.5px; text-align: right;
+    }
+    .top-bar-logo {
+      font-weight: 900; font-size: 15px; letter-spacing: -0.5px;
+      color: var(--text); white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* Dot indicators */
+    .dot-row { display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 16px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    .dot.done { background: rgba(34,197,94,0.45); }
+    .dot.active { background: var(--green); width: 22px; border-radius: 3px; box-shadow: 0 0 8px rgba(34,197,94,0.55); }
+
+    /* Wizard */
+    .wizard { width: 100%; max-width: 580px; padding: 94px 18px 60px; position: relative; z-index: 1; }
+
+    /* Steps viewport */
+    .steps-viewport { overflow: hidden; }
+    .steps-track { display: flex; will-change: transform; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+    .step-pane { min-width: 100%; flex-shrink: 0; padding: 3px; }
+
+    /* Card */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 28px;
+      padding: 2.4rem 2.4rem 2.2rem;
+      box-shadow: 0 2px 28px rgba(0,0,0,0.04), 0 1px 6px rgba(0,0,0,0.02);
+      animation: cardIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes cardIn { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    [data-theme="dark"] .card { box-shadow: 0 2px 28px rgba(0,0,0,0.35), 0 1px 6px rgba(0,0,0,0.25); }
+
+    .step-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.8px; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 0.8rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .step-label::before { content: ''; display: inline-block; width: 18px; height: 2px; background: var(--green); border-radius: 2px; }
+    .step-emoji {
+      font-size: 2.8rem; display: block; margin-bottom: 0.65rem; line-height: 1;
+      animation: emojiPop 0.5s cubic-bezier(0.16,1,0.3,1) both 0.06s;
+    }
+    @keyframes emojiPop { from { opacity:0; transform:scale(0.5) rotate(-10deg); } to { opacity:1; transform:scale(1) rotate(0); } }
+    .step-title {
+      font-size: 1.7rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px;
+      color: var(--text); margin-bottom: 0.4rem;
+      animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both 0.1s;
+    }
+    .step-sub {
+      color: var(--muted); font-size: 0.875rem; line-height: 1.65; margin-bottom: 1.85rem;
+      animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both 0.15s;
+    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Choice grid */
+    .choice-grid { display: grid; gap: 10px; margin-bottom: 1rem; }
+    .cols-1 { grid-template-columns: 1fr; }
+    .cols-2 { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 480px) { .cols-2 { grid-template-columns: 1fr; } }
+
+    .choice-card {
+      position: relative; border: 1.5px solid var(--border); border-radius: 18px;
+      padding: 1.2rem 1rem 1.05rem; cursor: pointer; background: var(--surface);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+      min-height: 106px;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s,
+                  transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      animation: choiceIn 0.38s cubic-bezier(0.16,1,0.3,1) both;
+      overflow: hidden;
+    }
+    .choice-card:nth-child(1){animation-delay:0.18s} .choice-card:nth-child(2){animation-delay:0.22s}
+    .choice-card:nth-child(3){animation-delay:0.26s} .choice-card:nth-child(4){animation-delay:0.30s}
+    .choice-card:nth-child(5){animation-delay:0.34s}
+    @keyframes choiceIn { from { opacity:0; transform:translateY(16px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }
+    .choice-card:hover { border-color: var(--border-hover); transform: translateY(-3px) scale(1.016); box-shadow: 0 8px 26px rgba(0,0,0,0.08); }
+    .choice-card:active { transform: scale(0.96); transition-duration: 0.1s; }
+    .choice-card.selected {
+      border-color: var(--green); background: var(--green-glow);
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.2), 0 4px 18px rgba(34,197,94,0.14);
+      transform: scale(1.02);
+    }
+
+    .check-badge {
+      position: absolute; top: 9px; right: 9px; width: 22px; height: 22px;
+      border-radius: 50%; background: var(--green); color: #fff;
+      font-size: 11px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.3) rotate(-45deg);
+      transition: opacity 0.22s cubic-bezier(0.34,1.56,0.64,1), transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .choice-card.selected .check-badge { opacity: 1; transform: scale(1) rotate(0); }
+
+    .choice-emoji {
+      font-size: 1.9rem; margin-bottom: 0.48rem; display: block; line-height: 1;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .choice-card:hover .choice-emoji { transform: scale(1.18); }
+    .choice-card.selected .choice-emoji { transform: scale(1.1); }
+    .choice-title { font-size: 0.83rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+    .choice-sub { font-size: 0.71rem; color: var(--muted); line-height: 1.45; }
+
+    /* Ripple */
+    .ripple {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      background: rgba(34,197,94,0.22); transform: scale(0);
+      animation: rippleAnim 0.55s ease-out forwards;
+    }
+    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+    /* Risk color accents */
+    .risk-0.selected { border-color:#22c55e; background:rgba(34,197,94,0.08); box-shadow:0 0 0 3px rgba(34,197,94,0.2); }
+    .risk-1.selected { border-color:#3b82f6; background:rgba(59,130,246,0.08); box-shadow:0 0 0 3px rgba(59,130,246,0.2); }
+    .risk-2.selected { border-color:#f59e0b; background:rgba(245,158,11,0.08); box-shadow:0 0 0 3px rgba(245,158,11,0.2); }
+    .risk-3.selected { border-color:#f97316; background:rgba(249,115,22,0.08); box-shadow:0 0 0 3px rgba(249,115,22,0.2); }
+    .risk-4.selected { border-color:#ef4444; background:rgba(239,68,68,0.08); box-shadow:0 0 0 3px rgba(239,68,68,0.2); }
+
+    /* Tier cards */
+    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.4rem; }
+    @media (max-width: 480px) { .tier-grid { grid-template-columns: 1fr; } }
+    .tier-card {
+      border: 1.5px solid var(--border); border-radius: 18px; padding: 1.25rem 1rem;
+      cursor: pointer; background: var(--surface); position: relative;
+      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      animation: choiceIn 0.38s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .tier-card:nth-child(1){animation-delay:0.18s} .tier-card:nth-child(2){animation-delay:0.22s}
+    .tier-card:nth-child(3){animation-delay:0.26s} .tier-card:nth-child(4){animation-delay:0.30s}
+    .tier-card:hover { transform: translateY(-3px); box-shadow: 0 8px 26px rgba(0,0,0,0.08); border-color: var(--border-hover); }
+    .tier-card:active { transform: scale(0.96); }
     .tier-card.selected {
-      border-color: transparent;
-      background-image: linear-gradient(var(--surface), var(--surface)), var(--gradient-primary);
+      border: 1.5px solid transparent;
+      background-image: linear-gradient(var(--surface),var(--surface)), linear-gradient(135deg,#22c55e,#16a34a);
       background-origin: border-box; background-clip: padding-box, border-box;
-      box-shadow: 0 0 18px var(--accent-glow);
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.18), 0 6px 22px rgba(34,197,94,0.18);
+      transform: scale(1.02);
     }
     .tier-badge {
-      position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
-      padding: 3px 9px; border-radius: 50px; background: #fff; color: #08090a;
+      position: absolute; top: 10px; right: 10px; font-size: 9px; font-weight: 800;
+      letter-spacing: 0.5px; padding: 3px 9px; border-radius: 50px;
+      background: var(--surface-2); color: var(--text-2);
     }
-    .tier-name { font-weight: 700; font-size: 1rem; margin-bottom: 3px; }
-    .tier-price { font-size: 1.35rem; font-weight: 800; margin-bottom: 3px; }
-    .tier-price span { font-size: 0.78rem; font-weight: 400; color: var(--muted); }
-    .tier-share { font-size: 12px; color: var(--green); font-weight: 600; }
-    .tier-desc { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+    .tier-card.selected .tier-badge { background: rgba(34,197,94,0.18); color: #16a34a; }
+    .tier-name { font-weight: 800; font-size: 1rem; margin-bottom: 2px; }
+    .tier-price { font-size: 1.4rem; font-weight: 800; margin-bottom: 2px; }
+    .tier-price span { font-size: 0.75rem; font-weight: 400; color: var(--muted); }
+    .tier-share { font-size: 11.5px; color: var(--green); font-weight: 700; margin-bottom: 5px; }
+    .tier-desc { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
 
-    /* ── Buttons ────────────────────────────────────── */
-    .btn {
-      width: 100%; padding: 0.875rem; border-radius: 50px; border: none;
-      cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.95rem;
-      font-weight: 700; transition: all 0.2s;
+    /* Confirm button */
+    .btn-confirm {
+      width: 100%; padding: 1rem; border-radius: 50px; border: none;
+      font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700;
+      background: var(--accent); color: var(--surface); cursor: pointer;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.1);
+      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      display: none;
     }
-    .btn-primary { background: var(--accent); color: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.14); }
-    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
-    .btn-outline:hover { border-color: var(--border-strong); }
-    .btn-green { background: var(--green); color: #fff; }
-    .btn-green:hover { background: #16a34a; transform: translateY(-1px); }
+    .btn-confirm.show { display: block; animation: slideUp 0.32s ease both; }
+    .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,0.16); }
+    .btn-confirm:active { transform: scale(0.97); }
 
-    /* ── Back button ────────────────────────────────── */
-    .back-btn {
-      display: inline-flex; align-items: center; gap: 5px; background: none;
-      border: none; cursor: pointer; color: var(--muted); font-size: 13px;
-      font-weight: 600; font-family: 'Inter', sans-serif;
-      padding: 0; margin-bottom: 1.25rem; transition: color 0.15s;
+    /* Summary */
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.75rem; }
+    @media (max-width: 380px) { .summary-grid { grid-template-columns: 1fr; } }
+    .summary-item {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 0.85rem 1rem;
+      animation: choiceIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
     }
-    .back-btn:hover { color: var(--text); }
-    .back-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+    .summary-key { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .summary-val { font-size: 0.88rem; font-weight: 700; color: var(--text); }
 
-    /* ── Summary card (step 7) ──────────────────────── */
-    .summary-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.75rem; }
-    .summary-row {
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--surface-2); border-radius: 12px; padding: 0.7rem 1rem;
-      font-size: 13px;
+    /* CTA */
+    .btn-cta {
+      width: 100%; padding: 1rem; border-radius: 50px; border: none;
+      font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700;
+      background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff;
+      cursor: pointer; box-shadow: 0 4px 18px rgba(34,197,94,0.38);
+      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      animation: slideUp 0.4s ease both 0.58s;
     }
-    .summary-row .label { color: var(--muted); font-weight: 500; }
-    .summary-row .value { color: var(--text); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .btn-cta:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 30px rgba(34,197,94,0.48); }
+    .btn-cta:active { transform: scale(0.97); }
 
-    /* ── Confetti canvas ────────────────────────────── */
-    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-
-    /* ── Footer ─────────────────────────────────────── */
-    .page-footer {
-      text-align: center; padding: 20px 0 8px; font-size: 11px; color: var(--muted);
+    @media (max-width: 500px) {
+      .card { padding: 1.75rem 1.25rem 1.5rem; border-radius: 22px; }
+      .step-title { font-size: 1.45rem; }
+      .wizard { padding: 90px 14px 60px; }
     }
-    .page-footer a { color: var(--text-secondary); font-size: 11px; }
-    footer { text-align: center; padding: 10px 24px 24px; font-size: 12px; color: var(--muted); }
-    footer a { color: var(--muted); font-size: 12px; }
-    .footer-links { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
   </style>
 </head>
 <body>
-<div class="wizard">
-  <div class="logo">Ferchaud</div>
 
-  <!-- Progress bar (7 steps) -->
-  <div class="progress-wrap">
-    <div class="progress-bar" id="progressBar">
-      <div class="progress-step active" id="ps1"></div>
-      <div class="progress-step" id="ps2"></div>
-      <div class="progress-step" id="ps3"></div>
-      <div class="progress-step" id="ps4"></div>
-      <div class="progress-step" id="ps5"></div>
-      <div class="progress-step" id="ps6"></div>
-      <div class="progress-step" id="ps7"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- Fixed top progress bar -->
+<div class="top-bar">
+  <button class="top-bar-back" id="backBtn" onclick="goBack()">&#8592;</button>
+  <div class="top-progress-wrap">
+    <div class="top-progress-track">
+      <div class="top-progress-fill" id="progressFill" style="width:0%"></div>
     </div>
-    <div class="progress-label" id="progressLabel">Step 1 of 7</div>
+    <div class="top-step-label" id="stepLabel">Step 1 of 7</div>
   </div>
+  <div class="top-bar-logo">Ferchaud</div>
+</div>
 
-  <!-- Slide viewport -->
+<div class="wizard">
+  <div class="dot-row" id="dotRow"></div>
+
   <div class="steps-viewport">
     <div class="steps-track" id="stepsTrack">
 
-      <!-- ══════════════════════════════════════════════ -->
-      <!-- STEP 1 — Trading Goal                         -->
-      <!-- ══════════════════════════════════════════════ -->
-      <div class="step-pane" id="step1">
+      <!-- STEP 1: Goal -->
+      <div class="step-pane">
         <div class="card">
           <div class="step-label">Step 1 of 7</div>
-          <span class="step-emoji">👋</span>
-          <div class="step-title">Why are you here?</div>
-          <div class="step-sub">Tell us your main goal so we can personalise your experience.</div>
-
-          <div class="choice-grid cols-1" id="goal-grid">
-            <div class="choice-card" data-value="grow" onclick="pickGoal(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🚀</span>
+          <span class="step-emoji">&#127919;</span>
+          <h1 class="step-title">What brings you here?</h1>
+          <p class="step-sub">We'll tailor your experience to match your goals.</p>
+          <div class="choice-grid cols-1">
+            <div class="choice-card" onclick="pick(this,event,'trading_goal','grow',2)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128640;</span>
               <div class="choice-title">Grow my wealth</div>
-              <div class="choice-sub">I want to build long-term wealth</div>
+              <div class="choice-sub">Build long-term wealth through smart investing</div>
             </div>
-            <div class="choice-card" data-value="income" onclick="pickGoal(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">💰</span>
+            <div class="choice-card" onclick="pick(this,event,'trading_goal','income',2)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128176;</span>
               <div class="choice-title">Generate income</div>
-              <div class="choice-sub">I want passive income from trading</div>
+              <div class="choice-sub">Earn consistent passive income from trading</div>
             </div>
-            <div class="choice-card" data-value="learn" onclick="pickGoal(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">📚</span>
+            <div class="choice-card" onclick="pick(this,event,'trading_goal','learn',2)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128218;</span>
               <div class="choice-title">Learn to trade</div>
-              <div class="choice-sub">I want to understand markets</div>
+              <div class="choice-sub">Understand markets and develop real skills</div>
             </div>
-            <div class="choice-card" data-value="protect" onclick="pickGoal(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🛡️</span>
+            <div class="choice-card" onclick="pick(this,event,'trading_goal','protect',2)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128737;</span>
               <div class="choice-title">Protect my savings</div>
-              <div class="choice-sub">I want to beat inflation</div>
+              <div class="choice-sub">Beat inflation and preserve purchasing power</div>
             </div>
-            <div class="choice-card" data-value="active" onclick="pickGoal(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">⚡</span>
+            <div class="choice-card" onclick="pick(this,event,'trading_goal','active',2)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#9889;</span>
               <div class="choice-title">Active trading</div>
-              <div class="choice-sub">I want to trade actively and frequently</div>
+              <div class="choice-sub">Trade frequently and stay hands-on</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════ -->
-      <!-- STEP 2 — Risk Tolerance                       -->
-      <!-- ══════════════════════════════════════════════ -->
-      <div class="step-pane" id="step2">
+      <!-- STEP 2: Risk -->
+      <div class="step-pane">
         <div class="card">
-          <button class="back-btn" onclick="goStep(1)">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </button>
           <div class="step-label">Step 2 of 7</div>
-          <span class="step-emoji">⚖️</span>
-          <div class="step-title">How much risk can you handle?</div>
-          <div class="step-sub">Be honest — this shapes which strategies the bot uses on your portfolio.</div>
-
-          <div class="choice-grid cols-1" id="risk-grid">
-            <div class="choice-card" data-value="conservative" onclick="pickRisk(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🟢</span>
+          <span class="step-emoji">&#128202;</span>
+          <h1 class="step-title">How much risk can you handle?</h1>
+          <p class="step-sub">Be honest — this shapes which strategies run for you.</p>
+          <div class="choice-grid cols-1">
+            <div class="choice-card risk-0" onclick="pick(this,event,'risk_tolerance','conservative',3)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128994;</span>
               <div class="choice-title">Conservative</div>
-              <div class="choice-sub">Protect capital, small steady gains</div>
+              <div class="choice-sub">Protect capital above all. Small, steady gains.</div>
             </div>
-            <div class="choice-card" data-value="moderate" onclick="pickRisk(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🔵</span>
+            <div class="choice-card risk-1" onclick="pick(this,event,'risk_tolerance','moderate',3)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128309;</span>
               <div class="choice-title">Moderate</div>
-              <div class="choice-sub">Balanced growth and protection</div>
+              <div class="choice-sub">Balanced growth and downside protection.</div>
             </div>
-            <div class="choice-card" data-value="balanced" onclick="pickRisk(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🟡</span>
+            <div class="choice-card risk-2" onclick="pick(this,event,'risk_tolerance','balanced',3)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128993;</span>
               <div class="choice-title">Balanced</div>
-              <div class="choice-sub">Growth-focused, comfortable with swings</div>
+              <div class="choice-sub">Growth-focused, comfortable with market swings.</div>
             </div>
-            <div class="choice-card" data-value="aggressive" onclick="pickRisk(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🟠</span>
+            <div class="choice-card risk-3" onclick="pick(this,event,'risk_tolerance','aggressive',3)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128992;</span>
               <div class="choice-title">Aggressive</div>
-              <div class="choice-sub">High growth, accept big drawdowns</div>
+              <div class="choice-sub">High growth target. Accept significant drawdowns.</div>
             </div>
-            <div class="choice-card" data-value="maximum" onclick="pickRisk(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🔴</span>
+            <div class="choice-card risk-4" onclick="pick(this,event,'risk_tolerance','maximum',3)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128308;</span>
               <div class="choice-title">Maximum</div>
-              <div class="choice-sub">All-in — I can handle 50%+ drops</div>
+              <div class="choice-sub">All-in. I can stomach 50%+ drops without flinching.</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════ -->
-      <!-- STEP 3 — Experience Level                     -->
-      <!-- ══════════════════════════════════════════════ -->
-      <div class="step-pane" id="step3">
+      <!-- STEP 3: Experience -->
+      <div class="step-pane">
         <div class="card">
-          <button class="back-btn" onclick="goStep(2)">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </button>
           <div class="step-label">Step 3 of 7</div>
-          <span class="step-emoji">🎓</span>
-          <div class="step-title">What's your experience level?</div>
-          <div class="step-sub">We'll tailor the interface and explanations to what you already know.</div>
-
-          <div class="choice-grid cols-1" id="exp-grid">
-            <div class="choice-card" data-value="beginner" onclick="pickExp(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">📖</span>
+          <span class="step-emoji">&#129504;</span>
+          <h1 class="step-title">Your trading experience?</h1>
+          <p class="step-sub">No wrong answers — we calibrate the bot to your level.</p>
+          <div class="choice-grid cols-1">
+            <div class="choice-card" onclick="pick(this,event,'experience_level','beginner',4)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128214;</span>
               <div class="choice-title">Complete beginner</div>
-              <div class="choice-sub">Never traded before</div>
+              <div class="choice-sub">Never traded before. Starting from zero.</div>
             </div>
-            <div class="choice-card" data-value="some" onclick="pickExp(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🌱</span>
+            <div class="choice-card" onclick="pick(this,event,'experience_level','some',4)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127807;</span>
               <div class="choice-title">Some experience</div>
-              <div class="choice-sub">I've bought stocks or crypto before</div>
+              <div class="choice-sub">Bought stocks or crypto before. Learning the ropes.</div>
             </div>
-            <div class="choice-card" data-value="intermediate" onclick="pickExp(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">📊</span>
+            <div class="choice-card" onclick="pick(this,event,'experience_level','intermediate',4)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128200;</span>
               <div class="choice-title">Intermediate</div>
-              <div class="choice-sub">I understand charts and options basics</div>
+              <div class="choice-sub">Comfortable with charts, technical analysis, options basics.</div>
             </div>
-            <div class="choice-card" data-value="advanced" onclick="pickExp(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🧠</span>
+            <div class="choice-card" onclick="pick(this,event,'experience_level','advanced',4)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127947;</span>
               <div class="choice-title">Advanced</div>
-              <div class="choice-sub">I trade regularly and know derivatives</div>
+              <div class="choice-sub">Trade regularly. Understand derivatives and risk management.</div>
             </div>
-            <div class="choice-card" data-value="professional" onclick="pickExp(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🏆</span>
+            <div class="choice-card" onclick="pick(this,event,'experience_level','professional',4)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127942;</span>
               <div class="choice-title">Professional</div>
-              <div class="choice-sub">I work in finance or trade full-time</div>
+              <div class="choice-sub">Work in finance or trade full-time for a living.</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════ -->
-      <!-- STEP 4 — Investment Horizon                   -->
-      <!-- ══════════════════════════════════════════════ -->
-      <div class="step-pane" id="step4">
+      <!-- STEP 4: Horizon -->
+      <div class="step-pane">
         <div class="card">
-          <button class="back-btn" onclick="goStep(3)">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </button>
           <div class="step-label">Step 4 of 7</div>
-          <span class="step-emoji">🕐</span>
-          <div class="step-title">What's your time horizon?</div>
-          <div class="step-sub">How long are you planning to keep money in the platform?</div>
-
-          <div class="choice-grid cols-2" id="horizon-grid">
-            <div class="choice-card" data-value="short" onclick="pickHorizon(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">⚡</span>
-              <div class="choice-title">Short-term</div>
-              <div class="choice-sub">Days to weeks</div>
+          <span class="step-emoji">&#8987;</span>
+          <h1 class="step-title">Investment horizon</h1>
+          <p class="step-sub">When might you need access to these funds?</p>
+          <div class="choice-grid cols-2">
+            <div class="choice-card" onclick="pick(this,event,'investment_horizon','short',5)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#9889;</span>
+              <div class="choice-title">Short-term</div><div class="choice-sub">Days to weeks</div>
             </div>
-            <div class="choice-card" data-value="medium" onclick="pickHorizon(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">📅</span>
-              <div class="choice-title">Medium-term</div>
-              <div class="choice-sub">Months</div>
+            <div class="choice-card" onclick="pick(this,event,'investment_horizon','medium',5)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128197;</span>
+              <div class="choice-title">Medium-term</div><div class="choice-sub">A few months</div>
             </div>
-            <div class="choice-card" data-value="long" onclick="pickHorizon(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🌱</span>
-              <div class="choice-title">Long-term</div>
-              <div class="choice-sub">1–5 years</div>
+            <div class="choice-card" onclick="pick(this,event,'investment_horizon','long',5)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127807;</span>
+              <div class="choice-title">Long-term</div><div class="choice-sub">1 – 5 years</div>
             </div>
-            <div class="choice-card" data-value="very_long" onclick="pickHorizon(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🏔️</span>
-              <div class="choice-title">Very long-term</div>
-              <div class="choice-sub">5+ years</div>
+            <div class="choice-card" onclick="pick(this,event,'investment_horizon','very_long',5)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127956;</span>
+              <div class="choice-title">Very long-term</div><div class="choice-sub">5+ years</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════ -->
-      <!-- STEP 5 — Starting Capital                     -->
-      <!-- ══════════════════════════════════════════════ -->
-      <div class="step-pane" id="step5">
+      <!-- STEP 5: Capital -->
+      <div class="step-pane">
         <div class="card">
-          <button class="back-btn" onclick="goStep(4)">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </button>
           <div class="step-label">Step 5 of 7</div>
-          <span class="step-emoji">💵</span>
-          <div class="step-title">How much are you starting with?</div>
-          <div class="step-sub">Approximate is fine — this helps us set realistic return expectations.</div>
-
-          <div class="choice-grid cols-2" id="capital-grid">
-            <div class="choice-card" data-value="under_500" onclick="pickCapital(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🪙</span>
-              <div class="choice-title">Under $500</div>
-              <div class="choice-sub">Just getting started</div>
+          <span class="step-emoji">&#128181;</span>
+          <h1 class="step-title">Starting capital</h1>
+          <p class="step-sub">You can always add more later. Minimum is just $10.</p>
+          <div class="choice-grid cols-2">
+            <div class="choice-card" onclick="pick(this,event,'starting_capital','10_500',6)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127807;</span>
+              <div class="choice-title">$10 – $500</div><div class="choice-sub">Starting small</div>
             </div>
-            <div class="choice-card" data-value="500_2500" onclick="pickCapital(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">💳</span>
-              <div class="choice-title">$500 – $2,500</div>
-              <div class="choice-sub">Small starter capital</div>
+            <div class="choice-card" onclick="pick(this,event,'starting_capital','500_2500',6)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128188;</span>
+              <div class="choice-title">$500 – $2,500</div><div class="choice-sub">Solid foundation</div>
             </div>
-            <div class="choice-card" data-value="2500_10k" onclick="pickCapital(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">📈</span>
-              <div class="choice-title">$2,500 – $10K</div>
-              <div class="choice-sub">Serious about it</div>
+            <div class="choice-card" onclick="pick(this,event,'starting_capital','2500_10k',6)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128202;</span>
+              <div class="choice-title">$2,500 – $10K</div><div class="choice-sub">Growing portfolio</div>
             </div>
-            <div class="choice-card" data-value="10k_50k" onclick="pickCapital(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">💼</span>
-              <div class="choice-title">$10K – $50K</div>
-              <div class="choice-sub">Significant deployment</div>
+            <div class="choice-card" onclick="pick(this,event,'starting_capital','10k_50k',6)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127974;</span>
+              <div class="choice-title">$10K – $50K</div><div class="choice-sub">Serious capital</div>
             </div>
-            <div class="choice-card" style="grid-column: 1 / -1;" data-value="50k_plus" onclick="pickCapital(this)">
-              <div class="check-badge">✓</div>
-              <span class="choice-emoji">🏦</span>
+            <div class="choice-card" style="grid-column:1/-1" onclick="pick(this,event,'starting_capital','50k_plus',6)">
+              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128640;</span>
               <div class="choice-title">$50,000+</div>
-              <div class="choice-sub">High-net-worth / institutional scale</div>
+              <div class="choice-sub">High-net-worth — unlock Elite tier benefits</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════ -->
-      <!-- STEP 6 — Choose Plan                          -->
-      <!-- ══════════════════════════════════════════════ -->
-      <div class="step-pane" id="step6">
+      <!-- STEP 6: Plan -->
+      <div class="step-pane">
         <div class="card">
-          <button class="back-btn" onclick="goStep(5)">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </button>
           <div class="step-label">Step 6 of 7</div>
-          <span class="step-emoji">🎯</span>
-          <div class="step-title">Choose your plan</div>
-          <div class="step-sub">Lower cost = higher revenue share taken by us. Higher cost = you keep almost everything.</div>
-
+          <span class="step-emoji">&#10024;</span>
+          <h1 class="step-title">Choose your plan</h1>
+          <p class="step-sub">Start free anytime. Upgrade when you're ready.</p>
           <div class="tier-grid">
-            <div class="tier-card" id="tier-free" onclick="selectTier('free', this)">
+            <div class="tier-card" onclick="selectTier(this,'free')">
+              <div class="tier-badge">FREE</div>
               <div class="tier-name">Free</div>
               <div class="tier-price">$0<span>/mo</span></div>
-              <div class="tier-share">You keep 70%</div>
-              <div class="tier-desc">Great to start. We take 30% of profits.</div>
+              <div class="tier-share">Keep 70%</div>
+              <div class="tier-desc">Up to $500 deployed · Basic strategies · Delayed signals</div>
             </div>
-            <div class="tier-card" id="tier-starter" onclick="selectTier('starter', this)">
+            <div class="tier-card" onclick="selectTier(this,'starter')">
+              <div class="tier-badge">POPULAR</div>
               <div class="tier-name">Starter</div>
               <div class="tier-price">$29<span>/mo</span></div>
-              <div class="tier-share">You keep 80%</div>
-              <div class="tier-desc">14-day free trial. We take 20% of profits.</div>
+              <div class="tier-share">Keep 80%</div>
+              <div class="tier-desc">Up to $2K deployed · All strategies · Live signals</div>
             </div>
-            <div class="tier-card selected" id="tier-pro" onclick="selectTier('pro', this)">
-              <div class="tier-badge">Popular</div>
+            <div class="tier-card" onclick="selectTier(this,'pro')">
+              <div class="tier-badge">PRO</div>
               <div class="tier-name">Pro</div>
               <div class="tier-price">$99<span>/mo</span></div>
-              <div class="tier-share">You keep 90%</div>
-              <div class="tier-desc">Options + Grok AI. We take 10%.</div>
+              <div class="tier-share">Keep 90%</div>
+              <div class="tier-desc">Up to $10K · Options · API access · Grok research</div>
             </div>
-            <div class="tier-card" id="tier-elite" onclick="selectTier('elite', this)">
+            <div class="tier-card" onclick="selectTier(this,'elite')">
+              <div class="tier-badge">ELITE</div>
               <div class="tier-name">Elite</div>
               <div class="tier-price">$299<span>/mo</span></div>
-              <div class="tier-share">You keep 98%</div>
-              <div class="tier-desc">Maximum returns. We take only 2%.</div>
+              <div class="tier-share">Keep 98%</div>
+              <div class="tier-desc">Unlimited · Custom strategies · White-glove setup</div>
             </div>
           </div>
-
-          <button class="btn btn-primary" id="tierConfirmBtn" onclick="confirmTier()">Confirm Plan &amp; Continue</button>
+          <button class="btn-confirm" id="tierBtn" onclick="confirmTier()">Continue with this plan &#8594;</button>
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════ -->
-      <!-- STEP 7 — All Set!                             -->
-      <!-- ══════════════════════════════════════════════ -->
-      <div class="step-pane" id="step7">
+      <!-- STEP 7: Summary -->
+      <div class="step-pane">
         <div class="card">
-          <div class="step-label" style="text-align:center;">You're all set! 🎉</div>
-          <div style="text-align:center; font-size:3.5rem; margin: 0.5rem 0 0.75rem;">🔥</div>
-          <div class="step-title" style="text-align:center; font-size:1.5rem;">Welcome to Ferchaud</div>
-          <div class="step-sub" style="text-align:center; margin-bottom:1.5rem;">
-            Here's what you told us. Your bot is being calibrated right now.
-          </div>
-
-          <div class="summary-grid" id="summaryGrid">
-            <!-- Rows injected by JS -->
-          </div>
-
-          <button class="btn btn-green" id="finishBtn" onclick="finish()">
-            Open My Dashboard &rarr;
-          </button>
+          <div class="step-label">Step 7 of 7</div>
+          <span class="step-emoji">&#127881;</span>
+          <h1 class="step-title">You're all set!</h1>
+          <p class="step-sub">Your personalized trading profile is ready. We'll use this to optimize everything for you.</p>
+          <div class="summary-grid" id="summaryGrid"></div>
+          <button class="btn-cta" id="dashBtn" onclick="launchDashboard()">Open Dashboard &#8594;</button>
         </div>
       </div>
 
-    </div><!-- /steps-track -->
-  </div><!-- /steps-viewport -->
-</div><!-- /wizard -->
-
-<div class="page-footer">
-  By continuing you agree to our <a href="/legal">Terms &amp; Privacy Policy</a>
-</div>
-<footer>
-  <div class="footer-links">
-    <a href="/#features">Features</a>
-    <a href="/pricing">Pricing</a>
-    <a href="/sources">Sources</a>
-    <a href="/legal">Legal</a>
-    <a href="mailto:support@ferchaud.com">Support</a>
+    </div>
   </div>
-  <p>&copy; 2026 Ferchaud</p>
-</footer>
+</div>
 
 <script>
-// ── State ──────────────────────────────────────────────────
-const profile = {
-  trading_goal: null,
-  risk_tolerance: null,
-  experience_level: null,
-  investment_horizon: null,
-  starting_capital: null,
-};
-let selectedTier = 'pro';
-let currentStep = 1;
-const TOTAL_STEPS = 7;
+(function(){
+  const TOTAL = 7;
+  let step = 1;
+  let tier = null;
+  const answers = {};
 
-// Human-readable labels for the summary card
-const LABELS = {
-  trading_goal: {
-    grow: '🚀 Grow my wealth', income: '💰 Generate income',
-    learn: '📚 Learn to trade', protect: '🛡️ Protect my savings', active: '⚡ Active trading',
-  },
-  risk_tolerance: {
-    conservative: '🟢 Conservative', moderate: '🔵 Moderate',
-    balanced: '🟡 Balanced', aggressive: '🟠 Aggressive', maximum: '🔴 Maximum',
-  },
-  experience_level: {
-    beginner: '📖 Complete beginner', some: '🌱 Some experience',
-    intermediate: '📊 Intermediate', advanced: '🧠 Advanced', professional: '🏆 Professional',
-  },
-  investment_horizon: {
-    short: '⚡ Short-term (days–weeks)', medium: '📅 Medium-term (months)',
-    long: '🌱 Long-term (1–5 years)', very_long: '🏔️ Very long-term (5+ years)',
-  },
-  starting_capital: {
-    under_500: '🪙 Under $500', '500_2500': '💳 $500–$2,500',
-    '2500_10k': '📈 $2,500–$10K', '10k_50k': '💼 $10K–$50K', '50k_plus': '🏦 $50,000+',
-  },
-};
-const SUMMARY_KEYS = [
-  { key: 'trading_goal',       label: 'Goal' },
-  { key: 'risk_tolerance',     label: 'Risk tolerance' },
-  { key: 'experience_level',   label: 'Experience' },
-  { key: 'investment_horizon', label: 'Time horizon' },
-  { key: 'starting_capital',   label: 'Starting capital' },
-  { key: 'tier',               label: 'Plan' },
-];
-const TIER_LABELS = {
-  free: '🆓 Free', starter: '🔵 Starter $29/mo',
-  pro: '🟣 Pro $99/mo', elite: '🟡 Elite $299/mo',
-};
-
-// ── Navigation ──────────────────────────────────────────────
-function goStep(n) {
-  if (n < 1 || n > TOTAL_STEPS) return;
-  currentStep = n;
-  const track = document.getElementById('stepsTrack');
-  track.style.transform = `translateX(-${(n - 1) * 100}%)`;
-  // Update progress dots
-  for (let i = 1; i <= TOTAL_STEPS; i++) {
-    const ps = document.getElementById('ps' + i);
-    if (!ps) continue;
-    ps.className = 'progress-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  // Build dots
+  const dotRow = document.getElementById('dotRow');
+  for(let i=1;i<=TOTAL;i++){
+    const d = document.createElement('div');
+    d.className='dot'; d.id='dot'+i;
+    dotRow.appendChild(d);
   }
-  document.getElementById('progressLabel').textContent = `Step ${n} of ${TOTAL_STEPS}`;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
 
-// ── Generic card picker ─────────────────────────────────────
-function pickCard(gridId, card, profileKey, nextStep) {
-  const grid = document.getElementById(gridId);
-  grid.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  profile[profileKey] = card.dataset.value;
-  // Save to server, then advance
-  saveProfile({ [profileKey]: card.dataset.value, step: currentStep })
-    .then(() => setTimeout(() => goStep(nextStep), 300));
-}
+  function updateUI() {
+    const pct = Math.round(((step-1)/(TOTAL-1))*100);
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('stepLabel').textContent = 'Step '+step+' of '+TOTAL;
+    for(let i=1;i<=TOTAL;i++){
+      const d=document.getElementById('dot'+i);
+      d.className='dot'+(i<step?' done':i===step?' active':'');
+    }
+    const back=document.getElementById('backBtn');
+    step>1?back.classList.add('show'):back.classList.remove('show');
+    document.getElementById('stepsTrack').style.transform='translateX(-'+((step-1)*100)+'%)';
+  }
 
-// ── Step-specific pickers ───────────────────────────────────
-function pickGoal(card)    { pickCard('goal-grid',    card, 'trading_goal',       2); }
-function pickRisk(card)    { pickCard('risk-grid',    card, 'risk_tolerance',     3); }
-function pickExp(card)     { pickCard('exp-grid',     card, 'experience_level',   4); }
-function pickHorizon(card) { pickCard('horizon-grid', card, 'investment_horizon', 5); }
-function pickCapital(card) { pickCard('capital-grid', card, 'starting_capital',   6); }
+  function goTo(s){
+    step=s;
+    updateUI();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
 
-// ── Tier (step 6) ───────────────────────────────────────────
-function selectTier(tier, el) {
-  selectedTier = tier;
-  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-}
+  window.goBack=function(){ if(step>1) goTo(step-1); };
 
-async function confirmTier() {
-  const btn = document.getElementById('tierConfirmBtn');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-  try {
-    await fetch('/api/onboarding/tier', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier: selectedTier }),
-    });
+  function ripple(el,e){
+    const r=el.getBoundingClientRect();
+    const sz=Math.max(r.width,r.height);
+    const rip=document.createElement('span');
+    rip.className='ripple';
+    rip.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+(e.clientX-r.left-sz/2)+'px;top:'+(e.clientY-r.top-sz/2)+'px';
+    el.appendChild(rip);
+    rip.addEventListener('animationend',()=>rip.remove());
+  }
+
+  async function saveProfile(field,val,s){
+    const body={step:s}; body[field]=val;
+    try{ await fetch('/api/onboarding/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}); }catch(e){}
+  }
+
+  window.pick=function(el,ev,field,val,next){
+    el.closest('.choice-grid').querySelectorAll('.choice-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    answers[field]=val;
+    ripple(el,ev);
+    saveProfile(field,val,next-1);
+    setTimeout(()=>goTo(next),310);
+  };
+
+  window.selectTier=function(el,t){
+    document.querySelectorAll('.tier-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    tier=t; answers.tier=t;
+    const btn=document.getElementById('tierBtn');
+    const names={free:'Free',starter:'Starter',pro:'Pro',elite:'Elite'};
+    btn.textContent='Continue with '+names[t]+' →';
+    btn.classList.add('show');
+  };
+
+  window.confirmTier=async function(){
+    if(!tier)return;
+    try{ await fetch('/api/onboarding/tier',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tier}),credentials:'same-origin'}); }catch(e){}
     buildSummary();
-    goStep(7);
-  } catch (e) {
-    btn.disabled = false;
-    btn.textContent = 'Confirm Plan & Continue';
-  }
-}
+    goTo(7);
+    setTimeout(fireConfetti,420);
+  };
 
-// ── Summary (step 7) ────────────────────────────────────────
-function buildSummary() {
-  const grid = document.getElementById('summaryGrid');
-  grid.innerHTML = '';
-  const data = { ...profile, tier: selectedTier };
-  SUMMARY_KEYS.forEach(({ key, label }) => {
-    const raw = data[key];
-    if (!raw) return;
-    const dict = key === 'tier' ? TIER_LABELS : (LABELS[key] || {});
-    const displayVal = dict[raw] || raw;
-    const row = document.createElement('div');
-    row.className = 'summary-row';
-    row.innerHTML = `<span class="label">${label}</span><span class="value">${displayVal}</span>`;
-    grid.appendChild(row);
-  });
-}
-
-// ── Finish ──────────────────────────────────────────────────
-async function finish() {
-  const btn = document.getElementById('finishBtn');
-  btn.disabled = true;
-  btn.textContent = 'Launching…';
-  launchConfetti();
-  await fetch('/api/onboarding/complete', { method: 'POST' });
-  setTimeout(() => { window.location.href = '/dashboard'; }, 2200);
-}
-
-// ── Confetti ────────────────────────────────────────────────
-function launchConfetti() {
-  if (typeof confetti !== 'function') return;
-  const count = 220, defaults = { origin: { y: 0.6 } };
-  function fire(particleRatio, opts) {
-    confetti(Object.assign({}, defaults, opts, {
-      particleCount: Math.floor(count * particleRatio),
-    }));
-  }
-  fire(0.25, { spread: 26, startVelocity: 55, colors: ['#22c55e', '#16a34a'] });
-  fire(0.20, { spread: 60, colors: ['#3b82f6', '#8b5cf6'] });
-  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8, colors: ['#fbbf24', '#f59e0b'] });
-  fire(0.10, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-  fire(0.10, { spread: 120, startVelocity: 45 });
-}
-
-// ── API helper ──────────────────────────────────────────────
-async function saveProfile(payload) {
-  try {
-    await fetch('/api/onboarding/profile', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+  function buildSummary(){
+    const map={
+      trading_goal:{grow:'&#128640; Grow wealth',income:'&#128176; Generate income',learn:'&#128218; Learn trading',protect:'&#128737; Protect savings',active:'&#9889; Active trading'},
+      risk_tolerance:{conservative:'&#128994; Conservative',moderate:'&#128309; Moderate',balanced:'&#128993; Balanced',aggressive:'&#128992; Aggressive',maximum:'&#128308; Maximum'},
+      experience_level:{beginner:'&#128214; Beginner',some:'&#127807; Some exp.',intermediate:'&#128200; Intermediate',advanced:'&#127947; Advanced',professional:'&#127942; Professional'},
+      investment_horizon:{short:'&#9889; Short-term',medium:'&#128197; Medium-term',long:'&#127807; Long-term',very_long:'&#127956; Very long-term'},
+      starting_capital:{'10_500':'&#127807; $10–$500','500_2500':'&#128188; $500–$2.5K','2500_10k':'&#128202; $2.5K–$10K','10k_50k':'&#127974; $10K–$50K','50k_plus':'&#128640; $50K+'},
+      tier:{free:'&#10024; Free',starter:'&#11088; Starter',pro:'&#128156; Pro',elite:'&#128081; Elite'}
+    };
+    const keys=['trading_goal','risk_tolerance','experience_level','investment_horizon','starting_capital','tier'];
+    const titles=['Goal','Risk','Experience','Horizon','Capital','Plan'];
+    const g=document.getElementById('summaryGrid');
+    g.innerHTML='';
+    keys.forEach((k,i)=>{
+      const v=answers[k];
+      const item=document.createElement('div');
+      item.className='summary-item';
+      item.style.animationDelay=(0.1+i*0.07)+'s';
+      item.innerHTML='<div class="summary-key">'+titles[i]+'</div><div class="summary-val">'+(v?(map[k][v]||v):'&#8212;')+'</div>';
+      g.appendChild(item);
     });
-  } catch (_) { /* non-blocking */ }
-}
+  }
+
+  function fireConfetti(){
+    const base={spread:65,origin:{y:0.55},zIndex:9999};
+    confetti({...base,particleCount:70,colors:['#22c55e','#16a34a','#86efac']});
+    setTimeout(()=>confetti({...base,particleCount:55,angle:65,origin:{x:0.1,y:0.6},colors:['#6366f1','#818cf8','#c7d2fe']}),200);
+    setTimeout(()=>confetti({...base,particleCount:55,angle:115,origin:{x:0.9,y:0.6},colors:['#f59e0b','#fbbf24','#fde68a']}),380);
+  }
+
+  window.launchDashboard=async function(){
+    const btn=document.getElementById('dashBtn');
+    btn.textContent='Launching…'; btn.disabled=true;
+    btn.style.transition='transform 0.15s ease';
+    btn.style.transform='scale(0.96)';
+    try{ await fetch('/api/onboarding/complete',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'}}); }catch(e){}
+    setTimeout(()=>{ window.location.href='/dashboard'; },340);
+  };
+
+  updateUI();
+})();
 </script>
 </body>
 </html>
