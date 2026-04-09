@@ -167,33 +167,54 @@ def get_db():
 
 
 def get_current_user(request: Request, token: Optional[str] = None) -> Optional[SupabaseUser]:
-    """Validate the Supabase session from cookies and return a SupabaseUser.
+    """Validate session from Supabase cookies OR legacy JWT cookie.
 
-    Reads ``sb-access-token`` and ``sb-refresh-token`` cookies, validates the
-    access token with Supabase, and returns the linked local profile.
+    Try order:
+    1. sb-access-token cookie  → validate with Supabase
+    2. legacy 'token' cookie   → validate with local JWT (backward compat)
     """
+    # ── 1. Try Supabase token ─────────────────────────────────────────────────
     access_token = request.cookies.get("sb-access-token")
-    refresh_token = request.cookies.get("sb-refresh-token")
+    if access_token:
+        try:
+            user_response = supabase.auth.get_user(access_token)
+            sb_user = user_response.user
+            if sb_user:
+                supabase_id = sb_user.id
+                email = sb_user.email or ""
+                user_metadata = sb_user.user_metadata or {}
+                username = user_metadata.get("username", email.split("@")[0])
+                provider = (sb_user.app_metadata or {}).get("provider", "email")
+                return _get_or_create_profile(supabase_id, email, username, auth_provider=provider)
+        except Exception:
+            pass  # Fall through to legacy JWT
 
-    if not access_token:
-        return None
+    # ── 2. Legacy JWT fallback ────────────────────────────────────────────────
+    jwt_token = token or request.cookies.get("token")
+    if not jwt_token:
+        auth_header = request.headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            jwt_token = auth_header[7:]
 
-    try:
-        # Validate the access token with Supabase
-        user_response = supabase.auth.get_user(access_token)
-        sb_user = user_response.user
-        if not sb_user:
-            return None
+    if jwt_token:
+        try:
+            from jose import jwt as jose_jwt, JWTError
+            SECRET_KEY = os.environ.get("JWT_SECRET", "qb-secret-change-in-production-2026")
+            payload = jose_jwt.decode(jwt_token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload.get("sub")
+            if user_id:
+                db = SessionLocal()
+                try:
+                    from web.database import User as DbUser
+                    db_user = db.query(DbUser).filter(DbUser.id == int(user_id)).first()
+                    if db_user:
+                        return _user_from_db_row(db_user)
+                finally:
+                    db.close()
+        except Exception:
+            pass
 
-        supabase_id = sb_user.id
-        email = sb_user.email or ""
-        user_metadata = sb_user.user_metadata or {}
-        username = user_metadata.get("username", email.split("@")[0])
-        provider = (sb_user.app_metadata or {}).get("provider", "email")
-
-        return _get_or_create_profile(supabase_id, email, username, auth_provider=provider)
-    except Exception:
-        return None
+    return None
 
 
 def require_user(request: Request, token: Optional[str] = None) -> SupabaseUser:

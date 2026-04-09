@@ -2,391 +2,301 @@
 {% block title %}Connections — Ferchaud{% endblock %}
 {% block head %}
 <style>
-/* ── Page Layout ─────────────────────────────────── */
+/* ── Page Layout ────────────────────────────────────── */
 .conn-wrap {
-  padding: 5.5rem 2rem 3rem;
+  padding: 5.5rem 2rem 4rem;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* ── Page Header ─────────────────────────────────── */
-.conn-header {
-  margin-bottom: 2rem;
-}
+/* ── Page Header ────────────────────────────────────── */
+.conn-header { margin-bottom: 2.25rem; }
 .conn-header h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.8px;
-  color: var(--text);
-  margin-bottom: 0.4rem;
+  font-size: 2rem; font-weight: 800; letter-spacing: -0.8px;
+  color: var(--text); margin-bottom: 0.35rem;
 }
-.conn-header p {
-  font-size: 14px;
-  color: var(--muted);
-  max-width: 520px;
-}
+.conn-header p { font-size: 14px; color: var(--muted); max-width: 540px; line-height: 1.6; }
 .conn-header-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 1rem; flex-wrap: wrap;
 }
-.conn-summary-pills {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
+.conn-summary-pills { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .summary-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 14px;
-  border-radius: 50px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 50px; font-size: 12px;
+  font-weight: 600; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted);
 }
-.summary-pill .dot {
-  width: 7px; height: 7px; border-radius: 50%;
-}
+.summary-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
 .summary-pill .dot.green { background: var(--green); }
 .summary-pill .dot.gray  { background: var(--muted); }
-</style>
 
-/* ── Broker Grid ─────────────────────────────────── */
-.broker-grid {
+/* ── Section Header ─────────────────────────────────── */
+.section-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem; margin-top: 2.5rem;
+}
+.section-header:first-of-type { margin-top: 0; }
+.section-title {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text);
+}
+.section-sub {
+  font-size: 12px; color: var(--muted); font-weight: 400;
+}
+.section-count {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; border-radius: 50px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  font-family: var(--mono);
+}
+.section-divider {
+  border: none; border-top: 1px solid var(--border);
+  margin: 2.5rem 0 0;
+}
+
+/* ── Sub-row label (inside Brokers section) ─────────── */
+.sub-row-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--muted);
+  margin: 1.5rem 0 0.75rem;
+}
+.sub-row-label:first-child { margin-top: 0; }
+
+/* ── Card Grid ──────────────────────────────────────── */
+.conn-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
-@media (max-width: 1100px) { .broker-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px)  { .broker-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .conn-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .conn-grid { grid-template-columns: 1fr; } }
 
-/* ── Broker Card ─────────────────────────────────── */
-.broker-card {
+/* ── Connection Card ────────────────────────────────── */
+.conn-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 1.4rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
+  border-radius: 20px;
+  padding: 1.35rem 1.4rem;
+  display: flex; flex-direction: column; gap: 0.85rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  position: relative;
-  overflow: hidden;
+  position: relative; overflow: hidden;
 }
-.broker-card:hover {
+.conn-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.07);
   border-color: var(--border-hover);
 }
-.broker-card.connected {
-  border-left: 3px solid var(--green);
-}
-.broker-card.coming-soon {
-  opacity: 0.6;
-  pointer-events: none;
-}
-.broker-card.coming-soon .broker-connect-btn { display: none; }
+.conn-card.is-connected { border-left: 4px solid var(--green); }
+.conn-card.is-coming-soon { opacity: 0.55; pointer-events: none; }
 
-/* ── Card Header ─────────────────────────────────── */
-.broker-card-top {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
+/* ── Card Top Row ───────────────────────────────────── */
+.card-top { display: flex; align-items: flex-start; gap: 0.85rem; }
+.card-icon {
+  width: 46px; height: 46px; border-radius: 14px;
+  background: var(--bg-cream); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
 }
-.broker-icon {
-  width: 46px; height: 46px;
-  border-radius: 14px;
-  background: var(--bg-cream);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
+.card-meta { flex: 1; min-width: 0; }
+.card-name {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.broker-info { flex: 1; min-width: 0; }
-.broker-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.broker-status-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 3px;
+.card-note { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+.card-badges {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;
 }
 
-/* ── Status Badges ───────────────────────────────── */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 10px;
-  border-radius: 50px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  font-family: var(--mono);
-}
-.status-badge.live         { background: rgba(34,197,94,0.12); color: var(--green); }
-.status-badge.beta         { background: rgba(245,158,11,0.13); color: var(--amber); }
-.status-badge.coming-soon  { background: var(--bg-cream); color: var(--muted); }
-.status-badge.connected-badge { background: rgba(34,197,94,0.12); color: var(--green); }
-.status-dot-sm {
-  width: 6px; height: 6px; border-radius: 50%; background: currentColor;
-}
-
-/* ── Asset Tags ──────────────────────────────────── */
-.asset-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.asset-tag {
-  padding: 2px 9px;
-  border-radius: 50px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: capitalize;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--muted);
-  letter-spacing: 0.2px;
-}
-
-/* ── Connection Info (when connected) ───────────── */
-.conn-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 8px 12px;
-  background: rgba(34,197,94,0.06);
-  border: 1px solid rgba(34,197,94,0.2);
-  border-radius: 12px;
-  font-size: 12px;
-  color: var(--green);
-}
-.conn-info-icon { font-size: 14px; }
-.conn-info-text { flex: 1; font-weight: 500; }
-.conn-info-time { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-
-/* ── Card Actions ────────────────────────────────── */
-.broker-card-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-.broker-connect-btn {
-  flex: 1;
-  padding: 0.55rem 1rem;
-  border-radius: 50px;
-  border: none;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  text-align: center;
-  background: var(--accent);
-  color: var(--surface);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.broker-connect-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-
-.broker-btn-sm {
-  padding: 0.5rem 0.85rem;
-  border-radius: 50px;
-  border: 1px solid var(--border);
-  font-family: var(--font);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  background: transparent;
-  color: var(--text-secondary);
-}
-.broker-btn-sm:hover { border-color: var(--border-hover); color: var(--text); background: var(--surface-2); }
-.broker-btn-sm.danger:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.06); }
-.broker-btn-sm.test:hover   { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.06); }
-
-/* ── Coming Soon Banner ──────────────────────────── */
-.coming-soon-banner {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  font-family: var(--mono);
-  text-align: center;
-  padding: 6px;
-  border-radius: 8px;
-  background: var(--surface-2);
+/* ── Connected indicator (top-right absolute) ───────── */
+.connected-dot-badge {
+  position: absolute; top: 14px; right: 14px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 50px;
+  background: rgba(34,197,94,0.10); border: 1px solid rgba(34,197,94,0.25);
+  font-size: 10px; font-weight: 700; color: var(--green);
   letter-spacing: 0.3px;
 }
 
-/* ── Modal Overlay ───────────────────────────────── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+/* ── Status Badges ──────────────────────────────────── */
+.badge-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 50px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+  text-transform: uppercase; font-family: var(--mono);
 }
-.modal-overlay.open {
-  opacity: 1;
-  visibility: visible;
+.badge-live        { background: rgba(34,197,94,0.12);  color: var(--green); }
+.badge-beta        { background: rgba(245,158,11,0.13); color: var(--amber); }
+.badge-coming-soon { background: var(--bg-cream);       color: var(--muted); }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ── Connected Info Strip ───────────────────────────── */
+.conn-info-strip {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 8px 12px;
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.18);
+  border-radius: 12px;
+  font-size: 12px; color: var(--green);
+}
+.conn-info-strip .addr {
+  flex: 1; font-family: var(--mono); font-size: 11px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.conn-info-strip .ts {
+  font-family: var(--mono); font-size: 10px; color: var(--muted); flex-shrink: 0;
 }
 
-/* ── Modal Box ───────────────────────────────────── */
+/* ── Card Actions ───────────────────────────────────── */
+.card-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.btn-connect {
+  flex: 1; padding: 0.55rem 1rem; border-radius: 50px; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; background: var(--accent); color: var(--surface);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.18s ease; text-align: center;
+}
+.btn-connect:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-sm-action {
+  padding: 0.5rem 0.85rem; border-radius: 50px;
+  border: 1px solid var(--border); font-family: var(--font);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: transparent; color: var(--text-secondary);
+  transition: all 0.18s ease;
+}
+.btn-sm-action:hover { border-color: var(--border-hover); color: var(--text); background: var(--surface-2); }
+.btn-sm-action.danger:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.06); }
+.btn-sm-action.test:hover   { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.06); }
+.coming-soon-footer {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  font-family: var(--mono); text-align: center;
+  padding: 6px; border-radius: 8px; background: var(--surface-2); letter-spacing: 0.3px;
+}
+.notify-link {
+  font-size: 12px; color: var(--muted); text-align: center;
+  cursor: pointer; text-decoration: underline; text-decoration-style: dotted;
+}
+.notify-link:hover { color: var(--text); }
+
+/* ── Modal Overlay ──────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.modal-overlay.open { opacity: 1; visibility: visible; }
+
+/* ── Modal Box ──────────────────────────────────────── */
 .modal-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 28px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 460px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 28px; padding: 2rem; width: 100%; max-width: 460px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.16);
   transform: translateY(16px) scale(0.97);
   transition: transform 0.25s ease;
+  max-height: 90vh; overflow-y: auto;
 }
-.modal-overlay.open .modal-box {
-  transform: translateY(0) scale(1);
-}
+.modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
 .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.5rem;
 }
 .modal-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.3px;
+  font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.3px;
 }
 .modal-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  cursor: pointer;
-  font-size: 18px;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface-2);
+  cursor: pointer; font-size: 18px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
-  color: var(--muted);
-  transition: all 0.15s;
-  line-height: 1;
+  color: var(--muted); transition: all 0.15s;
 }
 .modal-close:hover { color: var(--text); border-color: var(--border-hover); }
-.modal-broker-preview {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 1rem 1.2rem;
-  background: var(--bg-cream);
-  border-radius: 16px;
-  margin-bottom: 1.25rem;
+
+/* ── Modal Preview Row ──────────────────────────────── */
+.modal-preview {
+  display: flex; align-items: center; gap: 0.85rem;
+  padding: 1rem 1.2rem; background: var(--bg-cream);
+  border-radius: 16px; margin-bottom: 1.25rem;
   border: 1px solid var(--border);
 }
-.modal-broker-icon { font-size: 26px; }
-.modal-broker-name { font-size: 15px; font-weight: 700; color: var(--text); }
-.modal-broker-sub  { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.modal-preview-icon { font-size: 26px; }
+.modal-preview-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.modal-preview-sub  { font-size: 12px; color: var(--muted); margin-top: 1px; }
 
-/* ── Form Fields ─────────────────────────────────── */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 1rem;
-}
+/* ── Form Fields ────────────────────────────────────── */
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
 .form-group label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.6px;
 }
 .form-group input {
-  width: 100%;
-  padding: 0.65rem 1rem;
-  border-radius: 12px;
-  border: 1.5px solid var(--border);
-  background: var(--bg-warm);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.15s;
+  width: 100%; padding: 0.65rem 1rem; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--bg-warm);
+  color: var(--text); font-family: var(--mono); font-size: 13px;
+  outline: none; transition: border-color 0.15s;
 }
 .form-group input:focus { border-color: var(--accent); }
 .form-group input::placeholder { color: var(--muted); }
-.form-group input[readonly] { opacity: 0.6; cursor: default; }
 .form-submit-btn {
-  width: 100%;
-  padding: 0.75rem 1.5rem;
-  border-radius: 50px;
-  border: none;
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  background: var(--accent);
-  color: var(--surface);
-  margin-top: 0.5rem;
-  transition: all 0.18s ease;
+  width: 100%; padding: 0.75rem 1.5rem; border-radius: 50px; border: none;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  cursor: pointer; background: var(--accent); color: var(--surface);
+  margin-top: 0.5rem; transition: all 0.18s ease;
   box-shadow: 0 2px 10px rgba(0,0,0,0.12);
 }
 .form-submit-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
 .form-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .form-hint {
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.5;
-  margin-top: 0.75rem;
-  padding: 0.6rem 0.8rem;
-  background: var(--surface-2);
-  border-radius: 10px;
+  font-size: 11px; color: var(--muted); line-height: 1.5;
+  margin-top: 0.75rem; padding: 0.6rem 0.8rem;
+  background: var(--surface-2); border-radius: 10px;
   border-left: 2px solid var(--border-hover);
 }
 
-/* ── Toast Notifications ─────────────────────────── */
+/* ── Wallet Picker Buttons ──────────────────────────── */
+.wallet-picker { display: flex; flex-direction: column; gap: 0.65rem; }
+.wallet-opt-btn {
+  display: flex; align-items: center; gap: 0.85rem;
+  padding: 0.85rem 1.1rem; border-radius: 14px;
+  border: 1.5px solid var(--border); background: var(--bg-warm);
+  cursor: pointer; transition: all 0.18s ease; text-align: left;
+  font-family: var(--font); width: 100%;
+}
+.wallet-opt-btn:hover { border-color: var(--accent); background: var(--bg-cream); transform: translateX(2px); }
+.wallet-opt-icon { font-size: 22px; flex-shrink: 0; }
+.wallet-opt-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.wallet-opt-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.wallet-opt-arrow { margin-left: auto; color: var(--muted); font-size: 16px; }
+
+/* ── Info Modal (Plaid) ─────────────────────────────── */
+.info-block {
+  padding: 1rem 1.2rem; border-radius: 14px;
+  background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.22);
+  font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+  margin-bottom: 1rem;
+}
+.info-block strong { color: var(--text); }
+
+/* ── Toast Notifications ────────────────────────────── */
 #toast-container {
-  position: fixed;
-  top: 80px;
-  right: 24px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  position: fixed; top: 80px; right: 24px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 10px;
   pointer-events: none;
 }
 .toast {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 18px;
-  border-radius: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 18px; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--border);
   box-shadow: 0 8px 28px rgba(0,0,0,0.14);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  min-width: 240px;
-  max-width: 340px;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  min-width: 240px; max-width: 340px;
   pointer-events: auto;
   animation: toastIn 0.3s ease both;
 }
@@ -397,21 +307,11 @@
 .toast.info    { border-color: var(--border-hover); }
 @keyframes toastIn  { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
 @keyframes toastOut { from { opacity:1; transform: translateX(0); } to { opacity:0; transform: translateX(20px); } }
-
-/* ── Section Divider Label ───────────────────────── */
-.section-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin: 1.8rem 0 0.8rem;
-}
 </style>
 {% endblock %}
 
 {% block body %}
-<!-- ── Floating Pill Navbar ──────────────────────── -->
+<!-- ── Floating Pill Navbar ────────────────────────── -->
 <nav class="navbar">
   <div class="navbar-inner">
     <a href="/dashboard" class="logo">Ferchaud</a>
@@ -439,259 +339,652 @@
   </div>
 </nav>
 
-<!-- ── Toast Container ───────────────────────────── -->
+<!-- ── Toast Container ─────────────────────────────── -->
 <div id="toast-container"></div>
 
-<!-- ── Main Content ──────────────────────────────── -->
+<!-- ── Main Content ───────────────────────────────── -->
 <div class="conn-wrap page-enter">
+
+  <!-- Page Header -->
   <div class="conn-header-row">
     <div class="conn-header">
-      <h1>Broker Connections</h1>
-      <p>Connect your brokerage accounts to automate trading strategies across markets.</p>
+      <h1>Connections</h1>
+      <p>Link your wallets, bank accounts, and broker APIs to power automated trading and deposits.</p>
     </div>
     <div class="conn-summary-pills">
       <div class="summary-pill">
         <span class="dot green"></span>
-        <span id="count-connected">0 Connected</span>
+        <span id="pill-connected">0 Connected</span>
       </div>
       <div class="summary-pill">
         <span class="dot gray"></span>
-        <span id="count-available">17 Brokers</span>
+        <span id="pill-wallets">5 Wallets</span>
+      </div>
+      <div class="summary-pill">
+        <span class="dot gray"></span>
+        <span id="pill-brokers">14 Brokers</span>
       </div>
     </div>
   </div>
 
-  <!-- Live Brokers -->
-  <div class="section-label">Live</div>
-  <div class="broker-grid" id="brokers-live"></div>
+  <!-- ══════════════════════════════════════════════
+       SECTION 1 — CRYPTO WALLETS
+  ══════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="section-title">Crypto Wallets</span>
+    <span class="section-count">5</span>
+    <span class="section-sub">Non-custodial Web3 wallets</span>
+  </div>
+  <div class="conn-grid" id="wallets-grid">
 
-  <!-- Beta Brokers -->
-  <div class="section-label">Beta</div>
-  <div class="broker-grid" id="brokers-beta"></div>
-
-  <!-- Coming Soon Brokers -->
-  <div class="section-label">Coming Soon</div>
-  <div class="broker-grid" id="brokers-coming-soon"></div>
-</div>
-
-<!-- ── Connect Modal ─────────────────────────────── -->
-<div class="modal-overlay" id="connectModal" onclick="handleOverlayClick(event)">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">Connect Broker</div>
-      <button class="modal-close" onclick="closeModal()">×</button>
-    </div>
-    <div class="modal-broker-preview">
-      <div class="modal-broker-icon" id="modalIcon"></div>
-      <div>
-        <div class="modal-broker-name" id="modalBrokerName"></div>
-        <div class="modal-broker-sub" id="modalBrokerSub"></div>
+    <!-- MetaMask -->
+    <div class="conn-card" id="wallet-card-metamask" data-wallet="metamask">
+      <div class="card-top">
+        <div class="card-icon">🦊</div>
+        <div class="card-meta">
+          <div class="card-name">MetaMask</div>
+          <div class="card-note">Browser extension — most popular EVM wallet</div>
+          <div class="card-badges">
+            <span class="badge-pill badge-live"><span class="badge-dot"></span>Live</span>
+          </div>
+        </div>
+      </div>
+      <div class="conn-info-strip" id="wallet-info-metamask" style="display:none;">
+        <span>●</span>
+        <span class="addr" id="wallet-addr-metamask"></span>
+      </div>
+      <div class="card-actions" id="wallet-actions-metamask">
+        <button class="btn-connect" onclick="connectWalletDirect('metamask')">Connect MetaMask</button>
       </div>
     </div>
 
-    <!-- Paper trading special form -->
-    <div id="formPaper" style="display:none;">
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:1.25rem;">
-        Paper Trading uses simulated funds with real market data — no API keys needed.
-        Perfect for testing strategies before going live.
-      </p>
-      <button class="form-submit-btn" onclick="connectPaper()">Connect Paper Account</button>
+    <!-- WalletConnect -->
+    <div class="conn-card" id="wallet-card-walletconnect" data-wallet="walletconnect">
+      <div class="card-top">
+        <div class="card-icon">🔗</div>
+        <div class="card-meta">
+          <div class="card-name">WalletConnect</div>
+          <div class="card-note">400+ wallets via QR code</div>
+          <div class="card-badges">
+            <span class="badge-pill badge-live"><span class="badge-dot"></span>Live</span>
+          </div>
+        </div>
+      </div>
+      <div class="conn-info-strip" id="wallet-info-walletconnect" style="display:none;">
+        <span>●</span>
+        <span class="addr" id="wallet-addr-walletconnect"></span>
+      </div>
+      <div class="card-actions" id="wallet-actions-walletconnect">
+        <button class="btn-connect" onclick="openWalletModal()">Connect via QR</button>
+      </div>
     </div>
 
-    <!-- Standard API form -->
-    <div id="formApi">
+    <!-- Coinbase Wallet -->
+    <div class="conn-card" id="wallet-card-coinbase_wallet" data-wallet="coinbase_wallet">
+      <div class="card-top">
+        <div class="card-icon">🔵</div>
+        <div class="card-meta">
+          <div class="card-name">Coinbase Wallet</div>
+          <div class="card-note">Coinbase's self-custody wallet</div>
+          <div class="card-badges">
+            <span class="badge-pill badge-live"><span class="badge-dot"></span>Live</span>
+          </div>
+        </div>
+      </div>
+      <div class="conn-info-strip" id="wallet-info-coinbase_wallet" style="display:none;">
+        <span>●</span>
+        <span class="addr" id="wallet-addr-coinbase_wallet"></span>
+      </div>
+      <div class="card-actions" id="wallet-actions-coinbase_wallet">
+        <button class="btn-connect" onclick="openWalletModal()">Connect Wallet</button>
+      </div>
+    </div>
+
+    <!-- Phantom -->
+    <div class="conn-card" id="wallet-card-phantom" data-wallet="phantom">
+      <div class="card-top">
+        <div class="card-icon">👻</div>
+        <div class="card-meta">
+          <div class="card-name">Phantom</div>
+          <div class="card-note">Solana + ETH</div>
+          <div class="card-badges">
+            <span class="badge-pill badge-live"><span class="badge-dot"></span>Live</span>
+          </div>
+        </div>
+      </div>
+      <div class="conn-info-strip" id="wallet-info-phantom" style="display:none;">
+        <span>●</span>
+        <span class="addr" id="wallet-addr-phantom"></span>
+      </div>
+      <div class="card-actions" id="wallet-actions-phantom">
+        <button class="btn-connect" onclick="connectPhantom()">Connect Phantom</button>
+      </div>
+    </div>
+
+    <!-- Rainbow -->
+    <div class="conn-card" id="wallet-card-rainbow" data-wallet="rainbow">
+      <div class="card-top">
+        <div class="card-icon">🌈</div>
+        <div class="card-meta">
+          <div class="card-name">Rainbow</div>
+          <div class="card-note">Mobile-first ETH wallet</div>
+          <div class="card-badges">
+            <span class="badge-pill badge-live"><span class="badge-dot"></span>Live</span>
+          </div>
+        </div>
+      </div>
+      <div class="conn-info-strip" id="wallet-info-rainbow" style="display:none;">
+        <span>●</span>
+        <span class="addr" id="wallet-addr-rainbow"></span>
+      </div>
+      <div class="card-actions" id="wallet-actions-rainbow">
+        <button class="btn-connect" onclick="openWalletModal()">Connect via WalletConnect</button>
+      </div>
+    </div>
+
+  </div><!-- /wallets-grid -->
+
+  <hr class="section-divider">
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 2 — BANK ACCOUNTS
+  ══════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="section-title">Bank Accounts</span>
+    <span class="section-count">2</span>
+    <span class="section-sub">ACH links and card deposits</span>
+  </div>
+  <div class="conn-grid">
+
+    <!-- Plaid -->
+    <div class="conn-card" id="bank-card-plaid">
+      <div class="card-top">
+        <div class="card-icon">🏦</div>
+        <div class="card-meta">
+          <div class="card-name">Plaid</div>
+          <div class="card-note">ACH / bank link — 11,000+ US banks</div>
+          <div class="card-badges">
+            <span class="badge-pill badge-coming-soon">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-connect" onclick="openPlaidModal()" style="background:var(--surface-2);color:var(--text-secondary);border:1px solid var(--border);box-shadow:none;">
+          Learn More
+        </button>
+      </div>
+    </div>
+
+    <!-- Stripe -->
+    <div class="conn-card" id="bank-card-stripe">
+      <div class="card-top">
+        <div class="card-icon">💳</div>
+        <div class="card-meta">
+          <div class="card-name">Stripe</div>
+          <div class="card-note">Debit / credit card — instant deposit</div>
+          <div class="card-badges">
+            <span class="badge-pill badge-live"><span class="badge-dot"></span>Live</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-connect" onclick="openDeposit()">Add Card &amp; Deposit</button>
+      </div>
+    </div>
+
+  </div><!-- /bank grid -->
+
+  <hr class="section-divider">
+
+  <!-- ══════════════════════════════════════════════
+       SECTION 3 — BROKERS & EXCHANGES
+  ══════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="section-title">Brokers &amp; Exchanges</span>
+    <span class="section-count" id="brokers-count-badge">14</span>
+    <span class="section-sub">API-connected trading accounts</span>
+  </div>
+
+  <!-- Sub-row: Stock Brokers -->
+  <div class="sub-row-label">Stock Brokers</div>
+  <div class="conn-grid" id="stock-brokers-grid"></div>
+
+  <!-- Sub-row: Crypto Exchanges -->
+  <div class="sub-row-label" style="margin-top:1.5rem;">Crypto Exchanges</div>
+  <div class="conn-grid" id="crypto-exchanges-grid"></div>
+
+</div><!-- /conn-wrap -->
+
+<!-- ══════════════════════════════════════════════════
+     WALLET PICKER MODAL
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="walletModal" onclick="handleOverlayClick(event,'walletModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Connect a Wallet</div>
+      <button class="modal-close" onclick="closeModal('walletModal')">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6;">
+      Choose a wallet to connect. Your keys stay in your wallet — we only read your address.
+    </p>
+    <div class="wallet-picker">
+      <button class="wallet-opt-btn" onclick="connectWalletDirect('metamask')">
+        <span class="wallet-opt-icon">🦊</span>
+        <div><div class="wallet-opt-name">MetaMask</div><div class="wallet-opt-sub">Browser extension</div></div>
+        <span class="wallet-opt-arrow">›</span>
+      </button>
+      <button class="wallet-opt-btn" onclick="connectViaWalletConnect()">
+        <span class="wallet-opt-icon">🔗</span>
+        <div><div class="wallet-opt-name">WalletConnect</div><div class="wallet-opt-sub">400+ wallets via QR</div></div>
+        <span class="wallet-opt-arrow">›</span>
+      </button>
+      <button class="wallet-opt-btn" onclick="connectCoinbaseWallet()">
+        <span class="wallet-opt-icon">🔵</span>
+        <div><div class="wallet-opt-name">Coinbase Wallet</div><div class="wallet-opt-sub">Self-custody wallet</div></div>
+        <span class="wallet-opt-arrow">›</span>
+      </button>
+      <button class="wallet-opt-btn" onclick="connectPhantom()">
+        <span class="wallet-opt-icon">👻</span>
+        <div><div class="wallet-opt-name">Phantom</div><div class="wallet-opt-sub">Solana + ETH</div></div>
+        <span class="wallet-opt-arrow">›</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PLAID INFO MODAL
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="plaidModal" onclick="handleOverlayClick(event,'plaidModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🏦 Plaid Bank Link</div>
+      <button class="modal-close" onclick="closeModal('plaidModal')">×</button>
+    </div>
+    <div class="info-block">
+      <strong>Plaid integration is coming soon.</strong><br><br>
+      Plaid will allow you to link your bank account directly for ACH transfers with 11,000+ US banks.<br><br>
+      In the meantime, use <strong>Stripe</strong> to add a debit or credit card for instant deposits.
+    </div>
+    <button class="form-submit-btn" onclick="closeModal('plaidModal');openDeposit();">
+      Use Stripe Instead
+    </button>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:0.75rem;">
+      <a onclick="notifyMe('plaid')" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;">
+        Notify me when Plaid is available
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     BROKER CONNECT MODAL
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="brokerModal" onclick="handleOverlayClick(event,'brokerModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="brokerModalTitle">Connect Broker</div>
+      <button class="modal-close" onclick="closeModal('brokerModal')">×</button>
+    </div>
+    <div class="modal-preview" id="brokerModalPreview">
+      <div class="modal-preview-icon" id="brokerModalIcon"></div>
+      <div>
+        <div class="modal-preview-name" id="brokerModalName"></div>
+        <div class="modal-preview-sub"  id="brokerModalSub"></div>
+      </div>
+    </div>
+    <div id="brokerFormWrap">
       <div class="form-group">
         <label>API Key</label>
-        <input type="text" id="fieldApiKey" placeholder="Paste your API key…" autocomplete="off" />
+        <input type="text"     id="fieldApiKey"      placeholder="Paste your API key…"    autocomplete="off" />
       </div>
       <div class="form-group">
         <label>API Secret</label>
-        <input type="password" id="fieldApiSecret" placeholder="Paste your API secret…" autocomplete="off" />
+        <input type="password" id="fieldApiSecret"   placeholder="Paste your API secret…" autocomplete="off" />
       </div>
       <div class="form-group">
         <label>Account ID <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="fieldAccountId" placeholder="e.g. DU1234567" autocomplete="off" />
+        <input type="text"     id="fieldAccountId"   placeholder="e.g. DU1234567"         autocomplete="off" />
       </div>
       <div class="form-group">
         <label>Display Name <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="fieldDisplayName" placeholder="My Alpaca Account" autocomplete="off" />
+        <input type="text"     id="fieldDisplayName" placeholder="My Alpaca Account"      autocomplete="off" />
       </div>
       <div class="form-hint">
-        Your credentials are encrypted at rest and never shared. Keys require read + order permissions only.
+        Credentials are encrypted at rest and never shared. Keys require read + order permissions only.
       </div>
-      <button class="form-submit-btn" id="submitBtn" onclick="submitConnect()">Connect Account</button>
+      <button class="form-submit-btn" id="brokerSubmitBtn" onclick="submitBrokerConnect()">
+        Connect Account
+      </button>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
+<!-- Web3Modal v3 (WalletConnect) -->
+<script type="module">
+  import { createWeb3Modal, defaultWagmiConfig } from 'https://esm.run/@web3modal/wagmi@4';
+  import { mainnet, polygon, arbitrum } from 'https://esm.run/@wagmi/chains';
+  const projectId = '71529d0005cb0547de490d3861081f4f';
+  const metadata = { name: 'Ferchaud', description: 'Ferchaud Trading Platform', url: window.location.origin, icons: [] };
+  const chains = [mainnet, polygon, arbitrum];
+  const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
+  window._web3modal = createWeb3Modal({ wagmiConfig, projectId, chains });
+</script>
 <script>
-// ── Broker catalog (static, matches API) ────────────────────────────────────
-const BROKERS = [
-  { id: 'alpaca',       name: 'Alpaca',        icon: '🦙', assets: ['stocks','options','etfs'],                     status: 'live' },
-  { id: 'tradier',      name: 'Tradier',        icon: '🔰', assets: ['stocks','options','futures'],                  status: 'live' },
-  { id: 'tastytrade',   name: 'tastytrade',     icon: '🌶️', assets: ['stocks','options'],                           status: 'live' },
-  { id: 'coinbase',     name: 'Coinbase',       icon: '🔵', assets: ['crypto'],                                     status: 'live' },
-  { id: 'binance',      name: 'Binance',        icon: '🟡', assets: ['crypto'],                                     status: 'live' },
-  { id: 'bybit',        name: 'Bybit',          icon: '🔶', assets: ['crypto'],                                     status: 'live' },
-  { id: 'kraken',       name: 'Kraken',         icon: '🐙', assets: ['crypto'],                                     status: 'live' },
-  { id: 'ibkr',         name: 'IBKR',           icon: '🏦', assets: ['stocks','options','futures','forex'],          status: 'live' },
-  { id: 'tradestation', name: 'TradeStation',   icon: '📊', assets: ['stocks','options','futures'],                  status: 'live' },
-  { id: 'tradovate',    name: 'Tradovate',      icon: '⚡', assets: ['futures'],                                    status: 'live' },
-  { id: 'paper',        name: 'Paper Trading',  icon: '📝', assets: ['stocks','options','futures','crypto'],         status: 'live' },
-  { id: 'robinhood',    name: 'Robinhood',      icon: '🐦', assets: ['stocks','options'],                           status: 'beta' },
-  { id: 'webull',       name: 'Webull',         icon: '🐂', assets: ['stocks','options'],                           status: 'beta' },
-  { id: 'etrade',       name: 'E*TRADE',        icon: '💼', assets: ['stocks','options'],                           status: 'coming_soon' },
-  { id: 'ninjatrader',  name: 'NinjaTrader',    icon: '🥷', assets: ['futures'],                                    status: 'coming_soon' },
-  { id: 'projectx',    name: 'ProjectX',        icon: '🚀', assets: ['futures'],                                    status: 'coming_soon' },
-  { id: 'cryptocom',   name: 'Crypto.com',      icon: '💎', assets: ['crypto'],                                     status: 'coming_soon' },
+// ── Broker / Exchange Catalog ────────────────────────────────────────────────
+const STOCK_BROKERS = [
+  { id: 'alpaca',       name: 'Alpaca',                icon: '🦙', assets: ['Stocks','Options','ETFs'],            status: 'live'        },
+  { id: 'robinhood',    name: 'Robinhood',              icon: '🐦', assets: ['Stocks','Options'],                   status: 'beta'        },
+  { id: 'etrade',       name: 'E*TRADE',                icon: '💼', assets: ['Stocks','Options'],                   status: 'coming_soon' },
+  { id: 'webull',       name: 'Webull',                 icon: '🐂', assets: ['Stocks','Options'],                   status: 'beta'        },
+  { id: 'ibkr',         name: 'Interactive Brokers',    icon: '🏦', assets: ['Stocks','Options','Futures','Forex'], status: 'live'        },
+  { id: 'tradestation', name: 'TradeStation',           icon: '📊', assets: ['Stocks','Options','Futures'],         status: 'live'        },
+  { id: 'tradier',      name: 'Tradier',                icon: '🔰', assets: ['Stocks','Options','Futures'],         status: 'live'        },
+  { id: 'tastytrade',   name: 'tastytrade',             icon: '🌶️', assets: ['Stocks','Options'],                  status: 'live'        },
+  { id: 'tradovate',    name: 'Tradovate (futures)',    icon: '⚡', assets: ['Futures'],                            status: 'live'        },
+];
+const CRYPTO_EXCHANGES = [
+  { id: 'coinbase',   name: 'Coinbase',   icon: '🔵', assets: ['Spot','Futures'],  status: 'live'        },
+  { id: 'binance',    name: 'Binance',    icon: '🟡', assets: ['Spot','Futures'],  status: 'live'        },
+  { id: 'kraken',     name: 'Kraken',     icon: '🐙', assets: ['Spot'],            status: 'live'        },
+  { id: 'bybit',      name: 'Bybit',      icon: '🔶', assets: ['Spot','Perps'],    status: 'live'        },
+  { id: 'cryptocom',  name: 'Crypto.com', icon: '💎', assets: ['Spot'],            status: 'coming_soon' },
 ];
 
-// ── State ────────────────────────────────────────────────────────────────────
-let connections = [];   // loaded from GET /api/connections
-let activeBroker = null; // broker being connected in modal
+// ── State ───────────────────────────────────────────────────────────────────
+let brokerConnections = [];   // from GET /api/connections
+let activeBroker = null;
 
-// ── Init ─────────────────────────────────────────────────────────────────────
+// ── Template vars injected from Jinja ───────────────────────────────────────
+const WALLET_ADDRESS = {{ ('"' ~ user.wallet_address ~ '"') | safe if user.wallet_address else 'null' }};
+const WALLET_TYPE    = {{ ('"' ~ user.wallet_type    ~ '"') | safe if user.wallet_type    else 'null' }};
+
+// ── Init ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  loadConnections();
   startClock();
+  applyWalletState();
+  loadBrokerConnections();
 });
 
-async function loadConnections() {
+// ── Clock ────────────────────────────────────────────────────────────────────
+function startClock() {
+  const el = document.getElementById('clock');
+  if (!el) return;
+  const tick = () => {
+    el.textContent = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  };
+  tick(); setInterval(tick, 1000);
+}
+
+// ── Wallet State (from user object) ─────────────────────────────────────────
+function applyWalletState() {
+  if (!WALLET_ADDRESS || !WALLET_TYPE) return;
+  const truncated = WALLET_ADDRESS.slice(0, 6) + '…' + WALLET_ADDRESS.slice(-4);
+  markWalletConnected(WALLET_TYPE, truncated);
+}
+
+function markWalletConnected(walletType, displayAddr) {
+  const card    = document.getElementById('wallet-card-' + walletType);
+  const strip   = document.getElementById('wallet-info-' + walletType);
+  const addrEl  = document.getElementById('wallet-addr-' + walletType);
+  const actions = document.getElementById('wallet-actions-' + walletType);
+  if (!card) return;
+
+  card.classList.add('is-connected');
+
+  // Connected badge
+  if (!card.querySelector('.connected-dot-badge')) {
+    const badge = document.createElement('div');
+    badge.className = 'connected-dot-badge';
+    badge.innerHTML = '● Connected';
+    card.appendChild(badge);
+  }
+
+  if (strip && addrEl) {
+    addrEl.textContent = displayAddr;
+    strip.style.display = '';
+  }
+
+  if (actions) {
+    actions.innerHTML = `
+      <button class="btn-sm-action test"   onclick="showToast('info','⟳','Wallet connection healthy')">Verify</button>
+      <button class="btn-sm-action danger" onclick="disconnectWallet('${walletType}')">Disconnect</button>
+    `;
+  }
+}
+
+// ── MetaMask Direct ──────────────────────────────────────────────────────────
+async function connectWalletDirect(walletType) {
+  closeModal('walletModal');
+  if (typeof window.ethereum === 'undefined') {
+    showToast('error', '🦊', 'MetaMask not detected — install the browser extension');
+    return;
+  }
+  try {
+    showToast('info', '⟳', 'Requesting wallet access…');
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (!accounts || accounts.length === 0) { showToast('error', '✗', 'No accounts returned'); return; }
+    const address = accounts[0];
+    await postWalletConnect(address, walletType);
+  } catch (e) {
+    showToast('error', '✗', e.message || 'MetaMask connection rejected');
+  }
+}
+
+// ── Phantom Direct ───────────────────────────────────────────────────────────
+async function connectPhantom() {
+  closeModal('walletModal');
+  if (typeof window.solana === 'undefined' || !window.solana.isPhantom) {
+    showToast('error', '👻', 'Phantom not detected — install the Phantom extension');
+    return;
+  }
+  try {
+    showToast('info', '⟳', 'Requesting Phantom access…');
+    const resp = await window.solana.connect();
+    const address = resp.publicKey.toString();
+    await postWalletConnect(address, 'phantom');
+  } catch (e) {
+    showToast('error', '✗', e.message || 'Phantom connection rejected');
+  }
+}
+
+// ── WalletConnect via Web3Modal ──────────────────────────────────────────────
+function openWalletModal() { openModal('walletModal'); }
+
+function connectViaWalletConnect() {
+  closeModal('walletModal');
+  if (window._web3modal) {
+    window._web3modal.open();
+  } else {
+    showToast('error', '✗', 'Web3Modal not loaded — check your connection');
+  }
+}
+
+function connectCoinbaseWallet() {
+  closeModal('walletModal');
+  if (window._web3modal) {
+    window._web3modal.open({ view: 'Connect' });
+  } else {
+    showToast('error', '✗', 'Web3Modal not loaded');
+  }
+}
+
+// ── POST wallet connect to backend ───────────────────────────────────────────
+async function postWalletConnect(address, walletType) {
+  try {
+    const res = await fetch('/api/wallet/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address, wallet_type: walletType }),
+    });
+    if (res.ok) {
+      const truncated = address.slice(0, 6) + '…' + address.slice(-4);
+      markWalletConnected(walletType, truncated);
+      showToast('success', '●', walletType + ' wallet connected: ' + truncated);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast('error', '✗', err.detail || 'Wallet connect failed');
+    }
+  } catch (e) {
+    showToast('error', '✗', 'Network error — please try again');
+  }
+}
+
+async function disconnectWallet(walletType) {
+  if (!confirm('Disconnect this wallet?')) return;
+  try {
+    const res = await fetch('/api/wallet/disconnect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet_type: walletType }),
+    });
+    if (res.ok) {
+      showToast('info', '🔌', 'Wallet disconnected');
+      location.reload();
+    }
+  } catch (e) {
+    showToast('error', '✗', 'Failed to disconnect');
+  }
+}
+
+// ── Plaid Modal ──────────────────────────────────────────────────────────────
+function openPlaidModal() { openModal('plaidModal'); }
+
+// ── Stripe / Deposit ─────────────────────────────────────────────────────────
+function openDeposit() {
+  // Delegates to whatever deposit flow is in app.js
+  if (typeof window.openDepositModal === 'function') {
+    window.openDepositModal();
+  } else {
+    showToast('info', '💳', 'Redirecting to deposit page…');
+    setTimeout(() => { window.location.href = '/vault'; }, 800);
+  }
+}
+
+// ── Broker Connections ───────────────────────────────────────────────────────
+async function loadBrokerConnections() {
   try {
     const res = await fetch('/api/connections');
-    if (res.ok) connections = await res.json();
-  } catch (e) { connections = []; }
-  renderAll();
+    if (res.ok) brokerConnections = await res.json();
+  } catch (e) { brokerConnections = []; }
+  renderBrokerGrids();
 }
 
-// ── Render all broker grids ───────────────────────────────────────────────────
-function renderAll() {
+function renderBrokerGrids() {
   const connMap = {};
-  connections.forEach(c => { connMap[c.broker_id] = c; });
+  brokerConnections.forEach(c => { connMap[c.broker_id] = c; });
 
-  const live      = BROKERS.filter(b => b.status === 'live');
-  const beta      = BROKERS.filter(b => b.status === 'beta');
-  const comingSoon = BROKERS.filter(b => b.status === 'coming_soon');
+  document.getElementById('stock-brokers-grid').innerHTML =
+    STOCK_BROKERS.map(b => brokerCardHTML(b, connMap[b.id])).join('');
+  document.getElementById('crypto-exchanges-grid').innerHTML =
+    CRYPTO_EXCHANGES.map(b => brokerCardHTML(b, connMap[b.id])).join('');
 
-  document.getElementById('brokers-live').innerHTML        = live.map(b => brokerCardHTML(b, connMap[b.id])).join('');
-  document.getElementById('brokers-beta').innerHTML        = beta.map(b => brokerCardHTML(b, connMap[b.id])).join('');
-  document.getElementById('brokers-coming-soon').innerHTML = comingSoon.map(b => brokerCardHTML(b, connMap[b.id])).join('');
-
-  const connCount = connections.length;
-  document.getElementById('count-connected').textContent = connCount + ' Connected';
-}
-
-function statusLabel(status) {
-  if (status === 'live')         return '<span class="status-badge live"><span class="status-dot-sm"></span>Live</span>';
-  if (status === 'beta')         return '<span class="status-badge beta"><span class="status-dot-sm"></span>Beta</span>';
-  if (status === 'coming_soon')  return '<span class="status-badge coming-soon">Coming Soon</span>';
-  return '';
-}
-
-function assetTagsHTML(assets) {
-  return assets.map(a => `<span class="asset-tag">${a}</span>`).join('');
+  const total = STOCK_BROKERS.length + CRYPTO_EXCHANGES.length;
+  document.getElementById('brokers-count-badge').textContent = total;
+  document.getElementById('pill-brokers').textContent = total + ' Brokers';
+  document.getElementById('pill-connected').textContent = brokerConnections.length + ' Connected';
 }
 
 function brokerCardHTML(broker, conn) {
   const isConnected  = !!conn;
   const isComingSoon = broker.status === 'coming_soon';
+  const isBeta       = broker.status === 'beta';
 
-  const connectedClasses = isConnected ? ' connected' : '';
-  const comingClass      = isComingSoon ? ' coming-soon' : '';
+  let cardClass = 'conn-card';
+  if (isConnected)  cardClass += ' is-connected';
+  if (isComingSoon) cardClass += ' is-coming-soon';
 
-  // Connection info strip (only when connected)
+  let statusBadge = '';
+  if (isComingSoon) statusBadge = '<span class="badge-pill badge-coming-soon">Coming Soon</span>';
+  else if (isBeta)  statusBadge = '<span class="badge-pill badge-beta"><span class="badge-dot"></span>Beta</span>';
+  else              statusBadge = '<span class="badge-pill badge-live"><span class="badge-dot"></span>Live</span>';
+
+  const connBadge = isConnected
+    ? `<div class="connected-dot-badge">● Connected</div>` : '';
+
+  const assetTags = broker.assets
+    .map(a => `<span style="padding:2px 9px;border-radius:50px;font-size:10px;font-weight:600;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);">${a}</span>`)
+    .join('');
+
   let connInfoHTML = '';
   if (isConnected) {
-    const lastConn = conn.last_connected
+    const ts = conn.last_connected
       ? new Date(conn.last_connected).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
       : 'Just now';
-    const displayName = conn.display_name || broker.name;
+    const label = conn.display_name || broker.name;
     connInfoHTML = `
-      <div class="conn-info">
-        <span class="conn-info-icon">✓</span>
-        <span class="conn-info-text">${displayName}</span>
-        <span class="conn-info-time">${lastConn}</span>
+      <div class="conn-info-strip">
+        <span>✓</span>
+        <span class="addr">${label}</span>
+        <span class="ts">${ts}</span>
       </div>`;
   }
 
-  // Action buttons
   let actionsHTML = '';
   if (isComingSoon) {
-    actionsHTML = `<div class="coming-soon-banner">Launching soon — join waitlist</div>`;
+    actionsHTML = `
+      <div class="coming-soon-footer">Launching soon</div>
+      <a class="notify-link" onclick="notifyMe('${broker.id}')">Notify me</a>`;
   } else if (isConnected) {
     actionsHTML = `
-      <div class="broker-card-actions">
-        <button class="broker-btn-sm test" onclick="testConnection('${conn.id}', '${broker.name}')">Test</button>
-        <button class="broker-btn-sm danger" onclick="removeConnection('${conn.id}', '${broker.name}')">Remove</button>
+      <div class="card-actions">
+        <button class="btn-sm-action test"   onclick="testConnection('${conn.id}','${broker.name}')">Test</button>
+        <button class="btn-sm-action danger" onclick="removeConnection('${conn.id}','${broker.name}')">Remove</button>
       </div>`;
   } else {
     actionsHTML = `
-      <button class="broker-connect-btn" onclick="openConnectModal('${broker.id}')">Connect</button>`;
+      <button class="btn-connect" onclick="openBrokerModal('${broker.id}')">Connect</button>`;
   }
 
   return `
-    <div class="broker-card${connectedClasses}${comingClass}" id="card-${broker.id}">
-      <div class="broker-card-top">
-        <div class="broker-icon">${broker.icon}</div>
-        <div class="broker-info">
-          <div class="broker-name">${broker.name}</div>
-          <div class="broker-status-row">${statusLabel(broker.status)}</div>
+    <div class="${cardClass}" id="broker-card-${broker.id}">
+      ${connBadge}
+      <div class="card-top">
+        <div class="card-icon">${broker.icon}</div>
+        <div class="card-meta">
+          <div class="card-name">${broker.name}</div>
+          <div class="card-badges">${statusBadge}</div>
         </div>
       </div>
-      <div class="asset-tags">${assetTagsHTML(broker.assets)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">${assetTags}</div>
       ${connInfoHTML}
       ${actionsHTML}
     </div>`;
 }
 
-// ── Modal ────────────────────────────────────────────────────────────────────
-function openConnectModal(brokerId) {
-  const broker = BROKERS.find(b => b.id === brokerId);
+// ── Broker Modal ─────────────────────────────────────────────────────────────
+function openBrokerModal(brokerId) {
+  const broker = [...STOCK_BROKERS, ...CRYPTO_EXCHANGES].find(b => b.id === brokerId);
   if (!broker) return;
   activeBroker = broker;
 
-  document.getElementById('modalTitle').textContent     = 'Connect ' + broker.name;
-  document.getElementById('modalIcon').textContent      = broker.icon;
-  document.getElementById('modalBrokerName').textContent = broker.name;
-  document.getElementById('modalBrokerSub').textContent = broker.assets.join(', ');
+  document.getElementById('brokerModalTitle').textContent = 'Connect ' + broker.name;
+  document.getElementById('brokerModalIcon').textContent  = broker.icon;
+  document.getElementById('brokerModalName').textContent  = broker.name;
+  document.getElementById('brokerModalSub').textContent   = broker.assets.join(', ');
 
-  // Show paper or API form
-  const isPaper = broker.id === 'paper';
-  document.getElementById('formPaper').style.display = isPaper ? '' : 'none';
-  document.getElementById('formApi').style.display   = isPaper ? 'none' : '';
-
-  // Clear fields
   ['fieldApiKey','fieldApiSecret','fieldAccountId','fieldDisplayName'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
 
-  document.getElementById('connectModal').classList.add('open');
+  const btn = document.getElementById('brokerSubmitBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Connect Account'; }
+
+  openModal('brokerModal');
 }
 
-function closeModal() {
-  document.getElementById('connectModal').classList.remove('open');
-  activeBroker = null;
-}
-
-function handleOverlayClick(e) {
-  if (e.target.id === 'connectModal') closeModal();
-}
-
-// Close on Escape key
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-// ── Submit Connect ────────────────────────────────────────────────────────────
-async function submitConnect() {
+async function submitBrokerConnect() {
   if (!activeBroker) return;
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Connecting…';
+  const btn = document.getElementById('brokerSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Connecting…';
 
   const payload = {
     broker_id:    activeBroker.id,
+    broker_name:  activeBroker.name,
     api_key:      document.getElementById('fieldApiKey').value.trim(),
     api_secret:   document.getElementById('fieldApiSecret').value.trim(),
     account_id:   document.getElementById('fieldAccountId').value.trim() || null,
@@ -706,8 +999,8 @@ async function submitConnect() {
     });
     if (res.ok) {
       showToast('success', '✓', activeBroker.name + ' connected successfully');
-      closeModal();
-      await loadConnections();
+      closeModal('brokerModal');
+      await loadBrokerConnections();
     } else {
       const err = await res.json().catch(() => ({}));
       showToast('error', '✗', err.detail || 'Connection failed');
@@ -715,71 +1008,56 @@ async function submitConnect() {
   } catch (e) {
     showToast('error', '✗', 'Network error — please try again');
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Connect Account';
+    btn.disabled = false; btn.textContent = 'Connect Account';
   }
 }
 
-async function connectPaper() {
-  const payload = {
-    broker_id: 'paper',
-    display_name: 'Paper Trading',
-    api_key: '',
-    api_secret: '',
-  };
-  try {
-    const res = await fetch('/api/connections', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      showToast('success', '📝', 'Paper account connected');
-      closeModal();
-      await loadConnections();
-    } else {
-      const err = await res.json().catch(() => ({}));
-      showToast('error', '✗', err.detail || 'Failed to connect paper account');
-    }
-  } catch (e) {
-    showToast('error', '✗', 'Network error — please try again');
-  }
-}
-
-// ── Test Connection ───────────────────────────────────────────────────────────
+// ── Test / Remove connections ─────────────────────────────────────────────────
 async function testConnection(connId, brokerName) {
   showToast('info', '⟳', 'Testing ' + brokerName + '…');
   try {
     const res = await fetch(`/api/connections/${connId}/test`, { method: 'POST' });
-    if (res.ok) {
-      showToast('success', '✓', brokerName + ' connection is healthy');
-    } else {
+    if (res.ok) showToast('success', '✓', brokerName + ' is healthy');
+    else {
       const err = await res.json().catch(() => ({}));
       showToast('error', '✗', err.detail || brokerName + ' test failed');
     }
-  } catch (e) {
-    showToast('error', '✗', 'Network error during test');
-  }
+  } catch (e) { showToast('error', '✗', 'Network error during test'); }
 }
 
-// ── Remove Connection ─────────────────────────────────────────────────────────
 async function removeConnection(connId, brokerName) {
   if (!confirm(`Remove ${brokerName} connection? This cannot be undone.`)) return;
   try {
     const res = await fetch(`/api/connections/${connId}`, { method: 'DELETE' });
     if (res.ok) {
       showToast('info', '🗑', brokerName + ' disconnected');
-      await loadConnections();
+      await loadBrokerConnections();
     } else {
       const err = await res.json().catch(() => ({}));
       showToast('error', '✗', err.detail || 'Failed to remove connection');
     }
-  } catch (e) {
-    showToast('error', '✗', 'Network error — please try again');
-  }
+  } catch (e) { showToast('error', '✗', 'Network error — please try again'); }
 }
 
-// ── Toast System ──────────────────────────────────────────────────────────────
+// ── Notify Me ────────────────────────────────────────────────────────────────
+function notifyMe(name) {
+  showToast('success', '🔔', 'You\'ll be notified when ' + name + ' launches!');
+}
+
+// ── Modal helpers ────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function handleOverlayClick(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  ['walletModal','plaidModal','brokerModal'].forEach(closeModal);
+});
+
+// ── Toast System ─────────────────────────────────────────────────────────────
 function showToast(type, icon, message) {
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
@@ -788,20 +1066,8 @@ function showToast(type, icon, message) {
   container.appendChild(el);
   setTimeout(() => {
     el.classList.add('toast-exit');
-    el.addEventListener('animationend', () => el.remove());
+    el.addEventListener('animationend', () => el.remove(), { once: true });
   }, 3500);
-}
-
-// ── Clock ─────────────────────────────────────────────────────────────────────
-function startClock() {
-  const el = document.getElementById('clock');
-  if (!el) return;
-  const tick = () => {
-    const now = new Date();
-    el.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  };
-  tick();
-  setInterval(tick, 1000);
 }
 </script>
 {% endblock %}
