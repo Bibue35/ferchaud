@@ -35,6 +35,16 @@ class BaseStrategy(ABC):
     def get_symbols(self) -> List[str]:
         """Return the list of symbols this strategy trades."""
 
+    def update_symbols(self, symbols: List[str]) -> None:
+        """Dynamically expand the symbol universe from the full market scanner.
+
+        Called each cycle with the merged list of hot scanner picks + static
+        config universe.  Subclasses that maintain their own symbol list should
+        override this to merge/replace it; the default is a no-op so existing
+        strategies continue to work unchanged.
+        """
+        pass
+
     @abstractmethod
     def run(self) -> None:
         """Execute one iteration of the strategy logic."""

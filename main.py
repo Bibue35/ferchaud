@@ -233,7 +233,12 @@ def main() -> None:
     log.info("Alpha Combination Engine: ON (11-step, Fundamental Law IR = IC × √N)")
 
     # Start data stream
-    strat_symbols = list({s for strat in strategies for s in strat.get_symbols()})
+    # Build initial symbol list — scanner expands this dynamically every cycle
+    strat_symbols = list(dict.fromkeys(
+        [s for strat in strategies for s in strat.get_symbols()]
+        + CONFIG.stock_universe + CONFIG.crypto_universe
+    ))
+    log.info("Initial universe: %d symbols", len(strat_symbols))
     feed.start_stream(strat_symbols)
 
     # Graceful shutdown
@@ -269,11 +274,34 @@ def main() -> None:
             # 0. Full market scan (12,000+ stocks) + X research
             if scanner.needs_refresh():
                 scanner.scan_async()
-                hot = scanner.hot_symbols
-                if hot:
-                    log.info("SCANNER: %d hot stocks — top: %s", len(hot), ", ".join(hot[:8]))
+            hot = scanner.hot_symbols  # top 50 movers right now
+            x_hot = list(x_researcher.trending_tickers) if hasattr(x_researcher, 'trending_tickers') else []
+            if hot:
+                log.info("SCANNER: %d hot stocks — top: %s", len(hot), ", ".join(hot[:10]))
             if x_researcher.needs_refresh():
                 x_researcher.scan_async()
+
+            # Merge scanner output into live universe — no hardcoded limits
+            dynamic_universe = list(dict.fromkeys(
+                hot + x_hot + CONFIG.stock_universe + CONFIG.crypto_universe
+            ))
+            # Push new symbols into strategies that support dynamic symbols
+            for strat in strategies:
+                if hasattr(strat, 'update_symbols'):
+                    try:
+                        strat.update_symbols(dynamic_universe)
+                    except Exception:
+                        pass
+            # Subscribe new symbols to the data feed stream
+            new_syms = [s for s in dynamic_universe if s not in strat_symbols]
+            if new_syms:
+                log.info("UNIVERSE EXPAND: +%d symbols (total %d)",
+                         len(new_syms), len(dynamic_universe))
+                try:
+                    feed.start_stream(new_syms)
+                    strat_symbols.extend(new_syms)
+                except Exception as e:
+                    log.debug("Stream expand error: %s", e)
 
             # 1. Refresh portfolio and risk
             portfolio.refresh()
@@ -345,7 +373,7 @@ def main() -> None:
             # 7. Sentiment snapshot
             if sentiment and iteration % PORTFOLIO_LOG_INTERVAL == 0:
                 try:
-                    top_syms = CONFIG.stock_universe[:5]
+                    top_syms = (hot[:3] + CONFIG.stock_universe[:2]) if hot else CONFIG.stock_universe[:5]
                     scores = sentiment.get_bulk_sentiment(top_syms)
                     parts = [f"{s}={v:+.2f}" for s, v in scores.items() if v != 0]
                     if parts:
