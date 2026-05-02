@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Bot Brain · Analytics — Ferchaud{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  .ana-wrap   { padding: 5.5rem 2rem 2rem; max-width: 1400px; margin: 0 auto; }
+  .grid-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-tile  {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 1.1rem 1.25rem; transition: transform .2s ease;
+    position: relative; overflow: hidden;
+  }
+  .stat-tile:hover { transform: translateY(-2px); }
+  .stat-tile::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 80% at 0% 0%, rgba(34,197,94,.05), transparent 60%);
+  }
+  .tile-label { font-size: 10px; font-weight: 700; letter-spacing: .8px;
+                text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .tile-val   { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; color: var(--text); }
+  .tile-sub   { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .panel      { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:1.25rem; }
+  .panel-h    { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
+                color:var(--muted); margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; }
+  .panel-h span:first-child { color:var(--text); }
+  .grid-2x    { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .arms-tbl   { width:100%; border-collapse:collapse; font-size:12px; }
+  .arms-tbl th { color:var(--muted); font-weight:600; font-size:10px; text-transform:uppercase;
+                 padding:.5rem .5rem; border-bottom:1px solid var(--border); text-align:left; }
+  .arms-tbl td { padding:.5rem .5rem; border-bottom:1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .pos        { color: var(--green); font-weight:700; }
+  .neg        { color: var(--red); font-weight:700; }
+  .neutral    { color: var(--muted); }
+  .strat-card {
+    background: var(--surface-2); border-radius:14px; padding:.9rem 1rem;
+    margin-bottom:.6rem;
+  }
+  .pill {
+    display:inline-flex; align-items:center; gap:5px;
+    padding: 2px 10px; border-radius: 50px;
+    font-size: 10px; font-weight:700; letter-spacing:.4px;
+  }
+  .pill-ok    { background: rgba(34,197,94,.12);  color:#16a34a; }
+  .pill-warn  { background: rgba(251,191,36,.12); color:#d97706; }
+  .pill-bad   { background: rgba(239,68,68,.12);  color:#dc2626; }
+  #equity-chart { height: 320px; border-radius:14px; overflow:hidden; }
+
+  @media (max-width: 1100px) { .grid-stats { grid-template-columns: repeat(3, 1fr); } .grid-2x { grid-template-columns: 1fr; } }
+  @media (max-width: 600px)  { .grid-stats { grid-template-columns: repeat(2, 1fr); } }
+</style>
+{% endblock %}
+{% block body %}
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/dashboard" class="logo">Ferchaud</a>
+    <div class="nav-links">
+      <span class="badge badge-live">LIVE</span>
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/analytics" class="nav-link active">Brain</a>
+      <a href="/feed" class="nav-link">Feed</a>
+      <a href="/sources" class="nav-link">Sources</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/api/auth/logout" class="btn btn-ghost btn-sm" style="border-radius:50px;">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="ana-wrap page-enter">
+
+  <!-- Page header -->
+  <div style="margin-bottom:1.25rem;">
+    <h1 style="font-size:2rem;font-weight:800;color:var(--text);margin-bottom:.25rem;">
+      Bot Brain · <span style="color:var(--muted);font-weight:500;">Self-Learning Insights</span>
+    </h1>
+    <p style="color:var(--muted);font-size:13px;">
+      Every trade teaches the bot something. Below is what it has learned.
+    </p>
+  </div>
+
+  <!-- Headline metrics -->
+  <div class="grid-stats">
+    <div class="stat-tile"><div class="tile-label">Trades</div><div class="tile-val" id="m-n">—</div><div class="tile-sub">closed</div></div>
+    <div class="stat-tile"><div class="tile-label">Win Rate</div><div class="tile-val" id="m-wr">—</div><div class="tile-sub">all strategies</div></div>
+    <div class="stat-tile"><div class="tile-label">Sharpe</div><div class="tile-val" id="m-sharpe">—</div><div class="tile-sub">risk-adjusted</div></div>
+    <div class="stat-tile"><div class="tile-label">Max DD</div><div class="tile-val" id="m-mdd" style="color:var(--red);">—</div><div class="tile-sub">peak-to-trough</div></div>
+    <div class="stat-tile"><div class="tile-label">Profit Factor</div><div class="tile-val" id="m-pf">—</div><div class="tile-sub">wins ÷ losses</div></div>
+    <div class="stat-tile"><div class="tile-label">Expectancy</div><div class="tile-val" id="m-exp">—</div><div class="tile-sub">avg per trade</div></div>
+  </div>
+
+  <!-- Equity Curve -->
+  <div class="panel" style="margin-bottom:1.25rem;">
+    <div class="panel-h"><span>Synthetic Equity Curve</span><span style="font-weight:400;font-size:11px;">starting $10,000</span></div>
+    <div id="equity-chart"></div>
+  </div>
+
+  <div class="grid-2x">
+
+    <!-- Per-strategy breakdown -->
+    <div class="panel">
+      <div class="panel-h"><span>Per-Strategy Performance</span></div>
+      <div id="strat-list" style="display:flex;flex-direction:column;gap:.6rem;">
+        <div class="neutral" style="text-align:center;padding:2rem;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Mistake distribution -->
+    <div class="panel">
+      <div class="panel-h"><span>Mistake Distribution (30d)</span></div>
+      <div id="mistake-pie" style="display:flex;flex-direction:column;gap:.5rem;">
+        <div class="neutral" style="text-align:center;padding:2rem;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Top arms -->
+    <div class="panel">
+      <div class="panel-h"><span>Top Signal Combinations</span><span style="font-weight:400;font-size:11px;">by Sharpe</span></div>
+      <div style="overflow-x:auto;">
+        <table class="arms-tbl">
+          <thead><tr>
+            <th>Strategy</th><th>Signals</th><th>Regime</th>
+            <th style="text-align:right;">N</th>
+            <th style="text-align:right;">Win %</th>
+            <th style="text-align:right;">Avg P&amp;L</th>
+            <th style="text-align:right;">Sharpe</th>
+          </tr></thead>
+          <tbody id="top-arms-tbl"><tr><td colspan="7" class="neutral" style="text-align:center;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Adapted parameters -->
+    <div class="panel">
+      <div class="panel-h"><span>Adapted Parameters</span><span style="font-weight:400;font-size:11px;">live</span></div>
+      <div id="params-list">
+        <div class="neutral" style="text-align:center;padding:2rem;">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const fmtPct = v => (v === undefined || v === null) ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+const fmtNum = v => (v === undefined || v === null) ? '—' : Number(v).toFixed(2);
+
+const MISTAKE_COLORS = {
+  good:           '#22c55e',
+  sold_too_early: '#fbbf24',
+  held_too_long:  '#f59e0b',
+  cut_loss_late:  '#ef4444',
+  false_signal:   '#dc2626',
+  choppy:         '#6b7280',
+};
+const MISTAKE_LABELS = {
+  good:           'Clean trades',
+  sold_too_early: 'Sold too early',
+  held_too_long:  'Held too long',
+  cut_loss_late:  'Late stops',
+  false_signal:   'False signals',
+  choppy:         'Choppy',
+};
+
+let chart, area;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('equity-chart');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  chart = LightweightCharts.createChart(el, {
+    layout: { background: { color: isDark ? '#111' : '#fff' }, textColor: isDark ? '#888' : '#666' },
+    grid:   { vertLines: { color: isDark ? '#222' : '#eee' }, horzLines: { color: isDark ? '#222' : '#eee' } },
+    rightPriceScale: { borderVisible: false },
+    timeScale: { borderVisible: false, timeVisible: true },
+  });
+  area = chart.addAreaSeries({
+    lineColor: '#22c55e',
+    topColor: 'rgba(34,197,94,0.25)',
+    bottomColor: 'rgba(34,197,94,0)',
+    lineWidth: 2,
+  });
+  new ResizeObserver(e => chart.applyOptions({ width: e[0].contentRect.width })).observe(el);
+  refresh();
+  setInterval(refresh, 20000);
+});
+
+async function refresh() {
+  try {
+    const a = await fetch('/api/learning/analytics?limit=2000').then(r => r.json());
+    const l = await fetch('/api/learning/summary').then(r => r.json());
+    const p = await fetch('/api/learning/params').then(r => r.json());
+    renderHeader(a.overall || {});
+    renderEquity(a.equity || []);
+    renderStrats(a.by_strategy || {});
+    renderMistakes((l && l.mistakes_30d) || {});
+    renderArms((l && l.top_arms) || []);
+    renderParams(p || {});
+  } catch (e) { console.error(e); }
+}
+
+function renderHeader(o) {
+  document.getElementById('m-n').textContent      = o.n_trades || 0;
+  document.getElementById('m-wr').textContent     = o.win_rate ? (o.win_rate * 100).toFixed(0) + '%' : '—';
+  document.getElementById('m-sharpe').textContent = o.sharpe ? o.sharpe.toFixed(2) : '—';
+  document.getElementById('m-mdd').textContent    = o.max_drawdown ? '−' + o.max_drawdown.toFixed(1) + '%' : '—';
+  document.getElementById('m-pf').textContent     = o.profit_factor ? o.profit_factor.toFixed(2) : '—';
+  document.getElementById('m-exp').textContent    = o.expectancy ? fmtPct(o.expectancy) : '—';
+}
+
+function renderEquity(points) {
+  if (!area) return;
+  if (!points || points.length === 0) { area.setData([]); return; }
+  area.setData(points.map(p => ({ time: Math.floor(p.t), value: p.v })));
+}
+
+function renderStrats(by) {
+  const list = document.getElementById('strat-list');
+  const entries = Object.entries(by);
+  if (!entries.length) { list.innerHTML = '<div class="neutral" style="text-align:center;padding:2rem;">No closed trades yet.</div>'; return; }
+  list.innerHTML = entries.map(([name, m]) => {
+    const wr = m.win_rate || 0;
+    const pillCls = wr >= 0.55 ? 'pill-ok' : wr >= 0.45 ? 'pill-warn' : 'pill-bad';
+    const pillLabel = wr >= 0.55 ? 'EDGE' : wr >= 0.45 ? 'NEUTRAL' : 'LOSING';
+    return `<div class="strat-card">
+      <div style="display:flex;align-items:center;gap:.6rem;justify-content:space-between;margin-bottom:.4rem;">
+        <span style="font-weight:700;color:var(--text);text-transform:capitalize;">${name.replace(/_/g, ' ')}</span>
+        <span class="pill ${pillCls}">${pillLabel}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;font-size:11px;">
+        <div><span class="neutral">N</span><br><b style="color:var(--text);">${m.n_trades}</b></div>
+        <div><span class="neutral">Win</span><br><b style="color:${wr >= 0.5 ? '#22c55e' : '#f87171'};">${(wr*100).toFixed(0)}%</b></div>
+        <div><span class="neutral">Sharpe</span><br><b style="color:var(--text);">${m.sharpe.toFixed(2)}</b></div>
+        <div><span class="neutral">PF</span><br><b style="color:var(--text);">${m.profit_factor.toFixed(2)}</b></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMistakes(m) {
+  const total = Object.values(m).reduce((a,b) => a + b, 0);
+  const el = document.getElementById('mistake-pie');
+  if (!total) { el.innerHTML = '<div class="neutral" style="text-align:center;padding:2rem;">No mistakes catalogued yet.</div>'; return; }
+  const items = Object.entries(m).sort((a,b) => b[1] - a[1]);
+  el.innerHTML = items.map(([k, v]) => {
+    const pct = (v / total * 100).toFixed(0);
+    const c = MISTAKE_COLORS[k] || '#888';
+    const lbl = MISTAKE_LABELS[k] || k;
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:12px;">
+        <span style="color:var(--text);font-weight:600;">${lbl}</span>
+        <span class="neutral">${v} (${pct}%)</span>
+      </div>
+      <div style="background:var(--surface-2);height:8px;border-radius:50px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${c};border-radius:50px;transition:width .4s ease;"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderArms(arms) {
+  const tb = document.getElementById('top-arms-tbl');
+  if (!arms || !arms.length) { tb.innerHTML = '<tr><td colspan="7" class="neutral" style="text-align:center;">Bot is still learning.</td></tr>'; return; }
+  tb.innerHTML = arms.slice(0, 12).map(a => {
+    const parts = (a.arm || '').split('|');
+    const wrColor = a.win_rate >= 0.55 ? '#22c55e' : a.win_rate >= 0.45 ? '#fbbf24' : '#ef4444';
+    return `<tr>
+      <td style="text-transform:capitalize;">${(parts[0] || 'unknown').replace(/_/g, ' ')}</td>
+      <td class="neutral" style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(parts[1] || 'none').replace(/\+/g, ' + ')}</td>
+      <td class="neutral">${parts[2] || 'unknown'}</td>
+      <td style="text-align:right;">${a.n}</td>
+      <td style="text-align:right;color:${wrColor};font-weight:700;">${(a.win_rate * 100).toFixed(0)}%</td>
+      <td style="text-align:right;color:${a.avg_pnl_pct >= 0 ? '#22c55e' : '#ef4444'};">${fmtPct(a.avg_pnl_pct * 100)}</td>
+      <td style="text-align:right;">${a.sharpe.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderParams(p) {
+  const list = document.getElementById('params-list');
+  const entries = Object.entries(p || {});
+  if (!entries.length) { list.innerHTML = '<div class="neutral" style="text-align:center;padding:2rem;">No adapted parameters yet — bot still learning.</div>'; return; }
+  list.innerHTML = entries.map(([strat, params]) => {
+    const items = Object.entries(params).map(([k,v]) => {
+      return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px dashed var(--border);">
+        <span class="neutral">${k}</span>
+        <b style="color:var(--text);font-variant-numeric:tabular-nums;">${typeof v === 'number' ? v.toFixed(3) : v}</b>
+      </div>`;
+    }).join('');
+    return `<div class="strat-card">
+      <div style="font-weight:700;color:var(--text);text-transform:capitalize;margin-bottom:.5rem;">
+        ${strat.replace(/_/g, ' ')}
+      </div>
+      ${items}
+    </div>`;
+  }).join('');
+}
+</script>
+
+{% endblock %}

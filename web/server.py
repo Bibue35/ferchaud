@@ -555,6 +555,13 @@ async def feed_page(request: Request):
     return templates.TemplateResponse("feed.html", {"request": request, "user": user})
 
 
+@app.get("/analytics", response_class=HTMLResponse)
+async def analytics_page(request: Request):
+    """Dedicated bot brain analytics page."""
+    user = require_user(request)
+    return templates.TemplateResponse("analytics.html", {"request": request, "user": user})
+
+
 @app.get("/sources", response_class=HTMLResponse)
 async def sources_page(request: Request):
     return templates.TemplateResponse("sources.html", {"request": request})
