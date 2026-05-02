@@ -130,6 +130,64 @@ class BaseStrategy(ABC):
         except Exception:
             return default
 
+    def llm_decide(
+        self,
+        symbol: str,
+        side: str,
+        entry_price: float,
+        atr: float,
+        signals: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Ask the LLM brain (Claude or Grok) to ratify a candidate trade.
+        Returns a dict from Decision.to_dict() or None if disabled.
+
+        Strategies should treat veto = decision.action != 'enter'.
+        """
+        try:
+            from core.llm_brain import get_brain
+        except Exception:
+            return None
+        brain = get_brain()
+        if not brain.has_provider:
+            # Skip the call entirely if no provider configured (avoid budget waste)
+            return None
+
+        # Pull recent stats to feed the prompt
+        wr = None
+        mistakes = None
+        eng = self._engine()
+        if eng:
+            try:
+                stats = eng.store.stats_by_strategy().get(self.name) or {}
+                wr = stats.get("win_rate")
+                mistakes = eng.store.mistake_distribution(days=14)
+            except Exception:
+                pass
+
+        portfolio_ctx = {}
+        try:
+            portfolio_ctx = {
+                "equity":   round(self.portfolio.equity, 2),
+                "cash":     round(self.portfolio.cash, 2),
+                "n_positions": len(self.portfolio.positions or {}),
+            }
+        except Exception:
+            pass
+
+        try:
+            dec = brain.decide(
+                strategy=self.name, symbol=symbol, side=side,
+                entry_price=entry_price, atr=atr, signals=signals,
+                regime=self.regime_name,
+                recent_winrate=wr, recent_mistakes=mistakes,
+                portfolio_context=portfolio_ctx,
+            )
+            return dec.to_dict()
+        except Exception as e:
+            self.log.debug("llm_decide error: %s", e)
+            return None
+
     def learn_before_entry(
         self,
         signals: Dict[str, float],

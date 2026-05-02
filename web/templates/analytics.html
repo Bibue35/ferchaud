@@ -88,6 +88,39 @@
     <div class="stat-tile"><div class="tile-label">Expectancy</div><div class="tile-val" id="m-exp">—</div><div class="tile-sub">avg per trade</div></div>
   </div>
 
+  <!-- LLM Brain Status -->
+  <div class="panel" style="margin-bottom:1.25rem;">
+    <div class="panel-h">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>AI Brain (LLM Decision Layer)</span>
+      </span>
+      <span id="brain-status-pill" class="pill pill-warn">checking…</span>
+    </div>
+    <div id="brain-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
+      <div class="stat-tile">
+        <div class="tile-label">Provider</div>
+        <div class="tile-val" id="brain-provider" style="font-size:1.1rem;">—</div>
+        <div class="tile-sub" id="brain-fallback">—</div>
+      </div>
+      <div class="stat-tile">
+        <div class="tile-label">Daily Budget</div>
+        <div class="tile-val" id="brain-budget" style="font-size:1.1rem;">—</div>
+        <div class="tile-sub">calls remaining</div>
+      </div>
+      <div class="stat-tile">
+        <div class="tile-label">Cache</div>
+        <div class="tile-val" id="brain-cache" style="font-size:1.1rem;">—</div>
+        <div class="tile-sub">cached decisions</div>
+      </div>
+      <div class="stat-tile">
+        <div class="tile-label">Freqtrade</div>
+        <div class="tile-val" id="ft-status" style="font-size:1.1rem;">—</div>
+        <div class="tile-sub" id="ft-detail">—</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Equity Curve -->
   <div class="panel" style="margin-bottom:1.25rem;">
     <div class="panel-h"><span>Synthetic Equity Curve</span><span style="font-weight:400;font-size:11px;">starting $10,000</span></div>
@@ -185,16 +218,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function refresh() {
   try {
-    const a = await fetch('/api/learning/analytics?limit=2000').then(r => r.json());
-    const l = await fetch('/api/learning/summary').then(r => r.json());
-    const p = await fetch('/api/learning/params').then(r => r.json());
+    const [a, l, p, brain, ft] = await Promise.all([
+      fetch('/api/learning/analytics?limit=2000').then(r => r.json()),
+      fetch('/api/learning/summary').then(r => r.json()),
+      fetch('/api/learning/params').then(r => r.json()),
+      fetch('/api/llm/status').then(r => r.json()).catch(() => ({})),
+      fetch('/api/freqtrade/status').then(r => r.json()).catch(() => ({})),
+    ]);
     renderHeader(a.overall || {});
     renderEquity(a.equity || []);
     renderStrats(a.by_strategy || {});
     renderMistakes((l && l.mistakes_30d) || {});
     renderArms((l && l.top_arms) || []);
     renderParams(p || {});
+    renderBrain(brain, ft);
   } catch (e) { console.error(e); }
+}
+
+function renderBrain(b, ft) {
+  const pill = document.getElementById('brain-status-pill');
+  if (b && b.active) {
+    pill.className = 'pill pill-ok';
+    pill.textContent = 'LIVE';
+  } else {
+    pill.className = 'pill pill-warn';
+    pill.textContent = 'FALLBACK';
+  }
+  const provs = (b && b.providers) || {};
+  let primary = '—', sub = 'rule-based fallback';
+  if (provs.claude) { primary = 'Claude'; sub = 'Anthropic API'; }
+  else if (provs.grok) { primary = 'Grok';   sub = 'xAI API'; }
+  document.getElementById('brain-provider').textContent = primary;
+  document.getElementById('brain-fallback').textContent = sub;
+  if (b && b.budget) {
+    document.getElementById('brain-budget').textContent =
+      b.budget.remaining + '/' + b.budget.daily_limit;
+  }
+  document.getElementById('brain-cache').textContent = (b && b.cache_size) || 0;
+
+  if (ft && ft.enabled) {
+    document.getElementById('ft-status').textContent = ft.reachable ? 'CONNECTED' : 'OFFLINE';
+    document.getElementById('ft-detail').textContent = ft.reachable
+      ? (ft.open_trades + ' open trades') : 'check FREQTRADE_URL';
+  } else {
+    document.getElementById('ft-status').textContent = 'Disabled';
+    document.getElementById('ft-detail').textContent = 'Set FREQTRADE_ENABLED=true';
+  }
 }
 
 function renderHeader(o) {

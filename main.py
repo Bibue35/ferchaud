@@ -43,6 +43,9 @@ from data.x_research import x_researcher
 from data.full_market_scanner import scanner
 from core.learning import get_engine as get_learning_engine
 from core.exit_manager import ExitManager
+from integrations.freqtrade_adapter import (
+    get_freqtrade_adapter, is_freqtrade_enabled,
+)
 
 # ── Timing (TURBO) ───────────────────────────────────────────────────────────
 LOOP_INTERVAL_SECONDS = 10       # Was 60 — now ultra-fast
@@ -310,6 +313,32 @@ def main() -> None:
     except Exception as e:
         log.warning("ExitManager init failed: %s", e)
 
+    # Initialize Freqtrade adapter (opt-in via FREQTRADE_ENABLED=true)
+    ft_adapter = None
+    if is_freqtrade_enabled():
+        try:
+            ft_adapter = get_freqtrade_adapter()
+            if ft_adapter.ping():
+                log.info("Freqtrade adapter connected at %s", ft_adapter.base_url)
+            else:
+                log.warning("Freqtrade adapter unreachable at %s — disabling",
+                            ft_adapter.base_url)
+                ft_adapter = None
+        except Exception as e:
+            log.warning("Freqtrade adapter init failed: %s", e)
+            ft_adapter = None
+
+    # LLM Brain warmup
+    try:
+        from core.llm_brain import get_brain
+        brain = get_brain()
+        if brain.has_provider:
+            log.info("LLM Brain ready — daily budget %d", brain.budget.daily_limit)
+        else:
+            log.info("LLM Brain idle (no API keys) — using rule-based fallback")
+    except Exception as e:
+        log.warning("LLM Brain init warn: %s", e)
+
     while _running:
         iteration += 1
         t0 = time.time()
@@ -351,6 +380,15 @@ def main() -> None:
                         log.info("ExitManager triggered %d exits", n_exits)
                 except Exception as e:
                     log.debug("ExitManager error: %s", e)
+
+            # 1d. Sync with Freqtrade if enabled
+            if ft_adapter and iteration % 6 == 0:  # ~once per minute
+                try:
+                    ft_status = ft_adapter.tick()
+                    if ft_status.get("ok"):
+                        log.debug("Freqtrade tick: %s", ft_status)
+                except Exception as e:
+                    log.debug("Freqtrade tick error: %s", e)
 
             # 2. Regime
             if regime and iteration % REGIME_CHECK_INTERVAL == 0:

@@ -531,6 +531,53 @@ async def api_learning_analytics(request: Request, limit: int = 500):
         return JSONResponse({"error": str(e)}, status_code=200)
 
 
+@app.get("/api/llm/status")
+async def api_llm_status(request: Request):
+    """Show LLM brain provider, daily budget, recent decisions."""
+    require_user(request)
+    try:
+        from core.llm_brain import get_brain
+        b = get_brain()
+        return {
+            "providers": {
+                "claude": b._claude_ok,
+                "grok":   b._grok_ok,
+            },
+            "budget": {
+                "daily_limit": b.budget.daily_limit,
+                "used":        b.budget.used,
+                "remaining":   b.budget.remaining,
+            },
+            "cache_size": len(b.cache._d),
+            "active":     b.has_provider,
+        }
+    except Exception as e:
+        return JSONResponse({"error": str(e), "active": False}, status_code=200)
+
+
+@app.get("/api/freqtrade/status")
+async def api_freqtrade_status(request: Request):
+    """Show Freqtrade integration health if configured."""
+    require_user(request)
+    try:
+        from integrations.freqtrade_adapter import (
+            get_freqtrade_adapter, is_freqtrade_enabled,
+        )
+        if not is_freqtrade_enabled():
+            return {"enabled": False}
+        a = get_freqtrade_adapter()
+        return {
+            "enabled":    True,
+            "url":        a.base_url,
+            "reachable":  a.ping(),
+            "open_trades": len(a.open_trades() or []),
+            "whitelist":  a.whitelist()[:20],
+        }
+    except Exception as e:
+        return JSONResponse({"enabled": False, "error": str(e)},
+                            status_code=200)
+
+
 @app.get("/api/system/health")
 async def api_system_health(request: Request):
     """Public surface for /health — useful for status pages."""
