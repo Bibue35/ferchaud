@@ -5,10 +5,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request, Depends, HTTPException, Body
+from fastapi import FastAPI, Request, Depends, HTTPException, Body, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+import asyncio
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -452,6 +453,100 @@ async def api_trades(request: Request):
         db.close()
 
 
+# ─── Learning Engine APIs ─────────────────────────────────────────────────────
+
+@app.get("/api/learning/summary")
+async def api_learning_summary(request: Request):
+    """High-level snapshot of the bot's self-learning state."""
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        return get_engine().get_summary()
+    except Exception as e:
+        return JSONResponse({"error": str(e), "strategies": {}}, status_code=200)
+
+
+@app.get("/api/learning/trades")
+async def api_learning_trades(request: Request, limit: int = 100):
+    """Recent closed trades with mistake labels (the trade journal)."""
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        store = get_engine().store
+        rows = store.recent_closed(limit=limit)
+        for r in rows:
+            # Trim noisy fields
+            if r.get("signals"):
+                try:
+                    r["signals"] = json.loads(r["signals"])
+                except Exception:
+                    pass
+        return rows
+    except Exception as e:
+        return JSONResponse({"error": str(e), "trades": []}, status_code=200)
+
+
+@app.get("/api/learning/params")
+async def api_learning_params(request: Request):
+    """Current adapted parameters per strategy."""
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        eng = get_engine()
+        stats = eng.store.stats_by_strategy()
+        out = {}
+        for sname in stats.keys():
+            out[sname] = eng.tuner.all(sname)
+        return out
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=200)
+
+
+@app.get("/api/learning/mistakes")
+async def api_learning_mistakes(request: Request, days: int = 30):
+    """Distribution of mistake types over the last N days."""
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        return get_engine().store.mistake_distribution(days=days)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=200)
+
+
+@app.get("/api/learning/analytics")
+async def api_learning_analytics(request: Request, limit: int = 500):
+    """Per-strategy headline metrics (Sharpe, Sortino, Calmar, max drawdown)."""
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        from core.analytics import compute_metrics, per_strategy_metrics, equity_curve
+        store = get_engine().store
+        rows = store.recent_closed(limit=limit)
+        return {
+            "overall":     compute_metrics(rows),
+            "by_strategy": per_strategy_metrics(rows),
+            "equity":      equity_curve(rows, starting_equity=10000.0),
+        }
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=200)
+
+
+@app.get("/api/system/health")
+async def api_system_health(request: Request):
+    """Public surface for /health — useful for status pages."""
+    try:
+        from cloud_start import _snap as cloud_snap
+        snap = cloud_snap()
+    except Exception:
+        snap = {"web_uptime_sec": 0, "bot_running": False}
+    try:
+        from core.learning import get_engine
+        snap["learning"] = get_engine().get_summary()
+    except Exception:
+        snap["learning"] = None
+    return snap
+
+
 # ─── Feed & Sources Pages ─────────────────────────────────────────────────────
 
 @app.get("/feed", response_class=HTMLResponse)
@@ -518,6 +613,82 @@ async def api_feed(request: Request):
         return feed_items
     finally:
         db.close()
+
+
+# ─── WebSocket Live Stream ────────────────────────────────────────────────────
+
+class LiveBroadcaster:
+    """In-memory pub/sub for the dashboard live feed."""
+
+    def __init__(self) -> None:
+        self.clients: set[WebSocket] = set()
+        self._lock = asyncio.Lock()
+
+    async def connect(self, ws: WebSocket) -> None:
+        await ws.accept()
+        async with self._lock:
+            self.clients.add(ws)
+
+    async def disconnect(self, ws: WebSocket) -> None:
+        async with self._lock:
+            self.clients.discard(ws)
+
+    async def broadcast(self, msg: dict) -> None:
+        dead: list[WebSocket] = []
+        async with self._lock:
+            for c in list(self.clients):
+                try:
+                    await c.send_json(msg)
+                except Exception:
+                    dead.append(c)
+            for c in dead:
+                self.clients.discard(c)
+
+
+broadcaster = LiveBroadcaster()
+
+
+@app.websocket("/ws/live")
+async def ws_live(ws: WebSocket):
+    """
+    Streams live portfolio + learning + market updates to the dashboard.
+    Pushes a snapshot every 3 seconds. Clients can ignore intermediate frames.
+    """
+    await broadcaster.connect(ws)
+    try:
+        while True:
+            try:
+                broker = get_broker_data()
+                payload = {
+                    "type": "snapshot",
+                    "ts": datetime.utcnow().isoformat(),
+                    "equity": broker.get("equity", 0),
+                    "cash": broker.get("cash", 0),
+                    "positions": broker.get("positions", {}),
+                }
+                # Add learning summary every 5 ticks (~15s)
+                try:
+                    from core.learning import get_engine
+                    payload["learning"] = get_engine().get_summary()
+                except Exception:
+                    pass
+                # Add hot scanner symbols
+                try:
+                    from data.full_market_scanner import scanner as mscanner
+                    if hasattr(mscanner, "hot_details"):
+                        payload["hot"] = mscanner.hot_details[:10]
+                except Exception:
+                    pass
+                await ws.send_json(payload)
+            except WebSocketDisconnect:
+                break
+            except Exception:
+                pass
+            await asyncio.sleep(3.0)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        await broadcaster.disconnect(ws)
 
 
 if __name__ == "__main__":

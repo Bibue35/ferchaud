@@ -4,11 +4,14 @@ bracket orders (stop-loss + take-profit), and fill tracking.
 
 Uses Alpaca's native bracket order class to attach stop-loss and take-profit
 as legs of a single order (avoids wash trade rejections).
+
+Now also auto-records every fill to the learning engine so the bot
+learns from every trade without changes to individual strategies.
 """
 import threading
 import time
 import uuid
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from config import CONFIG
 from core.broker import Broker
@@ -17,6 +20,15 @@ from core.portfolio import Portfolio
 from utils.logger import get_logger
 
 log = get_logger("core.executor")
+
+
+def _learn():
+    """Lazy import — keeps executor importable even if learning module missing."""
+    try:
+        from core.learning import get_engine
+        return get_engine()
+    except Exception:
+        return None
 
 
 class OrderExecutor:
@@ -28,23 +40,80 @@ class OrderExecutor:
         self._portfolio = portfolio
         self._cycle_lock = threading.Lock()
         self._cycle_entries = 0
+        # symbol -> trade_id (for auto-close when position closes)
+        self._symbol_to_trade_id: Dict[str, str] = {}
+        self._known_positions: Dict[str, dict] = {}
 
     def reset_cycle(self) -> None:
         """Call at the start of each cycle to reset the per-cycle entry counter."""
         with self._cycle_lock:
             self._cycle_entries = 0
 
+    # ── Auto-close detection (call once per main-loop iteration) ──────────────
+
+    def detect_closures(self) -> None:
+        """
+        Compare current positions with last-known positions. Any symbol that
+        was open and is now flat → record exit in the learning engine using
+        the most recent trade price as exit price.
+        """
+        try:
+            current = self._portfolio.positions or {}
+        except Exception:
+            return
+
+        # Update MFE/MAE for still-open trades
+        eng = _learn()
+        if eng:
+            def _price(sym: str) -> float:
+                try:
+                    return float(self._get_price(sym) or 0)
+                except Exception:
+                    return 0.0
+            try:
+                eng.update_open_trades(_price)
+            except Exception:
+                pass
+
+        # Detect closures (was in known, no longer in current)
+        closed_syms = [s for s in self._known_positions if s not in current]
+        for sym in closed_syms:
+            tid = self._symbol_to_trade_id.pop(sym, None)
+            if not tid or not eng:
+                continue
+            exit_price = self._get_price(sym) or 0.0
+            if exit_price <= 0:
+                # Fall back to last known mark price
+                exit_price = self._known_positions[sym].get("avg_entry_price", 0)
+            try:
+                eng.record_exit(tid, exit_price, exit_reason="auto_detected")
+            except Exception:
+                pass
+
+        # Snapshot current positions
+        self._known_positions = dict(current)
+
     # ── Public entry points ───────────────────────────────────────────────────
 
     def enter_long(self, symbol, qty, stop_price=None, take_profit=None,
-                   strategy_tag="", confidence=0.5):
-        return self._execute(symbol, qty, "buy", stop_price, take_profit,
-                             strategy_tag, confidence)
+                   strategy_tag="", confidence=0.5, signals=None, atr=None):
+        result = self._execute(symbol, qty, "buy", stop_price, take_profit,
+                               strategy_tag, confidence)
+        if result and strategy_tag:
+            self._record_learn_entry(strategy_tag, symbol, "long", qty,
+                                     confidence, signals, stop_price,
+                                     take_profit, atr)
+        return result
 
     def enter_short(self, symbol, qty, stop_price=None, take_profit=None,
-                    strategy_tag="", confidence=0.5):
-        return self._execute(symbol, qty, "sell", stop_price, take_profit,
-                             strategy_tag, confidence)
+                    strategy_tag="", confidence=0.5, signals=None, atr=None):
+        result = self._execute(symbol, qty, "sell", stop_price, take_profit,
+                               strategy_tag, confidence)
+        if result and strategy_tag:
+            self._record_learn_entry(strategy_tag, symbol, "short", qty,
+                                     confidence, signals, stop_price,
+                                     take_profit, atr)
+        return result
 
     def exit_position(self, symbol: str, reason: str = "") -> Optional[dict]:
         pos = self._portfolio.positions.get(symbol)
@@ -53,7 +122,56 @@ class OrderExecutor:
         side = "sell" if pos["side"] == "long" else "buy"
         qty = abs(pos["qty"])
         log.info("Exiting %s (%s) qty=%s  reason=%s", symbol, pos["side"], qty, reason or "—")
-        return self._submit_with_retry(symbol, qty, side, "market")
+        result = self._submit_with_retry(symbol, qty, side, "market")
+        # Record exit in learning engine
+        if result:
+            tid = self._symbol_to_trade_id.pop(symbol, None)
+            if tid:
+                eng = _learn()
+                if eng:
+                    px = self._get_price(symbol) or pos.get("current_price", 0)
+                    try:
+                        eng.record_exit(tid, px, exit_reason=reason or "manual")
+                    except Exception:
+                        pass
+        return result
+
+    def _record_learn_entry(
+        self, strategy_tag, symbol, side, qty, confidence,
+        signals, stop_price, target_price, atr,
+    ) -> None:
+        """Persist a fresh entry to the learning engine."""
+        eng = _learn()
+        if not eng:
+            return
+        try:
+            entry_price = self._get_price(symbol) or 0.0
+            if entry_price <= 0:
+                return
+            # Pull regime if available via portfolio
+            regime = "unknown"
+            try:
+                if hasattr(self._portfolio, "regime_name"):
+                    regime = self._portfolio.regime_name
+            except Exception:
+                pass
+            tid = eng.record_entry(
+                strategy=strategy_tag,
+                symbol=symbol,
+                side=side,
+                entry_price=entry_price,
+                qty=qty,
+                confidence=confidence or 0.5,
+                signals=signals or {},
+                regime=regime,
+                stop_price=stop_price,
+                target_price=target_price,
+                atr=atr,
+            )
+            if tid:
+                self._symbol_to_trade_id[symbol] = tid
+        except Exception as e:
+            log.debug("learn entry record failed for %s: %s", symbol, e)
 
     def place_limit_pair(self, symbol, bid, ask, qty):
         """Market-making: place limit buy at bid and limit sell at ask.

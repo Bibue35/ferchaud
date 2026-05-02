@@ -116,55 +116,91 @@ class MomentumStrategy(BaseStrategy):
         from core.regime import CRISIS
         in_crisis = self.regime and self.regime.current_state == CRISIS
 
+        # Learned parameters (fall back to class defaults)
+        stop_mult   = self.learn_param("stop_atr_mult",   self.ATR_STOP_MULT)
+        target_mult = self.learn_param("target_atr_mult", self.ATR_TARGET_MULT)
+
         # ── Long signal ────────────────────────────────────────────────────────
         bullish_cross = prev_fast < prev_slow and cur_fast > cur_slow
         if bullish_cross and cur_hist > 0 and cur_price > cur_trend and not in_crisis:
             stop, target = self.risk.atr_stops(cur_price, cur_atr, "buy",
-                                               self.ATR_STOP_MULT, self.ATR_TARGET_MULT)
+                                               stop_mult, target_mult)
             stop_dist = abs(cur_price - stop)
             # Confidence: ADX strength + how far above trend + MACD histogram size
             adx_conf = min((cur_adx - self.ADX_THRESHOLD) / 40.0, 0.3)
             trend_conf = min((cur_price - cur_trend) / (cur_atr + 1e-9) * 0.05, 0.15)
             hist_conf = min(abs(cur_hist) / (cur_price * 0.001 + 1e-9), 0.05)
             confidence = float(min(0.5 + adx_conf + trend_conf + hist_conf, 1.0))
+
+            signals = {
+                "ema_cross_up": 1,
+                "macd_pos":     1 if cur_hist > 0 else 0,
+                "above_trend":  1 if cur_price > cur_trend else 0,
+                "adx_strong":   1 if cur_adx > self.ADX_THRESHOLD * 1.5 else 0,
+                "vol_confirm":  1 if volume_ok else 0,
+            }
+            decision = self.learn_before_entry(signals, confidence)
+            if decision["veto"]:
+                return
+            confidence = decision["confidence"]
+            size_mult = decision["size_mult"]
+
             qty = self.risk.risk_based_size(
                 self.portfolio.equity, cur_price, stop_dist,
                 regime_scale=scale, confidence=confidence,
-            )
+            ) * size_mult
             if qty >= 1:
                 self.log.info(
                     "LONG %s | price=%.2f  EMA9/21  ADX=%.1f  "
-                    "regime=%s(×%.1f)  conf=%.0f%%",
+                    "regime=%s(×%.1f)  conf=%.0f%% sm=%.2f",
                     symbol, cur_price, cur_adx,
                     self.regime.state_name if self.regime else "N/A",
-                    scale, confidence * 100,
+                    scale, confidence * 100, size_mult,
                 )
-                self.executor.enter_long(symbol, qty, stop_price=stop,
-                                         take_profit=target, strategy_tag="MOM",
-                                         confidence=confidence)
+                self.executor.enter_long(
+                    symbol, qty, stop_price=stop, take_profit=target,
+                    strategy_tag=self.name, confidence=confidence,
+                    signals=signals, atr=cur_atr,
+                )
 
         # ── Short signal ───────────────────────────────────────────────────────
         bearish_cross = prev_fast > prev_slow and cur_fast < cur_slow
         if bearish_cross and cur_hist < 0 and cur_price < cur_trend:
             stop, target = self.risk.atr_stops(cur_price, cur_atr, "sell",
-                                               self.ATR_STOP_MULT, self.ATR_TARGET_MULT)
+                                               stop_mult, target_mult)
             stop_dist = abs(cur_price - stop)
             adx_conf = min((cur_adx - self.ADX_THRESHOLD) / 40.0, 0.3)
             trend_conf = min((cur_trend - cur_price) / (cur_atr + 1e-9) * 0.05, 0.15)
             hist_conf = min(abs(cur_hist) / (cur_price * 0.001 + 1e-9), 0.05)
             confidence = float(min(0.5 + adx_conf + trend_conf + hist_conf, 1.0))
+
+            signals = {
+                "ema_cross_dn": 1,
+                "macd_neg":     1 if cur_hist < 0 else 0,
+                "below_trend":  1 if cur_price < cur_trend else 0,
+                "adx_strong":   1 if cur_adx > self.ADX_THRESHOLD * 1.5 else 0,
+                "vol_confirm":  1 if volume_ok else 0,
+            }
+            decision = self.learn_before_entry(signals, confidence)
+            if decision["veto"]:
+                return
+            confidence = decision["confidence"]
+            size_mult = decision["size_mult"]
+
             qty = self.risk.risk_based_size(
                 self.portfolio.equity, cur_price, stop_dist,
                 regime_scale=scale, confidence=confidence,
-            )
+            ) * size_mult
             if qty >= 1:
                 self.log.info(
                     "SHORT %s | price=%.2f  EMA9/21  ADX=%.1f  "
-                    "regime=%s(×%.1f)  conf=%.0f%%",
+                    "regime=%s(×%.1f)  conf=%.0f%% sm=%.2f",
                     symbol, cur_price, cur_adx,
                     self.regime.state_name if self.regime else "N/A",
-                    scale, confidence * 100,
+                    scale, confidence * 100, size_mult,
                 )
-                self.executor.enter_short(symbol, qty, stop_price=stop,
-                                          take_profit=target, strategy_tag="MOM",
-                                          confidence=confidence)
+                self.executor.enter_short(
+                    symbol, qty, stop_price=stop, take_profit=target,
+                    strategy_tag=self.name, confidence=confidence,
+                    signals=signals, atr=cur_atr,
+                )

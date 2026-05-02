@@ -1,6 +1,18 @@
-"""Abstract base class for all strategies — regime + VPIN aware."""
+"""
+Base strategy — regime + VPIN + Learning Engine aware.
+
+All strategies inherit from this. New helpers:
+  • learn_before_entry(...)  → returns (adjusted_conf, size_mult, veto, reason)
+  • learn_record_entry(...)  → persists trade for the learning engine
+  • learn_record_exit(...)   → closes trade in learning engine, triggers adapt
+  • learn_param(name, default) → reads adapted parameter (e.g. stop_atr_mult)
+  • learn_track_position(symbol, current_price) → updates MFE/MAE
+"""
+from __future__ import annotations
+
+import time
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from core.executor import OrderExecutor
 from core.portfolio import Portfolio
@@ -30,6 +42,8 @@ class BaseStrategy(ABC):
         self.regime = regime
         self.vpin = vpin
         self.log = get_logger(f"strategy.{self.name}")
+        # Map symbol -> trade_id for active positions opened by this strategy
+        self._open_trade_ids: Dict[str, str] = {}
 
     @abstractmethod
     def get_symbols(self) -> List[str]:
@@ -47,6 +61,12 @@ class BaseStrategy(ABC):
             return self.regime.position_scale
         return 1.0
 
+    @property
+    def regime_name(self) -> str:
+        if self.regime is not None and hasattr(self.regime, "state_name"):
+            return self.regime.state_name
+        return "unknown"
+
     def is_symbol_toxic(self, symbol: str) -> bool:
         if self.vpin is not None:
             return self.vpin.is_toxic(symbol)
@@ -57,7 +77,6 @@ class BaseStrategy(ABC):
 
     def _refresh_pending_cache(self) -> None:
         """Cache pending orders for 5 seconds — avoids API call per symbol."""
-        import time
         now = time.time()
         if now - self._cached_pending_ts < 5.0:
             return
@@ -90,3 +109,127 @@ class BaseStrategy(ABC):
         return self.risk.kelly_size(
             self.portfolio.equity, win_rate, avg_win, avg_loss, price
         )
+
+    # ── Learning engine integration ───────────────────────────────────────────
+    # All optional — strategies that don't call these still work fine.
+
+    def _engine(self):
+        try:
+            from core.learning import get_engine
+            return get_engine()
+        except Exception:
+            return None
+
+    def learn_param(self, name: str, default: float) -> float:
+        """Get a tuned parameter from the learning engine, or default."""
+        eng = self._engine()
+        if not eng:
+            return default
+        try:
+            return eng.tuner.get(self.name, name)
+        except Exception:
+            return default
+
+    def learn_before_entry(
+        self,
+        signals: Dict[str, float],
+        base_confidence: float = 0.5,
+    ) -> Dict[str, Any]:
+        """
+        Ask the learning engine whether to enter and how big.
+        Returns:
+            {"confidence": float, "size_mult": float, "veto": bool, "reason": str}
+        Strategies should:
+            res = self.learn_before_entry(signals, base_conf)
+            if res["veto"]:
+                self.log.debug("learn-veto %s: %s", symbol, res["reason"])
+                return
+            qty = base_qty * res["size_mult"]
+            confidence = res["confidence"]
+        """
+        eng = self._engine()
+        if not eng:
+            return {"confidence": base_confidence, "size_mult": 1.0,
+                    "veto": False, "reason": "learning disabled"}
+        try:
+            adj, size_mult, veto, reason = eng.before_entry(
+                self.name, signals, self.regime_name, base_confidence
+            )
+            return {"confidence": adj, "size_mult": size_mult,
+                    "veto": veto, "reason": reason}
+        except Exception as e:
+            return {"confidence": base_confidence, "size_mult": 1.0,
+                    "veto": False, "reason": f"learn-err:{e}"}
+
+    def learn_record_entry(
+        self,
+        symbol: str,
+        side: str,
+        entry_price: float,
+        qty: float,
+        confidence: float,
+        signals: Dict[str, float],
+        stop_price: Optional[float] = None,
+        target_price: Optional[float] = None,
+        atr: Optional[float] = None,
+    ) -> Optional[str]:
+        """Persist a new trade entry to the learning engine. Returns trade_id."""
+        eng = self._engine()
+        if not eng:
+            return None
+        try:
+            tid = eng.record_entry(
+                strategy=self.name,
+                symbol=symbol,
+                side=side,
+                entry_price=entry_price,
+                qty=qty,
+                confidence=confidence,
+                signals=signals or {},
+                regime=self.regime_name,
+                stop_price=stop_price,
+                target_price=target_price,
+                atr=atr,
+            )
+            if tid:
+                self._open_trade_ids[symbol] = tid
+            return tid
+        except Exception as e:
+            self.log.warning("learn_record_entry error: %s", e)
+            return None
+
+    def learn_record_exit(
+        self,
+        symbol: str,
+        exit_price: float,
+        exit_reason: str = "manual",
+    ) -> Optional[Dict[str, Any]]:
+        """Close out a trade in the learning engine. Pops from _open_trade_ids."""
+        eng = self._engine()
+        if not eng:
+            return None
+        tid = self._open_trade_ids.pop(symbol, None)
+        if not tid:
+            return None
+        try:
+            return eng.record_exit(tid, exit_price, exit_reason)
+        except Exception as e:
+            self.log.warning("learn_record_exit error: %s", e)
+            return None
+
+    def learn_track_positions(self) -> None:
+        """Update MFE/MAE for all open trades opened by this strategy."""
+        eng = self._engine()
+        if not eng or not self._open_trade_ids:
+            return
+
+        def _price(sym: str) -> float:
+            try:
+                return float(self.executor._get_price(sym) or 0)
+            except Exception:
+                return 0.0
+
+        try:
+            eng.update_open_trades(_price)
+        except Exception:
+            pass

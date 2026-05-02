@@ -4,6 +4,9 @@ __pycache__/
 .env
 logs/*.log
 data/quantbot.db
+data/learning.db
+data/*.db
+data/*.db-journal
 OpenStock/node_modules/
 OpenStock/.next/
 venv/

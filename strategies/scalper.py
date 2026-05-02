@@ -111,42 +111,80 @@ class ScalperStrategy(BaseStrategy):
         elif last_close > last_vwap * 1.002:  # 0.2% above VWAP
             sell_signals += 1
 
+        # Pull learned parameters (fall back to class defaults)
+        stop_mult   = self.learn_param("stop_atr_mult",   self.ATR_STOP_MULT)
+        target_mult = self.learn_param("target_atr_mult", self.ATR_TARGET_MULT)
+
         # Need at least 2 signals for entry
         if buy_signals >= 2:
             stop, target = self.risk.atr_stops(
-                last_close, last_atr, "buy", self.ATR_STOP_MULT, self.ATR_TARGET_MULT
+                last_close, last_atr, "buy", stop_mult, target_mult
             )
             stop_dist = abs(last_close - stop)
             # Confidence scales with signal count: 2 signals=0.6, 3 signals=0.85
             confidence = float(min(0.4 + buy_signals * 0.15, 0.90))
+
+            # Build signal dict for learning engine
+            signal_dict = {
+                "rsi_oversold":  1 if last_rsi < self.RSI_OVERSOLD else 0,
+                "bb_lower":      1 if last_close <= last_lower else 0,
+                "vwap_below":    1 if last_close < last_vwap * 0.998 else 0,
+            }
+            # Ask the bot's brain whether to take the trade
+            decision = self.learn_before_entry(signal_dict, confidence)
+            if decision["veto"]:
+                self.log.debug("SCALP veto %s: %s", symbol, decision["reason"])
+                return
+            confidence = decision["confidence"]
+            size_mult  = decision["size_mult"]
+
             qty = self.risk.risk_based_size(
                 self.portfolio.equity, last_close, stop_dist,
                 regime_scale=scale, confidence=confidence,
-            )
+            ) * size_mult
             if qty >= 1:
                 self.log.info(
-                    "SCALP LONG %s | price=%.2f RSI=%.0f signals=%d conf=%.0f%%",
-                    symbol, last_close, last_rsi, buy_signals, confidence * 100,
+                    "SCALP LONG %s | price=%.2f RSI=%.0f signals=%d conf=%.0f%% sm=%.2f",
+                    symbol, last_close, last_rsi, buy_signals,
+                    confidence * 100, size_mult,
                 )
-                self.executor.enter_long(symbol, qty, stop_price=stop,
-                                        take_profit=target, strategy_tag="SCALP",
-                                        confidence=confidence)
+                self.executor.enter_long(
+                    symbol, qty, stop_price=stop, take_profit=target,
+                    strategy_tag=self.name, confidence=confidence,
+                    signals=signal_dict, atr=last_atr,
+                )
 
         elif sell_signals >= 2:
             stop, target = self.risk.atr_stops(
-                last_close, last_atr, "sell", self.ATR_STOP_MULT, self.ATR_TARGET_MULT
+                last_close, last_atr, "sell", stop_mult, target_mult
             )
             stop_dist = abs(last_close - stop)
             confidence = float(min(0.4 + sell_signals * 0.15, 0.90))
+
+            signal_dict = {
+                "rsi_overbought": 1 if last_rsi > self.RSI_OVERBOUGHT else 0,
+                "bb_upper":       1 if last_close >= last_upper else 0,
+                "vwap_above":     1 if last_close > last_vwap * 1.002 else 0,
+            }
+            decision = self.learn_before_entry(signal_dict, confidence)
+            if decision["veto"]:
+                self.log.debug("SCALP veto %s: %s", symbol, decision["reason"])
+                return
+            confidence = decision["confidence"]
+            size_mult  = decision["size_mult"]
+
             qty = self.risk.risk_based_size(
                 self.portfolio.equity, last_close, stop_dist,
                 regime_scale=scale, confidence=confidence,
-            )
+            ) * size_mult
             if qty >= 1:
                 self.log.info(
-                    "SCALP SHORT %s | price=%.2f RSI=%.0f signals=%d conf=%.0f%%",
-                    symbol, last_close, last_rsi, sell_signals, confidence * 100,
+                    "SCALP SHORT %s | price=%.2f RSI=%.0f signals=%d conf=%.0f%% sm=%.2f",
+                    symbol, last_close, last_rsi, sell_signals,
+                    confidence * 100, size_mult,
                 )
-                self.executor.enter_short(symbol, qty, stop_price=stop,
-                                         take_profit=target, strategy_tag="SCALP",
-                                         confidence=confidence)
+                self.executor.enter_short(
+                    symbol, qty, stop_price=stop, take_profit=target,
+                    strategy_tag=self.name, confidence=confidence,
+                    signals=signal_dict, atr=last_atr,
+                )

@@ -347,6 +347,90 @@
         <div style="text-align:center;padding:2rem;color:var(--muted);">No open positions</div>
         {% endif %}
       </div>
+      <!-- Performance Metrics -->
+      <div class="panel" id="perf-panel">
+        <div class="panel-title">
+          <span style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            <span>Performance Metrics</span>
+          </span>
+          <span style="font-size:11px;color:var(--muted);">last 500 trades</span>
+        </div>
+        <div id="perf-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;">
+          <div class="perf-cell">
+            <div class="perf-label">Sharpe</div>
+            <div class="perf-val" id="perf-sharpe" style="color:var(--text);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Sortino</div>
+            <div class="perf-val" id="perf-sortino" style="color:var(--text);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Max DD</div>
+            <div class="perf-val" id="perf-mdd" style="color:var(--red);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Profit Factor</div>
+            <div class="perf-val" id="perf-pf" style="color:var(--text);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Win Rate</div>
+            <div class="perf-val" id="perf-wr" style="color:var(--green);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Best</div>
+            <div class="perf-val" id="perf-best" style="color:var(--green);font-size:1rem;">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Worst</div>
+            <div class="perf-val" id="perf-worst" style="color:var(--red);font-size:1rem;">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Avg Hold</div>
+            <div class="perf-val" id="perf-hold" style="color:var(--text);font-size:1rem;">—</div>
+          </div>
+        </div>
+        <style>
+          .perf-cell { background:var(--surface-2); border-radius:14px; padding:.75rem; text-align:center; }
+          .perf-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+          .perf-val { font-size:1.2rem; font-weight:800; font-variant-numeric:tabular-nums; }
+        </style>
+      </div>
+
+      <!-- AI Learning Insights -->
+      <div class="panel" id="learn-panel">
+        <div class="panel-title">
+          <span style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+            <span>Bot Brain — Self-Learning</span>
+          </span>
+          <span class="badge badge-live" style="font-size:10px;">LEARNING</span>
+        </div>
+
+        <!-- Mistake distribution mini-chart -->
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem;">
+            Mistakes Caught (30d)
+          </div>
+          <div id="mistake-bars" style="display:flex;gap:6px;align-items:flex-end;height:60px;">
+            <div style="text-align:center;color:var(--muted);font-size:12px;width:100%;align-self:center;">
+              No data yet — start trading to train the bot
+            </div>
+          </div>
+          <div id="mistake-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:.5rem;font-size:10px;color:var(--muted);"></div>
+        </div>
+
+        <!-- Top performing signal arms -->
+        <div style="margin-bottom:.5rem;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem;">
+            Top Learned Signal Combos
+          </div>
+          <div id="top-arms" style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div style="text-align:center;padding:1rem;color:var(--muted);">Loading…</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Trade History -->
       <div class="panel">
         <div class="panel-title"><span>Trade History</span>
@@ -354,9 +438,9 @@
         </div>
         <div style="max-height:360px;overflow-y:auto;">
           <table class="tbl">
-            <thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>P&L</th><th>Strategy</th></tr></thead>
+            <thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>P&L</th><th>Strategy</th><th>AI Label</th></tr></thead>
             <tbody id="trades-table">
-              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);">Loading...</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -617,7 +701,175 @@ async function loadTrades() {
 }
 
 loadTrades();
-setInterval(function() { loadPortfolio(); loadTrades(); }, 15000);
+loadLearning();
+loadAnalytics();
+setInterval(function() { loadPortfolio(); loadTrades(); loadLearning(); loadAnalytics(); }, 15000);
+
+// ── Performance metrics ───────────────────────────────────────────────────
+async function loadAnalytics() {
+  try {
+    const d = await fetch('/api/learning/analytics?limit=500').then(r => r.json());
+    const o = (d && d.overall) || {};
+    const set = (id, v, suffix='') => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = (v === undefined || v === null || isNaN(v)) ? '—' : (v + suffix);
+    };
+    set('perf-sharpe',  o.sharpe);
+    set('perf-sortino', o.sortino);
+    set('perf-mdd',     o.max_drawdown, '%');
+    set('perf-pf',      o.profit_factor);
+    set('perf-wr',      o.win_rate ? (o.win_rate * 100).toFixed(0) : '—', '%');
+    set('perf-best',    o.best_trade !== undefined ? '+' + o.best_trade.toFixed(2) : '—', o.best_trade !== undefined ? '%' : '');
+    set('perf-worst',   o.worst_trade !== undefined ? o.worst_trade.toFixed(2) : '—', o.worst_trade !== undefined ? '%' : '');
+    if (o.avg_hold_min !== undefined) {
+      const h = o.avg_hold_min;
+      const txt = h > 60 ? (h/60).toFixed(1) + 'h' : h.toFixed(0) + 'm';
+      set('perf-hold', txt);
+    }
+  } catch(e) {}
+}
+
+// ── Learning insights ──────────────────────────────────────────────────────
+const MISTAKE_COLORS = {
+  good:           '#22c55e',
+  sold_too_early: '#fbbf24',
+  held_too_long:  '#f59e0b',
+  cut_loss_late:  '#ef4444',
+  false_signal:   '#dc2626',
+  choppy:         '#6b7280',
+};
+const MISTAKE_LABELS = {
+  good:           'Clean trades',
+  sold_too_early: 'Sold too early',
+  held_too_long:  'Held too long',
+  cut_loss_late:  'Late stop',
+  false_signal:   'False signals',
+  choppy:         'Choppy',
+};
+
+async function loadLearning() {
+  try {
+    const summary  = await fetch('/api/learning/summary').then(r => r.json());
+    const mistakes = (summary && summary.mistakes_30d) || {};
+    const arms     = (summary && summary.top_arms)     || [];
+
+    // Render mistake bar chart
+    const total = Object.values(mistakes).reduce((a,b) => a + b, 0);
+    const bars  = document.getElementById('mistake-bars');
+    const legend = document.getElementById('mistake-legend');
+    if (total > 0) {
+      const maxV = Math.max(...Object.values(mistakes), 1);
+      bars.innerHTML = Object.entries(mistakes).map(([k, v]) => {
+        const h = Math.max(6, (v / maxV) * 60);
+        const c = MISTAKE_COLORS[k] || '#999';
+        return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">' +
+                 '<div style="width:100%;height:'+h+'px;background:'+c+';border-radius:6px 6px 0 0;" title="'+k+': '+v+'"></div>' +
+                 '<div style="font-size:10px;color:var(--text);font-weight:700;">'+v+'</div>' +
+               '</div>';
+      }).join('');
+      legend.innerHTML = Object.keys(mistakes).map(k => {
+        const c = MISTAKE_COLORS[k] || '#999';
+        const lbl = MISTAKE_LABELS[k] || k;
+        return '<span style="display:inline-flex;align-items:center;gap:4px;">' +
+                 '<span style="width:8px;height:8px;background:'+c+';border-radius:2px;"></span>'+lbl+
+               '</span>';
+      }).join('');
+    }
+
+    // Render top arms
+    const top = document.getElementById('top-arms');
+    if (arms.length === 0) {
+      top.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:12px;">Bot is still learning — needs a few trades</div>';
+    } else {
+      top.innerHTML = arms.slice(0, 5).map(a => {
+        const wr = (a.win_rate * 100).toFixed(0);
+        const wrColor = a.win_rate >= 0.55 ? '#22c55e' : a.win_rate >= 0.45 ? '#fbbf24' : '#ef4444';
+        const parts = a.arm.split('|');
+        const strat = parts[0] || 'unknown';
+        const sig = (parts[1] || 'none').replace(/\+/g, ' + ');
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface-2);border-radius:8px;">' +
+                 '<div style="width:6px;height:30px;background:'+wrColor+';border-radius:3px;"></div>' +
+                 '<div style="flex:1;min-width:0;">' +
+                   '<div style="font-weight:600;color:var(--text);font-size:11px;text-transform:capitalize;">'+strat.replace(/_/g,' ')+'</div>' +
+                   '<div style="color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+sig+'</div>' +
+                 '</div>' +
+                 '<div style="text-align:right;">' +
+                   '<div style="color:'+wrColor+';font-weight:700;font-size:12px;">'+wr+'%</div>' +
+                   '<div style="color:var(--muted);font-size:10px;">n='+a.n+'</div>' +
+                 '</div>' +
+               '</div>';
+      }).join('');
+    }
+  } catch(e) {}
+}
+
+// Override loadTrades to add AI labels
+async function loadTradesWithLearning() {
+  try {
+    const trades = await fetch('/api/learning/trades?limit=50').then(r => r.json());
+    if (!trades || !trades.length) return;
+    document.getElementById('trade-count').textContent = trades.length + ' trades';
+    const tbody = document.getElementById('trades-table');
+    tbody.innerHTML = trades.slice(0, 50).map(t => {
+      const pnl = t.pnl || 0;
+      const pnlPct = (t.pnl_pct || 0) * 100;
+      const ts  = t.exit_time
+        ? new Date(t.exit_time * 1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
+        : '—';
+      const label = t.mistake_label || '—';
+      const labelColor = MISTAKE_COLORS[label] || '#666';
+      return '<tr>' +
+        '<td style="color:var(--muted);font-size:12px;">' + ts + '</td>' +
+        '<td><b style="color:var(--text);">' + t.symbol + '</b></td>' +
+        '<td class="' + (t.side==='long'||t.side==='buy'?'side-buy':'side-sell') + '">' + (t.side||'').toUpperCase() + '</td>' +
+        '<td>' + parseFloat(t.qty||0).toFixed(4) + '</td>' +
+        '<td>$' + parseFloat(t.entry_price||0).toFixed(2) + '</td>' +
+        '<td class="' + (pnl>=0?'pnl-pos':'pnl-neg') + '">' + (pnl>=0?'+':'') + '$' + pnl.toFixed(2) +
+        ' <span style="font-size:10px;color:var(--muted);">(' + pnlPct.toFixed(1) + '%)</span></td>' +
+        '<td style="color:var(--muted);font-size:11px;">' + (t.strategy||'—') + '</td>' +
+        '<td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:50px;background:'+labelColor+'22;color:'+labelColor+';">'+label+'</span></td>' +
+        '</tr>';
+    }).join('');
+  } catch(e) {}
+}
+// Replace older loadTrades reference if it didn't yield data
+setInterval(loadTradesWithLearning, 15000);
+loadTradesWithLearning();
+
+// ── WebSocket live stream ──────────────────────────────────────────────────
+function startLiveStream() {
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const url = proto + '//' + window.location.host + '/ws/live';
+  let ws;
+  let reconnectDelay = 1000;
+  function connect() {
+    try {
+      ws = new WebSocket(url);
+      ws.onopen = () => { reconnectDelay = 1000; };
+      ws.onmessage = (ev) => {
+        try {
+          const d = JSON.parse(ev.data);
+          if (d.equity !== undefined) {
+            document.getElementById('s-equity').textContent = '$' + Number(d.equity).toFixed(2);
+          }
+          if (d.learning && d.learning.mistakes_30d) {
+            // Live update mistake bars too — but rate limit
+            // (handled by loadLearning interval already)
+          }
+        } catch(e) {}
+      };
+      ws.onclose = () => {
+        setTimeout(connect, Math.min(30000, reconnectDelay));
+        reconnectDelay = Math.min(30000, reconnectDelay * 2);
+      };
+      ws.onerror = () => { try { ws.close(); } catch(_){} };
+    } catch(e) {
+      setTimeout(connect, 5000);
+    }
+  }
+  connect();
+}
+startLiveStream();
 // ── Bot control ────────────────────────────────────────────────────────────
 async function toggleBot(action) {
   var mode = document.getElementById('modePassive').classList.contains('passive-active') ? 'passive' : 'aggressive';
