@@ -42,13 +42,19 @@ from strategies.aggressive_breakout import AggressiveBreakoutStrategy
 from strategies.alpha_combiner import AlphaCombiner, combine_signals
 from data.x_research import x_researcher
 from data.full_market_scanner import scanner
+from core.learning import get_engine as get_learning_engine
+from core.exit_manager import ExitManager
 
 # ── Timing (TURBO) ───────────────────────────────────────────────────────────
 LOOP_INTERVAL_SECONDS = 10       # Was 60 — now ultra-fast
 PORTFOLIO_LOG_INTERVAL = 5       # Log every 5th iteration
-REGIME_CHECK_INTERVAL = 3        # Check regime every 3rd iteration  
+REGIME_CHECK_INTERVAL = 3        # Check regime every 3rd iteration
 VPIN_REFRESH_INTERVAL = 2        # Refresh VPIN every 2nd iteration
+LEARN_ADAPT_INTERVAL = 30        # Run adaptive tuner every 30 iterations (~5 min)
 MAX_WORKERS = 6                  # Thread pool size for parallel strategies
+
+# Heartbeat hook — set by cloud_start.py supervisor for stall detection
+__heartbeat__ = None
 
 
 def build_strategies(
@@ -259,6 +265,34 @@ def main() -> None:
     log.info("Bot running TURBO mode (%ds loop). Press Ctrl+C to stop.\n", LOOP_INTERVAL_SECONDS)
 
     # ══════════════════════════════════════════════════════════════════════
+    #  Learning + Exit Manager + LLM Brain warmup
+    # ══════════════════════════════════════════════════════════════════════
+    learn_engine = None
+    try:
+        learn_engine = get_learning_engine()
+        log.info("LearningEngine ready — DB: %s", learn_engine.store.path)
+    except Exception as e:
+        log.warning("LearningEngine init failed: %s", e)
+
+    exit_mgr = None
+    try:
+        exit_mgr = ExitManager(executor, portfolio, feed,
+                               max_hold_hours=24.0, check_interval_sec=15)
+        log.info("ExitManager ready (trail/time stops)")
+    except Exception as e:
+        log.warning("ExitManager init failed: %s", e)
+
+    try:
+        from core.llm_brain import get_brain
+        brain = get_brain()
+        if brain.has_provider:
+            log.info("LLM Brain ready — daily budget %d", brain.budget.daily_limit)
+        else:
+            log.info("LLM Brain idle (no API keys) — using rule-based fallback")
+    except Exception as e:
+        log.warning("LLM Brain init warn: %s", e)
+
+    # ══════════════════════════════════════════════════════════════════════
     #  MAIN LOOP — TURBO
     # ══════════════════════════════════════════════════════════════════════
     iteration = 0
@@ -269,6 +303,13 @@ def main() -> None:
         t0 = time.time()
         log.info("--- Iteration %d " + "-" * 45, iteration)
         executor.reset_cycle()   # reset per-cycle entry counter
+
+        # Heartbeat for cloud supervisor (silent-stall detection)
+        try:
+            if __heartbeat__ is not None:
+                __heartbeat__()
+        except Exception:
+            pass
 
         try:
             # 0. Full market scan (12,000+ stocks) + X research
@@ -306,6 +347,21 @@ def main() -> None:
             # 1. Refresh portfolio and risk
             portfolio.refresh()
             risk.update_portfolio_value(portfolio.equity)
+
+            # Detect closed positions → push exits to learning engine
+            try:
+                executor.detect_closures()
+            except Exception:
+                pass
+
+            # Run adaptive exit manager (trail / time stops)
+            if exit_mgr:
+                try:
+                    n_exits = exit_mgr.check_all()
+                    if n_exits:
+                        log.info("ExitManager triggered %d exits", n_exits)
+                except Exception as e:
+                    log.debug("ExitManager error: %s", e)
 
             # 2. Regime
             if regime and iteration % REGIME_CHECK_INTERVAL == 0:
@@ -380,6 +436,18 @@ def main() -> None:
                         log.info("Sentiment: %s", "  ".join(parts))
                 except Exception:
                     pass
+
+            # 8. Adaptive learning pass (every N iterations)
+            if learn_engine and iteration % LEARN_ADAPT_INTERVAL == 0:
+                try:
+                    updates = learn_engine.adapt_all(strat_names)
+                    summary = learn_engine.get_summary()
+                    log.info("LEARN: open=%d arms=%d mistakes30d=%s",
+                             summary.get("open_trades", 0),
+                             summary.get("total_arms", 0),
+                             summary.get("mistakes_30d", {}))
+                except Exception as e:
+                    log.warning("Learning adapt error: %s", e)
 
         except Exception as exc:
             log.error("Main loop error: %s", exc)

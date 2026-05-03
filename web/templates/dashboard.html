@@ -154,9 +154,9 @@
     <div class="nav-links">
       <span class="badge badge-live">LIVE</span>
       <a href="/dashboard" class="nav-link active">Dashboard</a>
+      <a href="/analytics" class="nav-link">Brain</a>
       <a href="/feed" class="nav-link">Feed</a>
-      <a href="/vault" class="nav-link" style="font-weight:700">Strategy Vault</a>
-      <a href="/connections" class="nav-link">Connections</a>
+      <a href="/#features" class="nav-link">Features</a>
       <a href="/sources" class="nav-link">Sources</a>
       <a href="/pricing" class="nav-link">Pricing</a>
       <span class="nav-link muted" id="clock" style="font-family:var(--mono);font-size:13px;"></span>
@@ -175,7 +175,118 @@
   </div>
 </nav>
 
+<!-- Risk disclosure modal — required acknowledgment on first dashboard visit -->
+<div id="risk-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9998;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px;max-width:560px;width:100%;padding:36px 32px;box-shadow:0 30px 80px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:rgba(220,38,38,.08);color:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="m4.93 19.07 14.14-14.14a2 2 0 0 0 0-2.83 2 2 0 0 0-2.83 0L2.1 16.24a2 2 0 0 0 0 2.83 2 2 0 0 0 2.83 0z" stroke="none"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:20px;letter-spacing:-.5px;color:var(--text);">Trading involves substantial risk.</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Read this once. We won't show it again.</div>
+      </div>
+    </div>
+
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:18px;">
+      Algorithmic trading is not a path to guaranteed returns. Before you proceed, understand and accept the following:
+    </div>
+
+    <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">You can lose your entire deposit.</b> Stops don't fire during market closures, gap-downs, or API outages.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">Past performance does not guarantee future results.</b> Markets are non-stationary; what worked yesterday may fail tomorrow.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">Realistic returns are 5–25% per year</b>, not 10× per month. About 60% of retail algo-traders are profitable annually.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">Software has bugs.</b> The bot is best-effort, not failsafe. Manual override is your responsibility.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">We are not your financial advisor.</b> Consult a licensed professional before trading money you cannot afford to lose.</span>
+      </li>
+    </ul>
+
+    <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:var(--text-secondary);margin-bottom:20px;background:var(--bg-cream);padding:12px 14px;border-radius:12px;cursor:pointer;" onclick="document.getElementById('riskAck').click()">
+      <input type="checkbox" id="riskAck" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;" onchange="document.getElementById('riskAccept').disabled = !this.checked;">
+      <label for="riskAck" style="cursor:pointer;line-height:1.5;">I understand and accept these risks. I have read the <a href="/legal" style="color:var(--text);text-decoration:underline;" target="_blank">full disclaimers</a> and the <a href="/how-it-works#limits" style="color:var(--text);text-decoration:underline;" target="_blank">honest math page</a>.</label>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <a href="/" style="flex:1;padding:13px;border-radius:50px;border:1px solid var(--border);text-align:center;font-size:13px;font-weight:600;color:var(--text);text-decoration:none;">Not yet</a>
+      <button id="riskAccept" onclick="acceptRisk()" disabled style="flex:2;padding:13px;border-radius:50px;background:var(--text);color:var(--surface);border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;opacity:.4;transition:opacity .15s;">
+        I accept the risks · continue
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+  // Show on first dashboard visit per user
+  (function() {
+    const KEY = 'ferchaud_risk_acknowledged_v1';
+    if (!localStorage.getItem(KEY)) {
+      const m = document.getElementById('risk-modal');
+      if (m) m.style.display = 'flex';
+    }
+    window.acceptRisk = function() {
+      const ack = document.getElementById('riskAck');
+      if (!ack || !ack.checked) return;
+      localStorage.setItem(KEY, new Date().toISOString());
+      const m = document.getElementById('risk-modal');
+      if (m) m.style.display = 'none';
+    };
+    // Style the disabled state
+    const btn = document.getElementById('riskAccept');
+    if (btn) {
+      const obs = new MutationObserver(() => {
+        btn.style.opacity = btn.disabled ? '.4' : '1';
+        btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+      });
+      obs.observe(btn, { attributes: true, attributeFilter: ['disabled'] });
+    }
+  })();
+</script>
+
 <div class="dash-wrap page-enter">
+  <!-- Today's P&L Banner (Bloomberg-density: most important info, top of fold) -->
+  <div id="today-banner" style="background:linear-gradient(135deg, var(--surface) 0%, var(--bg-cream) 100%);border:1px solid var(--border);border-radius:24px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.25rem;">
+    <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">Today's P&amp;L</div>
+        <div id="today-pnl" style="font-size:2rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;color:var(--text);">$—</div>
+        <div id="today-pnl-pct" style="font-size:13px;font-weight:600;margin-top:4px;color:var(--muted);">—</div>
+      </div>
+      <div style="width:1px;height:48px;background:var(--border);"></div>
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">7 Day</div>
+        <div id="week-pnl" style="font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);">$—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">30 Day</div>
+        <div id="month-pnl" style="font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);">$—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">All Time</div>
+        <div id="alltime-pnl" style="font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);">$—</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button class="range-btn" data-range="1D" onclick="setRange(this, '1D')" style="padding:6px 14px;border-radius:50px;background:var(--accent);color:var(--surface);border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">1D</button>
+      <button class="range-btn" data-range="1W" onclick="setRange(this, '1W')" style="padding:6px 14px;border-radius:50px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">1W</button>
+      <button class="range-btn" data-range="1M" onclick="setRange(this, '1M')" style="padding:6px 14px;border-radius:50px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">1M</button>
+      <button class="range-btn" data-range="3M" onclick="setRange(this, '3M')" style="padding:6px 14px;border-radius:50px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">3M</button>
+      <button class="range-btn" data-range="ALL" onclick="setRange(this, 'ALL')" style="padding:6px 14px;border-radius:50px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">All</button>
+    </div>
+  </div>
+
   <!-- Bot Control Bar (Pill) -->
   <div class="bot-bar">
     <div class="bot-status">
@@ -272,14 +383,16 @@
         <div><div class="stat-val pnl-neg" style="font-size:1.2rem;">${{ "%.2f"|format(avg_los) }}</div><div style="font-size:11px;color:var(--muted);">avg loss</div></div>
       </div>
     </div>
-    <div class="stat-card hover-lift" data-tooltip="Your share of trading profits based on plan">
-      <div class="stat-label">Revenue Share</div>
-      {% set share_pct = ((user.revenue_share_pct or 0.8) * 100)|int %}
-      <div class="stat-val" style="font-size:1.3rem;">You keep <span style="color:var(--green);">{{ share_pct }}%</span></div>
-      <div class="rev-bar"><div class="rev-fill" style="width:{{ share_pct }}%;"></div></div>
+    <div class="stat-card hover-lift" data-tooltip="You keep 100% of every dollar you make. We charge a flat subscription only.">
+      <div class="stat-label">Your Profits</div>
+      <div class="stat-val" style="font-size:1.3rem;">You keep <span style="color:var(--green);">100%</span></div>
+      <div class="rev-bar"><div class="rev-fill" style="width:100%;background:var(--green);"></div></div>
       <div class="stat-sub">
-        <span>Platform takes {{ 100 - share_pct }}% of profits</span>
-        <a href="/pricing" style="color:var(--text-secondary);text-decoration:none;font-size:11px;">Upgrade</a>
+        <span>No commissions. No revenue share.</span>
+        {% set tier = user.subscription_tier or 'free' %}
+        {% if tier == 'free' or tier == 'starter' %}
+        <a href="/#pricing" style="color:var(--text-secondary);text-decoration:none;font-size:11px;">Upgrade</a>
+        {% endif %}
       </div>
     </div>
     <div class="stat-card hover-lift" data-tooltip="Current status of each trading strategy">
@@ -348,6 +461,90 @@
         <div style="text-align:center;padding:2rem;color:var(--muted);">No open positions</div>
         {% endif %}
       </div>
+      <!-- Performance Metrics -->
+      <div class="panel" id="perf-panel">
+        <div class="panel-title">
+          <span style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            <span>Performance Metrics</span>
+          </span>
+          <span style="font-size:11px;color:var(--muted);">last 500 trades</span>
+        </div>
+        <div id="perf-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;">
+          <div class="perf-cell">
+            <div class="perf-label">Sharpe</div>
+            <div class="perf-val" id="perf-sharpe" style="color:var(--text);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Sortino</div>
+            <div class="perf-val" id="perf-sortino" style="color:var(--text);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Max DD</div>
+            <div class="perf-val" id="perf-mdd" style="color:var(--red);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Profit Factor</div>
+            <div class="perf-val" id="perf-pf" style="color:var(--text);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Win Rate</div>
+            <div class="perf-val" id="perf-wr" style="color:var(--green);">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Best</div>
+            <div class="perf-val" id="perf-best" style="color:var(--green);font-size:1rem;">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Worst</div>
+            <div class="perf-val" id="perf-worst" style="color:var(--red);font-size:1rem;">—</div>
+          </div>
+          <div class="perf-cell">
+            <div class="perf-label">Avg Hold</div>
+            <div class="perf-val" id="perf-hold" style="color:var(--text);font-size:1rem;">—</div>
+          </div>
+        </div>
+        <style>
+          .perf-cell { background:var(--surface-2); border-radius:14px; padding:.75rem; text-align:center; }
+          .perf-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+          .perf-val { font-size:1.2rem; font-weight:800; font-variant-numeric:tabular-nums; }
+        </style>
+      </div>
+
+      <!-- AI Learning Insights -->
+      <div class="panel" id="learn-panel">
+        <div class="panel-title">
+          <span style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+            <span>Bot Brain — Self-Learning</span>
+          </span>
+          <span class="badge badge-live" style="font-size:10px;">LEARNING</span>
+        </div>
+
+        <!-- Mistake distribution mini-chart -->
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem;">
+            Mistakes Caught (30d)
+          </div>
+          <div id="mistake-bars" style="display:flex;gap:6px;align-items:flex-end;height:60px;">
+            <div style="text-align:center;color:var(--muted);font-size:12px;width:100%;align-self:center;">
+              No data yet — start trading to train the bot
+            </div>
+          </div>
+          <div id="mistake-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:.5rem;font-size:10px;color:var(--muted);"></div>
+        </div>
+
+        <!-- Top performing signal arms -->
+        <div style="margin-bottom:.5rem;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem;">
+            Top Learned Signal Combos
+          </div>
+          <div id="top-arms" style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div style="text-align:center;padding:1rem;color:var(--muted);">Loading…</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Trade History -->
       <div class="panel">
         <div class="panel-title"><span>Trade History</span>
@@ -355,9 +552,9 @@
         </div>
         <div style="max-height:360px;overflow-y:auto;">
           <table class="tbl">
-            <thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>P&L</th><th>Strategy</th></tr></thead>
+            <thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>P&L</th><th>Strategy</th><th>AI Label</th></tr></thead>
             <tbody id="trades-table">
-              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);">Loading...</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -387,20 +584,15 @@
             <div class="bank-name">Debit / Credit</div>
             <div class="bank-sub">Instant via Stripe</div>
           </div>
-          {% if user.wallet_address %}
-          <div class="bank-card bank-connected" style="cursor:default;">
-            <div class="bank-icon">🔗</div>
-            <div class="bank-name" style="color:var(--green);font-size:13px;">{{ user.wallet_address[:6] }}…{{ user.wallet_address[-4:] }}</div>
-            <div class="bank-sub" style="font-size:11px;">{{ user.wallet_type or 'wallet' }}</div>
-            <button onclick="disconnectWallet()" style="margin-top:.5rem;font-size:10px;background:none;border:1px solid var(--border);border-radius:50px;padding:2px 10px;cursor:pointer;color:var(--muted);">Disconnect</button>
-          </div>
-          {% else %}
           <div class="bank-card" onclick="connectBank('crypto')">
             <div class="bank-icon">🔗</div>
             <div class="bank-name">Crypto Wallet</div>
-            <div class="bank-sub">MetaMask · WalletConnect</div>
+            <div class="bank-sub">
+              {% if user.wallet_address %}
+                {{ user.wallet_address[:6] }}...{{ user.wallet_address[-4:] }}
+              {% else %}Connect wallet{% endif %}
+            </div>
           </div>
-          {% endif %}
           <div class="bank-card" onclick="openDeposit()">
             <div class="bank-icon">➕</div>
             <div class="bank-name">Quick Deposit</div>
@@ -413,6 +605,22 @@
           <span style="font-weight:700;color:var(--text);">${{ "%.2f"|format(broker.cash if broker else 0) }}</span>
         </div>
       </div>
+      <!-- Latest AI Brain Decisions -->
+      <div class="panel" id="ai-decisions-panel">
+        <div class="panel-title">
+          <span style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/></svg>
+            <span>Latest AI Decisions</span>
+          </span>
+          <span id="ai-provider-pill" style="font-size:10px;font-weight:700;padding:2px 10px;border-radius:50px;background:var(--bg-cream);color:var(--muted);">FALLBACK</span>
+        </div>
+        <div id="ai-decisions-list" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;font-size:12px;">
+          <div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:12px;">
+            No AI decisions yet — start the bot to see rationale
+          </div>
+        </div>
+      </div>
+
       <!-- Market Scanner -->
       <div class="panel">
         <div class="panel-title"><span>Hot Movers</span>
@@ -467,16 +675,27 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
           <div>
             <div style="font-size:1.1rem;font-weight:800;color:var(--text);">{{ tinfo.name }}</div>
-            <div style="font-size:12px;color:var(--muted);">${{ tinfo.price_monthly }}/month</div>
+            <div style="font-size:11px;color:var(--muted);">${{ tinfo.price_monthly }}/mo · {{ tinfo.tagline if tinfo.tagline else 'subscription' }}</div>
           </div>
-          <span class="tier-badge" style="font-size:13px;padding:5px 16px;background:var(--bg-cream);color:{{ {'free':'var(--muted)','starter':'var(--text-secondary)','pro':'var(--text)','elite':'var(--accent)'}[tier] }}">
-            {{ (tinfo.revenue_share * 100)|int }}% yours
+          <span class="tier-badge" style="font-size:10px;padding:4px 12px;background:var(--bg-cream);color:{{ {'free':'var(--muted)','starter':'var(--text-secondary)','pro':'var(--text)','elite':'var(--accent)'}[tier] }};">
+            {% if tier == 'free' %}PAPER ONLY{% elif tinfo.deployed_cap %}${{ (tinfo.deployed_cap // 1000) }}K cap{% else %}UNLIMITED{% endif %}
           </span>
         </div>
+        {% if tinfo.llm_calls_day %}
+        <div style="background:var(--surface-2);border-radius:10px;padding:.6rem .75rem;margin-bottom:.75rem;font-size:11px;">
+          <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:4px;">
+            <span>AI decisions today</span>
+            <span id="ai-quota" style="color:var(--text);font-weight:700;">— / {{ tinfo.llm_calls_day }}</span>
+          </div>
+          <div style="background:var(--surface);height:4px;border-radius:50px;overflow:hidden;">
+            <div id="ai-quota-bar" style="width:0%;height:100%;background:var(--green);transition:width .4s ease;"></div>
+          </div>
+        </div>
+        {% endif %}
         {% if tier != 'elite' %}
-        <a href="/pricing" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;text-decoration:none;">Upgrade Plan</a>
+        <a href="/#pricing" class="btn btn-primary btn-sm" style="width:100%;text-align:center;display:block;text-decoration:none;">Upgrade plan</a>
         {% else %}
-        <div style="text-align:center;font-size:13px;color:var(--green);">Maximum tier</div>
+        <div style="text-align:center;font-size:13px;color:var(--green);">Maximum tier · co-managed</div>
         {% endif %}
       </div>
 
@@ -490,7 +709,7 @@
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;">
       {% for amt in [50,100,250,500,1000,2500] %}
       <button class="btn btn-outline btn-sm" style="border-radius:50px;" onclick="setDepAmt({{ amt }})">
-        ${{ amt if amt < 1000 else (amt//1000|string + 'K') }}
+        ${{ amt if amt < 1000 else ((amt // 1000)|string + 'K') }}
       </button>
       {% endfor %}
     </div>
@@ -623,7 +842,307 @@ async function loadTrades() {
 }
 
 loadTrades();
-setInterval(function() { loadPortfolio(); loadTrades(); }, 15000);
+loadLearning();
+loadAnalytics();
+loadAIDecisions();
+setInterval(function() {
+  loadPortfolio(); loadTrades(); loadLearning();
+  loadAnalytics(); loadAIDecisions();
+}, 15000);
+
+// ── Latest AI decisions ───────────────────────────────────────────────────
+async function loadAIDecisions() {
+  try {
+    const [decs, status] = await Promise.all([
+      fetch('/api/llm/decisions?limit=15').then(r => r.json()),
+      fetch('/api/llm/status').then(r => r.json()),
+    ]);
+
+    // Update provider pill
+    const pill = document.getElementById('ai-provider-pill');
+    if (status && status.providers) {
+      if (status.providers.claude) {
+        pill.textContent = 'CLAUDE LIVE';
+        pill.style.background = 'rgba(217, 119, 87, 0.15)';
+        pill.style.color = '#d97757';
+      } else if (status.providers.grok) {
+        pill.textContent = 'GROK LIVE';
+        pill.style.background = 'rgba(99, 102, 241, 0.15)';
+        pill.style.color = '#6366f1';
+      } else {
+        pill.textContent = 'RULE-BASED';
+      }
+    }
+    // Update quota bar
+    if (status && status.budget) {
+      const qLabel = document.getElementById('ai-quota');
+      const qBar   = document.getElementById('ai-quota-bar');
+      if (qLabel) qLabel.textContent = status.budget.used + ' / ' + status.budget.daily_limit;
+      if (qBar) {
+        const pct = Math.min(100, (status.budget.used / Math.max(1, status.budget.daily_limit)) * 100);
+        qBar.style.width = pct + '%';
+        qBar.style.background = pct < 70 ? 'var(--green)' : pct < 90 ? '#fbbf24' : '#ef4444';
+      }
+    }
+
+    const list = document.getElementById('ai-decisions-list');
+    if (!decs || !decs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:12px;">No AI decisions yet — start the bot to see rationale</div>';
+      return;
+    }
+    list.innerHTML = decs.map(d => {
+      const ago = Math.max(0, Math.floor((Date.now()/1000 - d.ts) / 60));
+      const actionColor = d.action === 'enter' ? '#22c55e' :
+                         d.action === 'wait'  ? '#fbbf24' : '#6b7280';
+      const actionLabel = d.action.toUpperCase();
+      return '<div style="background:var(--surface-2);border-radius:10px;padding:.6rem .8rem;border-left:3px solid '+actionColor+';">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+          '<span style="font-weight:700;color:var(--text);font-size:13px;">' + d.symbol + ' <span style="color:var(--muted);font-weight:500;">'+(d.side||'').toUpperCase()+'</span></span>' +
+          '<span style="font-size:10px;color:'+actionColor+';font-weight:700;">'+actionLabel+'</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--text-secondary);line-height:1.4;margin-bottom:4px;">' +
+          (d.rationale || '—') +
+        '</div>' +
+        '<div style="display:flex;gap:8px;font-size:10px;color:var(--muted);">' +
+          '<span>conf '+ ((d.confidence||0)*100).toFixed(0) +'%</span>' +
+          '<span>·</span><span>size ×'+ (d.size_mult||1).toFixed(2) +'</span>' +
+          '<span>·</span><span>'+ (d.provider||'?')+ '</span>' +
+          '<span style="margin-left:auto;">'+ago+'m ago</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {}
+}
+
+// ── Date-range filter buttons ─────────────────────────────────────────────
+window._chartRange = '1D';
+window.setRange = function(btn, range) {
+  window._chartRange = range;
+  document.querySelectorAll('.range-btn').forEach(el => {
+    if (el === btn) {
+      el.style.background = 'var(--accent)';
+      el.style.color = 'var(--surface)';
+      el.style.border = 'none';
+    } else {
+      el.style.background = 'transparent';
+      el.style.color = 'var(--muted)';
+      el.style.border = '1px solid var(--border)';
+    }
+  });
+  if (typeof setChartRange === 'function') setChartRange(range);
+};
+
+// ── Today's P&L banner ────────────────────────────────────────────────────
+async function loadTodayBanner() {
+  try {
+    const trades = await fetch('/api/learning/trades?limit=1000').then(r => r.json());
+    if (!Array.isArray(trades)) return;
+    const now = Date.now() / 1000;
+    const dayStart   = now - 86400;
+    const weekStart  = now - 7 * 86400;
+    const monthStart = now - 30 * 86400;
+    let today = 0, week = 0, month = 0, all = 0;
+    for (const t of trades) {
+      const exitTs = t.exit_time || 0;
+      const pnl = t.pnl || 0;
+      all += pnl;
+      if (exitTs >= monthStart) month += pnl;
+      if (exitTs >= weekStart)  week  += pnl;
+      if (exitTs >= dayStart)   today += pnl;
+    }
+    const fmt = (v) => (v >= 0 ? '+$' : '-$') + Math.abs(v).toFixed(2);
+    const cls = (v) => v > 0 ? 'pnl-pos' : v < 0 ? 'pnl-neg' : '';
+    const setEl = (id, v) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = v === 0 ? '$0.00' : fmt(v);
+      el.style.color = v > 0 ? '#22c55e' : v < 0 ? '#ef4444' : 'var(--text)';
+    };
+    setEl('today-pnl', today);
+    setEl('week-pnl', week);
+    setEl('month-pnl', month);
+    setEl('alltime-pnl', all);
+
+    // Today's P&L %
+    const tpct = document.getElementById('today-pnl-pct');
+    if (tpct) {
+      const eq = parseFloat(document.getElementById('s-equity')?.textContent.replace(/[^0-9.-]/g, '') || '0');
+      if (eq > 0) {
+        const pct = (today / eq) * 100;
+        tpct.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '% today · ' + trades.filter(t => (t.exit_time||0) >= dayStart).length + ' trades';
+        tpct.style.color = pct > 0 ? '#22c55e' : pct < 0 ? '#ef4444' : 'var(--muted)';
+      }
+    }
+  } catch(e) {}
+}
+setInterval(loadTodayBanner, 20000);
+setTimeout(loadTodayBanner, 1000);
+
+// ── Performance metrics ───────────────────────────────────────────────────
+async function loadAnalytics() {
+  try {
+    const d = await fetch('/api/learning/analytics?limit=500').then(r => r.json());
+    const o = (d && d.overall) || {};
+    const set = (id, v, suffix='') => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = (v === undefined || v === null || isNaN(v)) ? '—' : (v + suffix);
+    };
+    set('perf-sharpe',  o.sharpe);
+    set('perf-sortino', o.sortino);
+    set('perf-mdd',     o.max_drawdown, '%');
+    set('perf-pf',      o.profit_factor);
+    set('perf-wr',      o.win_rate ? (o.win_rate * 100).toFixed(0) : '—', '%');
+    set('perf-best',    o.best_trade !== undefined ? '+' + o.best_trade.toFixed(2) : '—', o.best_trade !== undefined ? '%' : '');
+    set('perf-worst',   o.worst_trade !== undefined ? o.worst_trade.toFixed(2) : '—', o.worst_trade !== undefined ? '%' : '');
+    if (o.avg_hold_min !== undefined) {
+      const h = o.avg_hold_min;
+      const txt = h > 60 ? (h/60).toFixed(1) + 'h' : h.toFixed(0) + 'm';
+      set('perf-hold', txt);
+    }
+  } catch(e) {}
+}
+
+// ── Learning insights ──────────────────────────────────────────────────────
+const MISTAKE_COLORS = {
+  good:           '#22c55e',
+  sold_too_early: '#fbbf24',
+  held_too_long:  '#f59e0b',
+  cut_loss_late:  '#ef4444',
+  false_signal:   '#dc2626',
+  choppy:         '#6b7280',
+};
+const MISTAKE_LABELS = {
+  good:           'Clean trades',
+  sold_too_early: 'Sold too early',
+  held_too_long:  'Held too long',
+  cut_loss_late:  'Late stop',
+  false_signal:   'False signals',
+  choppy:         'Choppy',
+};
+
+async function loadLearning() {
+  try {
+    const summary  = await fetch('/api/learning/summary').then(r => r.json());
+    const mistakes = (summary && summary.mistakes_30d) || {};
+    const arms     = (summary && summary.top_arms)     || [];
+
+    // Render mistake bar chart
+    const total = Object.values(mistakes).reduce((a,b) => a + b, 0);
+    const bars  = document.getElementById('mistake-bars');
+    const legend = document.getElementById('mistake-legend');
+    if (total > 0) {
+      const maxV = Math.max(...Object.values(mistakes), 1);
+      bars.innerHTML = Object.entries(mistakes).map(([k, v]) => {
+        const h = Math.max(6, (v / maxV) * 60);
+        const c = MISTAKE_COLORS[k] || '#999';
+        return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">' +
+                 '<div style="width:100%;height:'+h+'px;background:'+c+';border-radius:6px 6px 0 0;" title="'+k+': '+v+'"></div>' +
+                 '<div style="font-size:10px;color:var(--text);font-weight:700;">'+v+'</div>' +
+               '</div>';
+      }).join('');
+      legend.innerHTML = Object.keys(mistakes).map(k => {
+        const c = MISTAKE_COLORS[k] || '#999';
+        const lbl = MISTAKE_LABELS[k] || k;
+        return '<span style="display:inline-flex;align-items:center;gap:4px;">' +
+                 '<span style="width:8px;height:8px;background:'+c+';border-radius:2px;"></span>'+lbl+
+               '</span>';
+      }).join('');
+    }
+
+    // Render top arms
+    const top = document.getElementById('top-arms');
+    if (arms.length === 0) {
+      top.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:12px;">Bot is still learning — needs a few trades</div>';
+    } else {
+      top.innerHTML = arms.slice(0, 5).map(a => {
+        const wr = (a.win_rate * 100).toFixed(0);
+        const wrColor = a.win_rate >= 0.55 ? '#22c55e' : a.win_rate >= 0.45 ? '#fbbf24' : '#ef4444';
+        const parts = a.arm.split('|');
+        const strat = parts[0] || 'unknown';
+        const sig = (parts[1] || 'none').replace(/\+/g, ' + ');
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface-2);border-radius:8px;">' +
+                 '<div style="width:6px;height:30px;background:'+wrColor+';border-radius:3px;"></div>' +
+                 '<div style="flex:1;min-width:0;">' +
+                   '<div style="font-weight:600;color:var(--text);font-size:11px;text-transform:capitalize;">'+strat.replace(/_/g,' ')+'</div>' +
+                   '<div style="color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+sig+'</div>' +
+                 '</div>' +
+                 '<div style="text-align:right;">' +
+                   '<div style="color:'+wrColor+';font-weight:700;font-size:12px;">'+wr+'%</div>' +
+                   '<div style="color:var(--muted);font-size:10px;">n='+a.n+'</div>' +
+                 '</div>' +
+               '</div>';
+      }).join('');
+    }
+  } catch(e) {}
+}
+
+// Override loadTrades to add AI labels
+async function loadTradesWithLearning() {
+  try {
+    const trades = await fetch('/api/learning/trades?limit=50').then(r => r.json());
+    if (!trades || !trades.length) return;
+    document.getElementById('trade-count').textContent = trades.length + ' trades';
+    const tbody = document.getElementById('trades-table');
+    tbody.innerHTML = trades.slice(0, 50).map(t => {
+      const pnl = t.pnl || 0;
+      const pnlPct = (t.pnl_pct || 0) * 100;
+      const ts  = t.exit_time
+        ? new Date(t.exit_time * 1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
+        : '—';
+      const label = t.mistake_label || '—';
+      const labelColor = MISTAKE_COLORS[label] || '#666';
+      return '<tr>' +
+        '<td style="color:var(--muted);font-size:12px;">' + ts + '</td>' +
+        '<td><b style="color:var(--text);">' + t.symbol + '</b></td>' +
+        '<td class="' + (t.side==='long'||t.side==='buy'?'side-buy':'side-sell') + '">' + (t.side||'').toUpperCase() + '</td>' +
+        '<td>' + parseFloat(t.qty||0).toFixed(4) + '</td>' +
+        '<td>$' + parseFloat(t.entry_price||0).toFixed(2) + '</td>' +
+        '<td class="' + (pnl>=0?'pnl-pos':'pnl-neg') + '">' + (pnl>=0?'+':'') + '$' + pnl.toFixed(2) +
+        ' <span style="font-size:10px;color:var(--muted);">(' + pnlPct.toFixed(1) + '%)</span></td>' +
+        '<td style="color:var(--muted);font-size:11px;">' + (t.strategy||'—') + '</td>' +
+        '<td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:50px;background:'+labelColor+'22;color:'+labelColor+';">'+label+'</span></td>' +
+        '</tr>';
+    }).join('');
+  } catch(e) {}
+}
+// Replace older loadTrades reference if it didn't yield data
+setInterval(loadTradesWithLearning, 15000);
+loadTradesWithLearning();
+
+// ── WebSocket live stream ──────────────────────────────────────────────────
+function startLiveStream() {
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const url = proto + '//' + window.location.host + '/ws/live';
+  let ws;
+  let reconnectDelay = 1000;
+  function connect() {
+    try {
+      ws = new WebSocket(url);
+      ws.onopen = () => { reconnectDelay = 1000; };
+      ws.onmessage = (ev) => {
+        try {
+          const d = JSON.parse(ev.data);
+          if (d.equity !== undefined) {
+            document.getElementById('s-equity').textContent = '$' + Number(d.equity).toFixed(2);
+          }
+          if (d.learning && d.learning.mistakes_30d) {
+            // Live update mistake bars too — but rate limit
+            // (handled by loadLearning interval already)
+          }
+        } catch(e) {}
+      };
+      ws.onclose = () => {
+        setTimeout(connect, Math.min(30000, reconnectDelay));
+        reconnectDelay = Math.min(30000, reconnectDelay * 2);
+      };
+      ws.onerror = () => { try { ws.close(); } catch(_){} };
+    } catch(e) {
+      setTimeout(connect, 5000);
+    }
+  }
+  connect();
+}
+startLiveStream();
 // ── Bot control ────────────────────────────────────────────────────────────
 async function toggleBot(action) {
   var mode = document.getElementById('modePassive').classList.contains('passive-active') ? 'passive' : 'aggressive';
@@ -675,22 +1194,12 @@ function connectBank(type) {
       '</div>';
   } else if (type === 'crypto') {
     document.getElementById('bankModalTitle').textContent = 'Crypto Wallet';
-    document.getElementById('bankModalSub').textContent   = 'Connect any wallet';
+    document.getElementById('bankModalSub').textContent   = 'Connect MetaMask or Phantom';
     document.getElementById('bankModalContent').innerHTML =
-      '<div id="wallet-connect-area">' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem;">' +
-          '<div class="bank-card" onclick="connectWallet('metamask')"><div class="bank-icon">🦊</div><div class="bank-name" style="font-size:12px;">MetaMask</div></div>' +
-          '<div class="bank-card" onclick="openWeb3Modal()"><div class="bank-icon">🔗</div><div class="bank-name" style="font-size:12px;">WalletConnect</div></div>' +
-          '<div class="bank-card" onclick="connectWallet('coinbase')"><div class="bank-icon">🔵</div><div class="bank-name" style="font-size:12px;">Coinbase</div></div>' +
-        '</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">' +
-          '<div class="bank-card" onclick="connectWallet('phantom')"><div class="bank-icon">👻</div><div class="bank-name" style="font-size:12px;">Phantom</div></div>' +
-          '<div class="bank-card" onclick="connectWallet('rainbow')"><div class="bank-icon">🌈</div><div class="bank-name" style="font-size:12px;">Rainbow</div></div>' +
-        '</div>' +
-        '<div id="wallet-status" style="font-size:12px;color:var(--muted);text-align:center;"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">' +
+        '<div class="bank-card" onclick="connectMetaMask()"><div class="bank-icon">🦊</div><div class="bank-name">MetaMask</div></div>' +
+        '<div class="bank-card" onclick="connectPhantom()"><div class="bank-icon">👻</div><div class="bank-name">Phantom</div></div>' +
       '</div>';
-    // Auto-open Web3Modal
-    setTimeout(openWeb3Modal, 100);
   }
   modal.style.display = 'flex';
 }
@@ -699,99 +1208,251 @@ async function launchPlaid() {
   alert('Plaid integration requires a Plaid API key.\nVisit plaid.com to get your keys, then add PLAID_CLIENT_ID and PLAID_SECRET to your .env file.');
 }
 
-// ── Web3Modal / WalletConnect ─────────────────────────────────────────────────
-let web3modal = null;
-
-async function initWeb3Modal() {
-  if (web3modal) return;
-  const { createAppKit } = await import('https://cdn.jsdelivr.net/npm/@reown/appkit@1.6.8/dist/esm/index.js');
-  const { WagmiAdapter } = await import('https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-wagmi@1.6.8/dist/esm/index.js');
-  const { mainnet, polygon, arbitrum, base, optimism } = await import('https://cdn.jsdelivr.net/npm/@reown/appkit/networks');
-  const networks = [mainnet, polygon, arbitrum, base, optimism];
-  const wagmiAdapter = new WagmiAdapter({ networks, projectId: '71529d0005cb0547de490d3861081f4f' });
-  web3modal = createAppKit({
-    adapters: [wagmiAdapter],
-    networks,
-    projectId: '71529d0005cb0547de490d3861081f4f',
-    metadata: {
-      name: 'Ferchaud', description: 'AI-powered trading platform',
-      url: window.location.origin, icons: [window.location.origin + '/static/icon.png']
-    },
-    features: { analytics: false }
+async function connectMetaMask() {
+  if (!window.ethereum) { alert('MetaMask not installed. Get it at metamask.io'); return; }
+  var accounts = await window.ethereum.request({method:'eth_requestAccounts'});
+  var addr = accounts[0];
+  await fetch('/api/onboarding/wallet', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({wallet_address: addr, wallet_type: 'metamask'})
   });
-  // Listen for account changes
-  web3modal.subscribeAccount(async (state) => {
-    if (state.isConnected && state.address) {
-      await saveWalletAddress(state.address, 'walletconnect');
-    }
+  closeBankModal(); location.reload();
+}
+async function connectPhantom() {
+  if (!window.solana) { alert('Phantom not installed. Get it at phantom.app'); return; }
+  var resp = await window.solana.connect();
+  var pubKey = resp.publicKey.toString();
+  await fetch('/api/onboarding/wallet', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({wallet_address: pubKey, wallet_type: 'phantom'})
   });
+  closeBankModal(); location.reload();
 }
 
-async function openWeb3Modal() {
-  try {
-    await initWeb3Modal();
-    web3modal.open();
-  } catch(e) {
-    console.error('Web3Modal error:', e);
-    // Fallback to MetaMask
-    connectWallet('metamask');
+// ═════════════════════════════════════════════════════════════════════════════
+//  Power-user UX: density toggle, toast feed, command palette (Cmd+K)
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── Density toggle ────────────────────────────────────────────────────────
+(function() {
+  const KEY = 'ferchaud_density';
+  const saved = localStorage.getItem(KEY) || 'comfy';
+  document.documentElement.setAttribute('data-density', saved);
+  window.toggleDensity = function() {
+    const cur = document.documentElement.getAttribute('data-density') || 'comfy';
+    const next = cur === 'comfy' ? 'compact' : 'comfy';
+    document.documentElement.setAttribute('data-density', next);
+    localStorage.setItem(KEY, next);
+    showToast('Display: ' + next, 'info');
+  };
+})();
+
+// ── Toast notifications ───────────────────────────────────────────────────
+(function() {
+  const wrap = document.createElement('div');
+  wrap.id = 'toast-wrap';
+  wrap.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:360px;pointer-events:none;';
+  document.body.appendChild(wrap);
+
+  window.showToast = function(msg, type = 'info', durationMs = 4000) {
+    const el = document.createElement('div');
+    const colors = {
+      info:    { bg:'#1f2937', txt:'#fff', accent:'#60a5fa' },
+      success: { bg:'#064e3b', txt:'#fff', accent:'#22c55e' },
+      warn:    { bg:'#78350f', txt:'#fff', accent:'#fbbf24' },
+      error:   { bg:'#7f1d1d', txt:'#fff', accent:'#ef4444' },
+      ai:      { bg:'#111827', txt:'#fff', accent:'#a78bfa' },
+    };
+    const c = colors[type] || colors.info;
+    el.style.cssText = `
+      background:${c.bg};color:${c.txt};border-left:3px solid ${c.accent};
+      border-radius:10px;padding:.7rem 1rem;font-size:13px;line-height:1.45;
+      box-shadow:0 8px 32px rgba(0,0,0,.4);pointer-events:auto;
+      transform:translateX(120%);transition:transform .25s ease;
+      backdrop-filter:blur(12px);
+      font-family:'Inter',sans-serif;`;
+    el.innerHTML = msg;
+    wrap.appendChild(el);
+    requestAnimationFrame(() => { el.style.transform = 'translateX(0)'; });
+    setTimeout(() => {
+      el.style.transform = 'translateX(120%)';
+      setTimeout(() => el.remove(), 250);
+    }, durationMs);
+  };
+})();
+
+// Detect new trades from /api/trades and surface as toasts
+(function() {
+  let lastSeenIds = new Set();
+  let warmedUp = false;
+  async function poll() {
+    try {
+      const trades = await fetch('/api/trades').then(r => r.json());
+      if (!Array.isArray(trades)) return;
+      const ids = new Set(trades.map(t => t.id));
+      if (warmedUp) {
+        for (const t of trades) {
+          if (!lastSeenIds.has(t.id)) {
+            const pnl = t.pnl || 0;
+            const sym = t.symbol;
+            const side = (t.side || '').toUpperCase();
+            const type = pnl > 0 ? 'success' : pnl < 0 ? 'error' : 'info';
+            const msg = `<b>${side} ${sym}</b> · ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} · ${t.strategy || 'bot'}`;
+            showToast(msg, type, 6000);
+          }
+        }
+      }
+      lastSeenIds = ids;
+      warmedUp = true;
+    } catch(e) {}
   }
-}
+  setInterval(poll, 12000);
+  setTimeout(poll, 2000);
+})();
 
-async function connectWallet(type) {
-  const statusEl = document.getElementById('wallet-status');
-  if (statusEl) statusEl.textContent = 'Connecting…';
-  try {
-    if (type === 'metamask' || type === 'coinbase' || type === 'rainbow') {
-      if (!window.ethereum) {
-        const urls = {
-          metamask: 'https://metamask.io/download/',
-          coinbase: 'https://www.coinbase.com/wallet/downloads',
-          rainbow: 'https://rainbow.me/download'
-        };
-        window.open(urls[type] || 'https://metamask.io/download/', '_blank');
-        return;
+// Detect new AI decisions and surface as ai-toasts
+(function() {
+  let lastTs = 0;
+  let warmedUp = false;
+  async function poll() {
+    try {
+      const decs = await fetch('/api/llm/decisions?limit=5').then(r => r.json());
+      if (!Array.isArray(decs) || !decs.length) return;
+      if (warmedUp) {
+        for (const d of decs) {
+          if (d.ts > lastTs && d.action === 'enter' && d.confidence >= 0.65) {
+            const sym = d.symbol;
+            const side = (d.side || '').toUpperCase();
+            const conf = (d.confidence * 100).toFixed(0);
+            const msg = `<b>AI: ${side} ${sym}</b> · ${conf}% conf<br><span style="opacity:.7;font-size:11px;">${(d.rationale||'').slice(0,90)}</span>`;
+            showToast(msg, 'ai', 7000);
+          }
+        }
       }
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts[0]) await saveWalletAddress(accounts[0], type);
-    } else if (type === 'phantom') {
-      if (!window.solana?.isPhantom) {
-        window.open('https://phantom.app/', '_blank'); return;
-      }
-      const resp = await window.solana.connect();
-      await saveWalletAddress(resp.publicKey.toString(), 'phantom');
-    } else {
-      openWeb3Modal();
+      lastTs = Math.max(lastTs, ...decs.map(d => d.ts || 0));
+      warmedUp = true;
+    } catch(e) {}
+  }
+  setInterval(poll, 15000);
+  setTimeout(poll, 3000);
+})();
+
+// ── Command palette (Cmd+K / Ctrl+K) ─────────────────────────────────────
+(function() {
+  const ACTIONS = [
+    { label: 'Toggle theme (light/dark)', kbd: '⇧T', run: () => { const t = document.documentElement.getAttribute('data-theme'); const next = t === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); localStorage.setItem('ferchaud_theme', next); showToast('Theme: ' + next, 'info'); }},
+    { label: 'Toggle density (comfy/compact)', kbd: '⇧D', run: () => window.toggleDensity() },
+    { label: 'Start bot',            run: () => fetch('/api/bot/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) }).then(() => { showToast('Bot started', 'success'); setTimeout(() => location.reload(), 600); }) },
+    { label: 'Stop bot',             run: () => fetch('/api/bot/stop',  { method:'POST' }).then(() => { showToast('Bot stopped', 'warn'); setTimeout(() => location.reload(), 600); }) },
+    { label: 'Switch to passive mode',    run: () => setMode('passive') },
+    { label: 'Switch to aggressive mode', run: () => setMode('aggressive') },
+    { label: 'Open deposit modal',   run: () => openDeposit() },
+    { label: 'Go to Brain analytics',  run: () => location.href = '/analytics' },
+    { label: 'Go to Live feed',        run: () => location.href = '/feed' },
+    { label: 'Go to Pricing',          run: () => location.href = '/#pricing' },
+    { label: 'Go to Sources & data',   run: () => location.href = '/sources' },
+    { label: 'Refresh dashboard',      run: () => { loadPortfolio(); loadTrades(); loadLearning(); loadAnalytics(); loadAIDecisions(); showToast('Refreshed', 'info'); } },
+    { label: 'Logout',                 run: () => location.href = '/api/auth/logout' },
+  ];
+
+  const overlay = document.createElement('div');
+  overlay.id = 'cmdk-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:10000;padding-top:15vh;';
+  overlay.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;width:600px;max-width:calc(100vw - 32px);box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden;">
+      <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="cmdk-input" type="text" placeholder="Type a command or search…" autocomplete="off"
+               style="flex:1;background:none;border:none;outline:none;font-family:inherit;font-size:14px;color:var(--text);">
+        <span style="font-size:10px;color:var(--muted);padding:2px 8px;border-radius:4px;border:1px solid var(--border);">ESC</span>
+      </div>
+      <div id="cmdk-list" style="max-height:400px;overflow-y:auto;padding:.5rem;"></div>
+      <div style="padding:.5rem 1.25rem;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;">
+        <span><kbd style="padding:1px 6px;border:1px solid var(--border);border-radius:3px;">↑↓</kbd> navigate</span>
+        <span><kbd style="padding:1px 6px;border:1px solid var(--border);border-radius:3px;">↵</kbd> run</span>
+        <span style="opacity:.6;">Ferchaud command palette · ⌘K</span>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const input = document.getElementById('cmdk-input');
+  const list = document.getElementById('cmdk-list');
+  let selectedIdx = 0;
+
+  function render(filtered) {
+    if (!filtered.length) {
+      list.innerHTML = '<div style="padding:1rem;color:var(--muted);font-size:13px;text-align:center;">No matches</div>';
+      return;
     }
-  } catch(e) {
-    if (statusEl) statusEl.textContent = 'Connection cancelled.';
-  }
-}
-
-async function saveWalletAddress(address, walletType) {
-  const statusEl = document.getElementById('wallet-status');
-  try {
-    const res = await fetch('/api/wallet/connect', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address, wallet_type: walletType }),
-      credentials: 'same-origin'
+    list.innerHTML = filtered.map((a, i) => `
+      <div data-cmdk-idx="${i}" style="padding:.55rem .75rem;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;${i === selectedIdx ? 'background:var(--surface-2);' : ''}">
+        <span style="color:var(--text);">${a.label}</span>
+        ${a.kbd ? `<span style="font-size:10px;color:var(--muted);">${a.kbd}</span>` : ''}
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-cmdk-idx]').forEach(el => {
+      el.addEventListener('click', () => { run(parseInt(el.dataset.cmdkIdx)); });
+      el.addEventListener('mouseenter', () => { selectedIdx = parseInt(el.dataset.cmdkIdx); render(currentFiltered()); });
     });
-    const data = await res.json();
-    if (data.ok) {
-      if (statusEl) statusEl.innerHTML = '<span style="color:var(--green);">✓ Connected: ' + address.slice(0,6) + '…' + address.slice(-4) + '</span>';
-      setTimeout(() => { closeBankModal(); location.reload(); }, 1200);
-    } else {
-      if (statusEl) statusEl.textContent = data.error || 'Failed to save wallet.';
-    }
-  } catch(e) {
-    if (statusEl) statusEl.textContent = 'Network error.';
   }
-}
+  function currentFiltered() {
+    const q = (input.value || '').toLowerCase();
+    return ACTIONS.filter(a => a.label.toLowerCase().includes(q));
+  }
+  function run(idx) {
+    const filtered = currentFiltered();
+    if (filtered[idx]) { close(); filtered[idx].run(); }
+  }
+  function open() {
+    overlay.style.display = 'flex';
+    input.value = '';
+    selectedIdx = 0;
+    render(ACTIONS);
+    setTimeout(() => input.focus(), 0);
+  }
+  function close() { overlay.style.display = 'none'; }
 
-async function disconnectWallet() {
-  await fetch('/api/wallet/disconnect', { method: 'DELETE', credentials: 'same-origin' });
-  location.reload();
-}
+  input.addEventListener('input', () => { selectedIdx = 0; render(currentFiltered()); });
+  input.addEventListener('keydown', (e) => {
+    const f = currentFiltered();
+    if (e.key === 'ArrowDown') { selectedIdx = Math.min(f.length - 1, selectedIdx + 1); render(f); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { selectedIdx = Math.max(0, selectedIdx - 1); render(f); e.preventDefault(); }
+    else if (e.key === 'Enter') { run(selectedIdx); }
+    else if (e.key === 'Escape') { close(); }
+  });
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      overlay.style.display === 'flex' ? close() : open();
+    }
+  });
+  // Expose for buttons
+  window.openCommandPalette = open;
+})();
+
+// Subtle compact-density CSS injection
+(function() {
+  const style = document.createElement('style');
+  style.textContent = `
+    [data-density="compact"] .stat-card { padding: .85rem 1rem; border-radius: 16px; }
+    [data-density="compact"] .stat-val  { font-size: 1.3rem; }
+    [data-density="compact"] .panel     { padding: .9rem; }
+    [data-density="compact"] .panel-title { margin-bottom: .65rem; }
+    [data-density="compact"] .tbl td, [data-density="compact"] .tbl th { padding: .35rem .55rem; }
+    kbd { font-family: 'SF Mono', Menlo, monospace; font-size: 10px; }
+  `;
+  document.head.appendChild(style);
+})();
 </script>
+
+<!-- Floating command-palette button -->
+<button onclick="openCommandPalette()" title="Command palette (⌘K or Ctrl+K)"
+        style="position:fixed;bottom:20px;left:20px;height:36px;padding:0 14px;border-radius:50px;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;z-index:100;display:flex;align-items:center;gap:8px;font-size:12px;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,.15);transition:transform .2s ease;"
+        onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  <span>Search</span>
+  <kbd style="padding:1px 6px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-family:'SF Mono',Menlo,monospace;">⌘K</kbd>
+</button>
 {% endblock %}

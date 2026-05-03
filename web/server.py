@@ -113,10 +113,11 @@ async def signup_page(request: Request):
     return templates.TemplateResponse("auth.html", {"request": request, "mode": "signup"})
 
 
-@app.get("/onboarding", response_class=HTMLResponse)
+@app.get("/onboarding")
 async def onboarding_page(request: Request):
-    user = require_user(request)
-    return templates.TemplateResponse("onboarding.html", {"request": request, "user": user})
+    """Onboarding gate removed — connections are progressive from inside the
+    app. Legacy / questionnaire links land in /dashboard."""
+    return RedirectResponse("/dashboard", status_code=307)
 
 
 @app.get("/pricing", response_class=HTMLResponse)
@@ -208,8 +209,8 @@ async def vault_accept(request: Request):
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     user = require_user(request)
-    if not user.onboarding_complete:
-        return RedirectResponse("/onboarding")
+    # Onboarding gate removed — users land directly in the dashboard.
+    # Connections (broker, funding) happen progressively from inside the app.
     db = SessionLocal()
     try:
         trades = db.query(Trade).filter(Trade.user_id == user.id).order_by(Trade.timestamp.desc()).limit(50).all()
@@ -256,10 +257,23 @@ async def api_signup(request: Request, body: dict = Body(...)):
     password = body.get("password", "")
     if not email or not username or not password:
         return JSONResponse({"error": "All fields required"}, status_code=400)
+    if len(password) < 6:
+        return JSONResponse({"error": "Password must be at least 6 characters"}, status_code=400)
     result = signup_user(email, username, password)
     if "error" in result:
         return JSONResponse(result, status_code=400)
-    response = JSONResponse(result)
+    # Auto-complete onboarding so the user lands in /dashboard directly.
+    try:
+        db = SessionLocal()
+        u = db.query(User).filter(User.email == email).first()
+        if u and not u.onboarding_complete:
+            u.onboarding_complete = True
+            u.onboarding_step = 4
+            db.commit()
+        db.close()
+    except Exception:
+        pass
+    response = JSONResponse({**result, "redirect": "/dashboard"})
     if "access_token" in result:
         _set_auth_cookies(response, result["access_token"], result["refresh_token"])
     return response
@@ -1001,6 +1015,275 @@ async def api_test_connection(request: Request, connection_id: int):
             return JSONResponse({"status": "error", "message": str(e)}, status_code=400)
     finally:
         db.close()
+
+
+# ─── How-it-works (transparency guide) ─────────────────────────────────────────
+
+@app.get("/how-it-works", response_class=HTMLResponse)
+async def how_it_works_page(request: Request):
+    return templates.TemplateResponse("how_it_works.html", {"request": request})
+
+
+@app.get("/how", response_class=HTMLResponse)
+async def how_alias(request: Request):
+    return RedirectResponse("/how-it-works", status_code=307)
+
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_alias(request: Request):
+    return RedirectResponse("/signup", status_code=307)
+
+
+@app.get("/logout")
+async def logout_alias():
+    """User-friendly /logout link — clears cookies and goes home."""
+    response = RedirectResponse("/")
+    _delete_auth_cookies(response)
+    return response
+
+
+# ─── Analytics / Bot Brain page ───────────────────────────────────────────────
+
+@app.get("/analytics", response_class=HTMLResponse)
+async def analytics_page(request: Request):
+    """Dedicated bot brain analytics page (Sharpe, Sortino, top arms, mistakes)."""
+    user = require_user(request)
+    return templates.TemplateResponse("analytics.html", {"request": request, "user": user})
+
+
+# ─── Learning Engine APIs ─────────────────────────────────────────────────────
+
+@app.get("/api/learning/summary")
+async def api_learning_summary(request: Request):
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        return get_engine().get_summary()
+    except Exception as e:
+        return JSONResponse({"error": str(e), "strategies": {}}, status_code=200)
+
+
+@app.get("/api/learning/trades")
+async def api_learning_trades(request: Request, limit: int = 100):
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        store = get_engine().store
+        rows = store.recent_closed(limit=limit)
+        for r in rows:
+            if r.get("signals"):
+                try:
+                    r["signals"] = json.loads(r["signals"])
+                except Exception:
+                    pass
+        return rows
+    except Exception as e:
+        return JSONResponse({"error": str(e), "trades": []}, status_code=200)
+
+
+@app.get("/api/learning/params")
+async def api_learning_params(request: Request):
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        eng = get_engine()
+        stats = eng.store.stats_by_strategy()
+        return {sname: eng.tuner.all(sname) for sname in stats.keys()}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=200)
+
+
+@app.get("/api/learning/mistakes")
+async def api_learning_mistakes(request: Request, days: int = 30):
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        return get_engine().store.mistake_distribution(days=days)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=200)
+
+
+@app.get("/api/learning/analytics")
+async def api_learning_analytics(request: Request, limit: int = 500):
+    require_user(request)
+    try:
+        from core.learning import get_engine
+        from core.analytics import compute_metrics, per_strategy_metrics, equity_curve
+        store = get_engine().store
+        rows = store.recent_closed(limit=limit)
+        return {
+            "overall":     compute_metrics(rows),
+            "by_strategy": per_strategy_metrics(rows),
+            "equity":      equity_curve(rows, starting_equity=10000.0),
+        }
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=200)
+
+
+# ─── LLM Brain APIs ───────────────────────────────────────────────────────────
+
+@app.get("/api/llm/status")
+async def api_llm_status(request: Request):
+    require_user(request)
+    try:
+        from core.llm_brain import get_brain
+        b = get_brain()
+        return {
+            "providers": {"claude": b._claude_ok, "grok": b._grok_ok},
+            "budget":    {"daily_limit": b.budget.daily_limit, "used": b.budget.used,
+                          "remaining": b.budget.remaining},
+            "cache_size": len(b.cache._d),
+            "active":    b.has_provider,
+        }
+    except Exception as e:
+        return JSONResponse({"error": str(e), "active": False}, status_code=200)
+
+
+@app.get("/api/llm/decisions")
+async def api_llm_decisions(request: Request, limit: int = 20):
+    require_user(request)
+    try:
+        from core.llm_brain import get_brain
+        return get_brain().recent_decisions(limit=limit)
+    except Exception as e:
+        return JSONResponse({"error": str(e), "decisions": []}, status_code=200)
+
+
+@app.get("/api/freqtrade/status")
+async def api_freqtrade_status(request: Request):
+    require_user(request)
+    try:
+        from integrations.freqtrade_adapter import get_freqtrade_adapter, is_freqtrade_enabled
+        if not is_freqtrade_enabled():
+            return {"enabled": False}
+        a = get_freqtrade_adapter()
+        return {"enabled": True, "url": a.base_url, "reachable": a.ping(),
+                "open_trades": len(a.open_trades() or []),
+                "whitelist": a.whitelist()[:20]}
+    except Exception as e:
+        return JSONResponse({"enabled": False, "error": str(e)}, status_code=200)
+
+
+@app.get("/api/system/health")
+async def api_system_health(request: Request):
+    """Public-ish surface for /health — useful for status pages."""
+    try:
+        from cloud_start import _snap as cloud_snap
+        snap = cloud_snap()
+    except Exception:
+        snap = {"web_uptime_sec": 0, "bot_running": False}
+    try:
+        from core.learning import get_engine
+        snap["learning"] = get_engine().get_summary()
+    except Exception:
+        snap["learning"] = None
+    return snap
+
+
+# ─── WebSocket live stream ────────────────────────────────────────────────────
+
+try:
+    from fastapi import WebSocket, WebSocketDisconnect
+    import asyncio
+
+    class _LiveBroadcaster:
+        def __init__(self):
+            self.clients: set = set()
+            self._lock = asyncio.Lock()
+
+        async def connect(self, ws):
+            await ws.accept()
+            async with self._lock:
+                self.clients.add(ws)
+
+        async def disconnect(self, ws):
+            async with self._lock:
+                self.clients.discard(ws)
+
+    _broadcaster = _LiveBroadcaster()
+
+    @app.websocket("/ws/live")
+    async def ws_live(ws: WebSocket):
+        """Streams live portfolio + learning + market snapshots every 3s."""
+        await _broadcaster.connect(ws)
+        try:
+            while True:
+                try:
+                    broker = get_broker_data()
+                    payload = {
+                        "type": "snapshot",
+                        "ts": datetime.utcnow().isoformat(),
+                        "equity": broker.get("equity", 0),
+                        "cash":   broker.get("cash", 0),
+                        "positions": broker.get("positions", {}),
+                    }
+                    try:
+                        from core.learning import get_engine
+                        payload["learning"] = get_engine().get_summary()
+                    except Exception:
+                        pass
+                    await ws.send_json(payload)
+                except WebSocketDisconnect:
+                    break
+                except Exception:
+                    pass
+                await asyncio.sleep(3.0)
+        except WebSocketDisconnect:
+            pass
+        finally:
+            await _broadcaster.disconnect(ws)
+except Exception:
+    pass
+
+
+# ─── Friendly 500 error page (HTML) + JSON for /api/* ─────────────────────────
+
+import logging as _logging
+import traceback as _traceback
+_log = _logging.getLogger("ferchaud.web")
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch every uncaught exception and render a polished error page."""
+    tb = _traceback.format_exc()
+    _log.error("Unhandled %s on %s: %s\n%s",
+               type(exc).__name__, request.url.path, exc, tb)
+
+    is_api = request.url.path.startswith("/api/") or request.url.path.startswith("/ws/")
+    accepts_html = "text/html" in request.headers.get("accept", "")
+    if is_api or not accepts_html:
+        return JSONResponse({"error": "internal_error", "message": str(exc)}, status_code=500)
+
+    error_html = f"""<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Something went wrong — Ferchaud</title>
+<style>
+  body{{font-family:'Inter',sans-serif;background:#fafaf9;color:#0c0d0e;
+       min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}}
+  .card{{max-width:480px;background:#fff;border:1px solid #e8e7e3;border-radius:24px;
+         padding:3rem 2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.06);}}
+  .glyph{{width:64px;height:64px;margin:0 auto 1.5rem;background:rgba(220,38,38,.08);
+          border-radius:50%;display:flex;align-items:center;justify-content:center;color:#dc2626;}}
+  h1{{font-size:1.5rem;font-weight:800;margin-bottom:.5rem;}}
+  p{{color:#525355;line-height:1.6;margin-bottom:1.5rem;font-size:14px;}}
+  .err{{font-family:'SF Mono',Menlo,monospace;font-size:11px;background:#f4f3f0;
+        padding:6px 12px;border-radius:50px;color:#8b8d91;display:inline-block;margin-bottom:1.5rem;}}
+  .btn{{padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;text-decoration:none;
+        display:inline-block;background:#0c0d0e;color:#fff;}}
+  .btn.outline{{background:#fff;color:#0c0d0e;border:1px solid #e8e7e3;margin-right:8px;}}
+</style></head><body>
+<div class="card">
+  <div class="glyph"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+  <h1>Something went wrong</h1>
+  <p>We hit an unexpected error rendering this page. The team has been notified — try again, or head back to the dashboard.</p>
+  <div class="err">{type(exc).__name__}</div>
+  <div>
+    <a href="javascript:history.back()" class="btn outline">Back</a>
+    <a href="/dashboard" class="btn">Dashboard</a>
+  </div>
+</div></body></html>"""
+    return HTMLResponse(error_html, status_code=500)
 
 
 if __name__ == "__main__":

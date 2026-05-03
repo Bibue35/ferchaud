@@ -1,643 +1,787 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Ferchaud</title>
-  <script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+{% extends "base.html" %}
+{% block title %}Welcome to Ferchaud{% endblock %}
+{% block head %}
+<style>
+  /* ═══════════════════════════════════════════════════════════════
+     ONBOARDING — depth, motion, real connection states
+     ═══════════════════════════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background:
+      radial-gradient(ellipse 800px 600px at 0% 0%, rgba(34,197,94,.04), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 100% 100%, rgba(99,102,241,.04), transparent 60%),
+      var(--bg-warm, #faf9f7);
+    color: var(--text, #1a1a1a);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  [data-theme="dark"] body {
+    background:
+      radial-gradient(ellipse 800px 600px at 0% 0%, rgba(34,197,94,.06), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 100% 100%, rgba(99,102,241,.06), transparent 60%),
+      #0a0a0a;
+  }
 
-    :root {
-      --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f3f2ef;
-      --border: #e8e8e4; --border-hover: #c8c8c0;
-      --text: #111111; --text-2: #555555; --muted: #999999;
-      --green: #22c55e; --green-glow: rgba(34,197,94,0.14);
-      --accent: #111111; --accent-glow: rgba(0,0,0,0.05);
-    }
-    [data-theme="dark"] {
-      --bg: #0c0c0c; --surface: #161616; --surface-2: #1e1e1e;
-      --border: #2a2a2a; --border-hover: #444;
-      --text: #f2f2f2; --text-2: #aaaaaa; --muted: #666666;
-      --accent: #f2f2f2; --accent-glow: rgba(255,255,255,0.06);
-    }
+  /* Top mini nav */
+  .ob-top {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,255,255,.7); backdrop-filter: blur(12px);
+    border: 1px solid var(--border, #eaeaea); border-radius: 50px;
+    padding: 8px 16px; display: flex; align-items: center; gap: 14px;
+    font-size: 12px; z-index: 100;
+  }
+  [data-theme="dark"] .ob-top { background: rgba(17,17,17,.7); border-color: #2a2a2a; }
+  .ob-top .logo-link { font-weight: 800; letter-spacing: -.5px; color: var(--text); text-decoration: none; }
+  .ob-top a { color: var(--muted); text-decoration: none; font-size: 11px; transition: color .15s; }
+  .ob-top a:hover { color: var(--text); }
 
-    html, body { height: 100%; }
-    body {
-      min-height: 100vh; background: var(--bg); color: var(--text);
-      font-family: 'Inter', -apple-system, sans-serif;
-      display: flex; flex-direction: column; align-items: center;
-      -webkit-font-smoothing: antialiased;
-    }
+  /* Wizard layout */
+  .ob-wrap {
+    min-height: 100vh; display: grid; place-items: center;
+    padding: 96px 1.5rem 4rem;
+  }
+  .wizard { width: 100%; max-width: 580px; }
 
-    /* Ambient blobs */
-    .blob { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(90px); opacity: 0.3; transition: all 1.4s ease; }
-    .blob-1 { width: 700px; height: 700px; top: -250px; left: -250px; background: radial-gradient(circle, rgba(34,197,94,0.35) 0%, transparent 65%); }
-    .blob-2 { width: 600px; height: 600px; bottom: -200px; right: -200px; background: radial-gradient(circle, rgba(99,102,241,0.28) 0%, transparent 65%); }
-    [data-theme="dark"] .blob-1 { opacity: 0.16; }
-    [data-theme="dark"] .blob-2 { opacity: 0.12; }
+  /* Progress bar */
+  .progress-row {
+    display: flex; gap: 4px; margin-bottom: 2rem;
+    padding: 0 4px;
+  }
+  .progress-step {
+    flex: 1; height: 3px; background: var(--border, #eaeaea);
+    border-radius: 50px; overflow: hidden; position: relative;
+    transition: background .3s;
+  }
+  .progress-step.done { background: var(--green, #22c55e); }
+  .progress-step.active { background: var(--border, #eaeaea); }
+  .progress-step.active::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--green, #22c55e), transparent);
+    animation: progress-flow 1.6s ease-in-out infinite;
+  }
+  @keyframes progress-flow {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .progress-meta {
+    display: flex; justify-content: space-between;
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.5rem;
+  }
 
-    /* Fixed top bar */
-    .top-bar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(247,247,245,0.88);
-      backdrop-filter: blur(20px) saturate(1.5);
-      -webkit-backdrop-filter: blur(20px) saturate(1.5);
-      border-bottom: 1px solid var(--border);
-      height: 62px; padding: 0 20px;
-      display: flex; align-items: center; gap: 16px;
-    }
-    [data-theme="dark"] .top-bar { background: rgba(12,12,12,0.88); }
+  /* Card */
+  .card {
+    background: var(--surface, #fff); border: 1px solid var(--border, #eaeaea);
+    border-radius: 28px; padding: 2.5rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.06);
+    position: relative; overflow: hidden;
+  }
+  [data-theme="dark"] .card { background: #111; border-color: #2a2a2a; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .card::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 80% at 0% 0%, rgba(34,197,94,.04), transparent 60%);
+  }
+  .card.fade-out { opacity: 0; transform: translateY(-8px); transition: all .25s ease; }
+  .card.fade-in  { animation: card-in .35s ease both; }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-    .top-bar-back {
-      width: 38px; height: 38px; border-radius: 50%;
-      border: 1.5px solid var(--border); background: var(--surface);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 16px; color: var(--text-2); flex-shrink: 0;
-      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
-      opacity: 0; pointer-events: none;
-    }
-    .top-bar-back.show { opacity: 1; pointer-events: auto; }
-    .top-bar-back:hover { border-color: var(--border-hover); color: var(--text); transform: scale(1.08); }
-    .top-bar-back:active { transform: scale(0.92); }
+  .step-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted);
+    text-transform: uppercase; margin-bottom: .75rem; display: flex; align-items: center; gap: 8px;
+  }
+  .step-eyebrow::before {
+    content: ''; width: 24px; height: 2px; background: var(--green); border-radius: 50px;
+  }
+  .step-title {
+    font-size: 1.85rem; font-weight: 800; letter-spacing: -.5px;
+    color: var(--text); margin-bottom: .5rem;
+  }
+  .step-sub {
+    color: var(--text-secondary); font-size: 14px; line-height: 1.6;
+    margin-bottom: 2rem;
+  }
 
-    .top-progress-wrap { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-    .top-progress-track {
-      height: 4px; background: var(--border); border-radius: 50px; overflow: hidden; position: relative;
-    }
-    .top-progress-fill {
-      position: absolute; top: 0; left: 0; height: 100%;
-      background: linear-gradient(90deg, #22c55e, #16a34a);
-      border-radius: 50px;
-      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-      box-shadow: 0 0 10px rgba(34,197,94,0.55);
-    }
-    .top-step-label {
-      font-size: 10px; font-weight: 600; color: var(--muted);
-      letter-spacing: 0.5px; text-align: right;
-    }
-    .top-bar-logo {
-      font-weight: 900; font-size: 15px; letter-spacing: -0.5px;
-      color: var(--text); white-space: nowrap; flex-shrink: 0;
-    }
+  /* Plan cards */
+  .plan-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+  .plan-card {
+    border: 1.5px solid var(--border); border-radius: 18px; padding: 1.1rem 1.25rem;
+    cursor: pointer; transition: all .2s ease; position: relative;
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 1rem;
+  }
+  .plan-card:hover { border-color: var(--border-hover, #d4d4d4); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.06); }
+  .plan-card.selected {
+    border-color: var(--green); background: rgba(34,197,94,.04);
+    box-shadow: 0 0 0 4px rgba(34,197,94,.08);
+  }
+  .plan-card .check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; transition: all .2s ease;
+  }
+  .plan-card.selected .check {
+    background: var(--green); border-color: var(--green);
+  }
+  .plan-card.selected .check svg { opacity: 1; transform: scale(1); }
+  .plan-card .check svg { opacity: 0; transform: scale(.5); transition: all .15s ease; }
+  .plan-name { font-weight: 700; color: var(--text); font-size: 15px; }
+  .plan-tagline { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .plan-price-block { text-align: right; }
+  .plan-price { font-weight: 800; font-size: 1.1rem; color: var(--text); }
+  .plan-price small { font-weight: 500; font-size: 11px; color: var(--muted); }
+  .plan-cap { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .plan-card .badge {
+    position: absolute; top: -8px; right: 16px;
+    background: var(--text); color: var(--surface);
+    font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 3px 10px; border-radius: 50px;
+  }
 
-    /* Dot indicators */
-    .dot-row { display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 16px; }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); }
-    .dot.done { background: rgba(34,197,94,0.45); }
-    .dot.active { background: var(--green); width: 22px; border-radius: 3px; box-shadow: 0 0 8px rgba(34,197,94,0.55); }
+  /* Connection picker (Step 3) */
+  .conn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  @media (max-width: 480px) { .conn-grid { grid-template-columns: 1fr; } }
+  .conn-tile {
+    border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem;
+    cursor: pointer; transition: all .2s; text-align: left;
+    background: var(--surface, #fff); position: relative;
+    display: flex; align-items: center; gap: .85rem;
+  }
+  .conn-tile:hover { border-color: var(--border-hover, #d4d4d4); transform: translateY(-2px); }
+  .conn-tile.connected { border-color: var(--green); background: rgba(34,197,94,.04); }
+  .conn-tile.connecting { border-color: var(--accent); animation: conn-pulse 1s ease-in-out infinite; }
+  @keyframes conn-pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+  .conn-icon {
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-cream, #f5f3ef); color: var(--text); font-size: 20px;
+  }
+  [data-theme="dark"] .conn-icon { background: #1a1a1a; }
+  .conn-name { font-weight: 700; color: var(--text); font-size: 14px; }
+  .conn-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .conn-status {
+    margin-left: auto; font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 50px; letter-spacing: .3px;
+  }
+  .conn-status.linked  { background: rgba(34,197,94,.12); color: #16a34a; }
+  .conn-status.pending { background: rgba(251,191,36,.12); color: #d97706; }
 
-    /* Wizard */
-    .wizard { width: 100%; max-width: 580px; padding: 94px 18px 60px; position: relative; z-index: 1; }
+  /* Inputs */
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding-left: 4px; }
+  .field input, .field select {
+    width: 100%; background: var(--bg-warm, #faf9f7);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 16px; font-family: inherit; font-size: 14px;
+    color: var(--text); outline: none; transition: border-color .2s;
+  }
+  [data-theme="dark"] .field input, [data-theme="dark"] .field select { background: #1a1a1a; }
+  .field input:focus, .field select:focus { border-color: var(--text); box-shadow: 0 0 0 3px rgba(0,0,0,.04); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    /* Steps viewport */
-    .steps-viewport { overflow: hidden; }
-    .steps-track { display: flex; will-change: transform; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
-    .step-pane { min-width: 100%; flex-shrink: 0; padding: 3px; }
+  /* Quick-amount chips */
+  .amt-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1rem; }
+  .amt-chip {
+    padding: 10px; border-radius: 50px; border: 1.5px solid var(--border);
+    background: transparent; color: var(--text-secondary); font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s;
+  }
+  .amt-chip:hover { border-color: var(--border-hover); color: var(--text); }
+  .amt-chip.active { background: var(--text); color: var(--surface); border-color: var(--text); }
 
-    /* Card */
-    .card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 28px;
-      padding: 2.4rem 2.4rem 2.2rem;
-      box-shadow: 0 2px 28px rgba(0,0,0,0.04), 0 1px 6px rgba(0,0,0,0.02);
-      animation: cardIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
-    }
-    @keyframes cardIn { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
-    [data-theme="dark"] .card { box-shadow: 0 2px 28px rgba(0,0,0,0.35), 0 1px 6px rgba(0,0,0,0.25); }
+  /* Risk slider */
+  .slider-wrap { padding: 1.25rem; background: var(--bg-cream); border-radius: 16px; margin-bottom: 1rem; }
+  [data-theme="dark"] .slider-wrap { background: #1a1a1a; }
+  .slider-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+  .slider-row .label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .slider-row .value {
+    font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 50px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px; background: var(--border);
+    border-radius: 50px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    background: var(--text); border-radius: 50%; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
 
-    .step-label {
-      font-size: 10px; font-weight: 700; letter-spacing: 1.8px; color: var(--muted);
-      text-transform: uppercase; margin-bottom: 0.8rem;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .step-label::before { content: ''; display: inline-block; width: 18px; height: 2px; background: var(--green); border-radius: 2px; }
-    .step-emoji {
-      font-size: 2.8rem; display: block; margin-bottom: 0.65rem; line-height: 1;
-      animation: emojiPop 0.5s cubic-bezier(0.16,1,0.3,1) both 0.06s;
-    }
-    @keyframes emojiPop { from { opacity:0; transform:scale(0.5) rotate(-10deg); } to { opacity:1; transform:scale(1) rotate(0); } }
-    .step-title {
-      font-size: 1.7rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px;
-      color: var(--text); margin-bottom: 0.4rem;
-      animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both 0.1s;
-    }
-    .step-sub {
-      color: var(--muted); font-size: 0.875rem; line-height: 1.65; margin-bottom: 1.85rem;
-      animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both 0.15s;
-    }
-    @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  /* Buttons */
+  .btn-row { display: flex; gap: 10px; margin-top: 1.5rem; }
+  .btn {
+    flex: 1; padding: 14px 20px; border-radius: 50px; border: none; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 700; transition: all .2s;
+  }
+  .btn-primary {
+    background: var(--accent, #1a1a1a); color: var(--surface, #fff);
+    box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  }
+  [data-theme="dark"] .btn-primary { background: #fff; color: #000; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--border-hover); }
+  .btn-ghost { background: transparent; color: var(--muted); padding: 10px; }
+  .btn-ghost:hover { color: var(--text); }
 
-    /* Choice grid */
-    .choice-grid { display: grid; gap: 10px; margin-bottom: 1rem; }
-    .cols-1 { grid-template-columns: 1fr; }
-    .cols-2 { grid-template-columns: 1fr 1fr; }
-    @media (max-width: 480px) { .cols-2 { grid-template-columns: 1fr; } }
+  /* Inline alert */
+  .alert {
+    padding: 10px 14px; border-radius: 12px; font-size: 13px;
+    margin-bottom: 1rem; display: none; line-height: 1.45;
+  }
+  .alert.error   { background: rgba(239,68,68,.08);  color: #dc2626; border: 1px solid rgba(239,68,68,.2); }
+  .alert.info    { background: rgba(59,130,246,.08); color: #2563eb; border: 1px solid rgba(59,130,246,.2); }
+  .alert.success { background: rgba(34,197,94,.08);  color: #16a34a; border: 1px solid rgba(34,197,94,.2); }
 
-    .choice-card {
-      position: relative; border: 1.5px solid var(--border); border-radius: 18px;
-      padding: 1.2rem 1rem 1.05rem; cursor: pointer; background: var(--surface);
-      display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-      min-height: 106px;
-      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s,
-                  transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
-      animation: choiceIn 0.38s cubic-bezier(0.16,1,0.3,1) both;
-      overflow: hidden;
-    }
-    .choice-card:nth-child(1){animation-delay:0.18s} .choice-card:nth-child(2){animation-delay:0.22s}
-    .choice-card:nth-child(3){animation-delay:0.26s} .choice-card:nth-child(4){animation-delay:0.30s}
-    .choice-card:nth-child(5){animation-delay:0.34s}
-    @keyframes choiceIn { from { opacity:0; transform:translateY(16px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }
-    .choice-card:hover { border-color: var(--border-hover); transform: translateY(-3px) scale(1.016); box-shadow: 0 8px 26px rgba(0,0,0,0.08); }
-    .choice-card:active { transform: scale(0.96); transition-duration: 0.1s; }
-    .choice-card.selected {
-      border-color: var(--green); background: var(--green-glow);
-      box-shadow: 0 0 0 3px rgba(34,197,94,0.2), 0 4px 18px rgba(34,197,94,0.14);
-      transform: scale(1.02);
-    }
+  /* Recap (final step) */
+  .recap-list {
+    background: var(--bg-cream); border-radius: 16px; padding: 1rem; margin-bottom: 1.25rem;
+  }
+  [data-theme="dark"] .recap-list { background: #1a1a1a; }
+  .recap-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 4px; font-size: 13px; border-bottom: 1px dashed var(--border);
+  }
+  .recap-row:last-child { border-bottom: none; }
+  .recap-row .k { color: var(--muted); }
+  .recap-row .v { font-weight: 700; color: var(--text); }
 
-    .check-badge {
-      position: absolute; top: 9px; right: 9px; width: 22px; height: 22px;
-      border-radius: 50%; background: var(--green); color: #fff;
-      font-size: 11px; font-weight: 900;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; transform: scale(0.3) rotate(-45deg);
-      transition: opacity 0.22s cubic-bezier(0.34,1.56,0.64,1), transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .choice-card.selected .check-badge { opacity: 1; transform: scale(1) rotate(0); }
+  .ai-glow {
+    width: 64px; height: 64px; margin: 0 auto 1rem;
+    background: radial-gradient(circle, var(--green), transparent 70%);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    animation: ai-glow 2s ease-in-out infinite;
+  }
+  @keyframes ai-glow {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50%     { transform: scale(1.05); opacity: .85; }
+  }
+  .ai-glow svg { color: #fff; }
+</style>
+{% endblock %}
+{% block body %}
 
-    .choice-emoji {
-      font-size: 1.9rem; margin-bottom: 0.48rem; display: block; line-height: 1;
-      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .choice-card:hover .choice-emoji { transform: scale(1.18); }
-    .choice-card.selected .choice-emoji { transform: scale(1.1); }
-    .choice-title { font-size: 0.83rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
-    .choice-sub { font-size: 0.71rem; color: var(--muted); line-height: 1.45; }
+<nav class="ob-top">
+  <a href="/" class="logo-link">Ferchaud</a>
+  <span style="opacity:.3;">·</span>
+  <a href="/api/auth/logout">Sign out</a>
+</nav>
 
-    /* Ripple */
-    .ripple {
-      position: absolute; border-radius: 50%; pointer-events: none;
-      background: rgba(34,197,94,0.22); transform: scale(0);
-      animation: rippleAnim 0.55s ease-out forwards;
-    }
-    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+<div class="ob-wrap">
+  <div class="wizard">
 
-    /* Risk color accents */
-    .risk-0.selected { border-color:#22c55e; background:rgba(34,197,94,0.08); box-shadow:0 0 0 3px rgba(34,197,94,0.2); }
-    .risk-1.selected { border-color:#3b82f6; background:rgba(59,130,246,0.08); box-shadow:0 0 0 3px rgba(59,130,246,0.2); }
-    .risk-2.selected { border-color:#f59e0b; background:rgba(245,158,11,0.08); box-shadow:0 0 0 3px rgba(245,158,11,0.2); }
-    .risk-3.selected { border-color:#f97316; background:rgba(249,115,22,0.08); box-shadow:0 0 0 3px rgba(249,115,22,0.2); }
-    .risk-4.selected { border-color:#ef4444; background:rgba(239,68,68,0.08); box-shadow:0 0 0 3px rgba(239,68,68,0.2); }
-
-    /* Tier cards */
-    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.4rem; }
-    @media (max-width: 480px) { .tier-grid { grid-template-columns: 1fr; } }
-    .tier-card {
-      border: 1.5px solid var(--border); border-radius: 18px; padding: 1.25rem 1rem;
-      cursor: pointer; background: var(--surface); position: relative;
-      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-      animation: choiceIn 0.38s cubic-bezier(0.16,1,0.3,1) both;
-    }
-    .tier-card:nth-child(1){animation-delay:0.18s} .tier-card:nth-child(2){animation-delay:0.22s}
-    .tier-card:nth-child(3){animation-delay:0.26s} .tier-card:nth-child(4){animation-delay:0.30s}
-    .tier-card:hover { transform: translateY(-3px); box-shadow: 0 8px 26px rgba(0,0,0,0.08); border-color: var(--border-hover); }
-    .tier-card:active { transform: scale(0.96); }
-    .tier-card.selected {
-      border: 1.5px solid transparent;
-      background-image: linear-gradient(var(--surface),var(--surface)), linear-gradient(135deg,#22c55e,#16a34a);
-      background-origin: border-box; background-clip: padding-box, border-box;
-      box-shadow: 0 0 0 3px rgba(34,197,94,0.18), 0 6px 22px rgba(34,197,94,0.18);
-      transform: scale(1.02);
-    }
-    .tier-badge {
-      position: absolute; top: 10px; right: 10px; font-size: 9px; font-weight: 800;
-      letter-spacing: 0.5px; padding: 3px 9px; border-radius: 50px;
-      background: var(--surface-2); color: var(--text-2);
-    }
-    .tier-card.selected .tier-badge { background: rgba(34,197,94,0.18); color: #16a34a; }
-    .tier-name { font-weight: 800; font-size: 1rem; margin-bottom: 2px; }
-    .tier-price { font-size: 1.4rem; font-weight: 800; margin-bottom: 2px; }
-    .tier-price span { font-size: 0.75rem; font-weight: 400; color: var(--muted); }
-    .tier-share { font-size: 11.5px; color: var(--green); font-weight: 700; margin-bottom: 5px; }
-    .tier-desc { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
-
-    /* Confirm button */
-    .btn-confirm {
-      width: 100%; padding: 1rem; border-radius: 50px; border: none;
-      font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700;
-      background: var(--accent); color: var(--surface); cursor: pointer;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.1);
-      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-      display: none;
-    }
-    .btn-confirm.show { display: block; animation: slideUp 0.32s ease both; }
-    .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,0.16); }
-    .btn-confirm:active { transform: scale(0.97); }
-
-    /* Summary */
-    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.75rem; }
-    @media (max-width: 380px) { .summary-grid { grid-template-columns: 1fr; } }
-    .summary-item {
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 14px; padding: 0.85rem 1rem;
-      animation: choiceIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
-    }
-    .summary-key { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-    .summary-val { font-size: 0.88rem; font-weight: 700; color: var(--text); }
-
-    /* CTA */
-    .btn-cta {
-      width: 100%; padding: 1rem; border-radius: 50px; border: none;
-      font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700;
-      background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff;
-      cursor: pointer; box-shadow: 0 4px 18px rgba(34,197,94,0.38);
-      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-      animation: slideUp 0.4s ease both 0.58s;
-    }
-    .btn-cta:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 30px rgba(34,197,94,0.48); }
-    .btn-cta:active { transform: scale(0.97); }
-
-    @media (max-width: 500px) {
-      .card { padding: 1.75rem 1.25rem 1.5rem; border-radius: 22px; }
-      .step-title { font-size: 1.45rem; }
-      .wizard { padding: 90px 14px 60px; }
-    }
-  </style>
-</head>
-<body>
-
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
-
-<!-- Fixed top progress bar -->
-<div class="top-bar">
-  <button class="top-bar-back" id="backBtn" onclick="goBack()">&#8592;</button>
-  <div class="top-progress-wrap">
-    <div class="top-progress-track">
-      <div class="top-progress-fill" id="progressFill" style="width:0%"></div>
+    <!-- Progress -->
+    <div class="progress-meta">
+      <span id="progressLabel">Step 1 of 4</span>
+      <span id="progressName">Choose plan</span>
     </div>
-    <div class="top-step-label" id="stepLabel">Step 1 of 7</div>
-  </div>
-  <div class="top-bar-logo">Ferchaud</div>
-</div>
-
-<div class="wizard">
-  <div class="dot-row" id="dotRow"></div>
-
-  <div class="steps-viewport">
-    <div class="steps-track" id="stepsTrack">
-
-      <!-- STEP 1: Goal -->
-      <div class="step-pane">
-        <div class="card">
-          <div class="step-label">Step 1 of 7</div>
-          <span class="step-emoji">&#127919;</span>
-          <h1 class="step-title">What brings you here?</h1>
-          <p class="step-sub">We'll tailor your experience to match your goals.</p>
-          <div class="choice-grid cols-1">
-            <div class="choice-card" onclick="pick(this,event,'trading_goal','grow',2)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128640;</span>
-              <div class="choice-title">Grow my wealth</div>
-              <div class="choice-sub">Build long-term wealth through smart investing</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'trading_goal','income',2)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128176;</span>
-              <div class="choice-title">Generate income</div>
-              <div class="choice-sub">Earn consistent passive income from trading</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'trading_goal','learn',2)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128218;</span>
-              <div class="choice-title">Learn to trade</div>
-              <div class="choice-sub">Understand markets and develop real skills</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'trading_goal','protect',2)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128737;</span>
-              <div class="choice-title">Protect my savings</div>
-              <div class="choice-sub">Beat inflation and preserve purchasing power</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'trading_goal','active',2)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#9889;</span>
-              <div class="choice-title">Active trading</div>
-              <div class="choice-sub">Trade frequently and stay hands-on</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 2: Risk -->
-      <div class="step-pane">
-        <div class="card">
-          <div class="step-label">Step 2 of 7</div>
-          <span class="step-emoji">&#128202;</span>
-          <h1 class="step-title">How much risk can you handle?</h1>
-          <p class="step-sub">Be honest — this shapes which strategies run for you.</p>
-          <div class="choice-grid cols-1">
-            <div class="choice-card risk-0" onclick="pick(this,event,'risk_tolerance','conservative',3)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128994;</span>
-              <div class="choice-title">Conservative</div>
-              <div class="choice-sub">Protect capital above all. Small, steady gains.</div>
-            </div>
-            <div class="choice-card risk-1" onclick="pick(this,event,'risk_tolerance','moderate',3)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128309;</span>
-              <div class="choice-title">Moderate</div>
-              <div class="choice-sub">Balanced growth and downside protection.</div>
-            </div>
-            <div class="choice-card risk-2" onclick="pick(this,event,'risk_tolerance','balanced',3)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128993;</span>
-              <div class="choice-title">Balanced</div>
-              <div class="choice-sub">Growth-focused, comfortable with market swings.</div>
-            </div>
-            <div class="choice-card risk-3" onclick="pick(this,event,'risk_tolerance','aggressive',3)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128992;</span>
-              <div class="choice-title">Aggressive</div>
-              <div class="choice-sub">High growth target. Accept significant drawdowns.</div>
-            </div>
-            <div class="choice-card risk-4" onclick="pick(this,event,'risk_tolerance','maximum',3)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128308;</span>
-              <div class="choice-title">Maximum</div>
-              <div class="choice-sub">All-in. I can stomach 50%+ drops without flinching.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 3: Experience -->
-      <div class="step-pane">
-        <div class="card">
-          <div class="step-label">Step 3 of 7</div>
-          <span class="step-emoji">&#129504;</span>
-          <h1 class="step-title">Your trading experience?</h1>
-          <p class="step-sub">No wrong answers — we calibrate the bot to your level.</p>
-          <div class="choice-grid cols-1">
-            <div class="choice-card" onclick="pick(this,event,'experience_level','beginner',4)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128214;</span>
-              <div class="choice-title">Complete beginner</div>
-              <div class="choice-sub">Never traded before. Starting from zero.</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'experience_level','some',4)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127807;</span>
-              <div class="choice-title">Some experience</div>
-              <div class="choice-sub">Bought stocks or crypto before. Learning the ropes.</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'experience_level','intermediate',4)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128200;</span>
-              <div class="choice-title">Intermediate</div>
-              <div class="choice-sub">Comfortable with charts, technical analysis, options basics.</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'experience_level','advanced',4)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127947;</span>
-              <div class="choice-title">Advanced</div>
-              <div class="choice-sub">Trade regularly. Understand derivatives and risk management.</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'experience_level','professional',4)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127942;</span>
-              <div class="choice-title">Professional</div>
-              <div class="choice-sub">Work in finance or trade full-time for a living.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 4: Horizon -->
-      <div class="step-pane">
-        <div class="card">
-          <div class="step-label">Step 4 of 7</div>
-          <span class="step-emoji">&#8987;</span>
-          <h1 class="step-title">Investment horizon</h1>
-          <p class="step-sub">When might you need access to these funds?</p>
-          <div class="choice-grid cols-2">
-            <div class="choice-card" onclick="pick(this,event,'investment_horizon','short',5)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#9889;</span>
-              <div class="choice-title">Short-term</div><div class="choice-sub">Days to weeks</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'investment_horizon','medium',5)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128197;</span>
-              <div class="choice-title">Medium-term</div><div class="choice-sub">A few months</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'investment_horizon','long',5)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127807;</span>
-              <div class="choice-title">Long-term</div><div class="choice-sub">1 – 5 years</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'investment_horizon','very_long',5)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127956;</span>
-              <div class="choice-title">Very long-term</div><div class="choice-sub">5+ years</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 5: Capital -->
-      <div class="step-pane">
-        <div class="card">
-          <div class="step-label">Step 5 of 7</div>
-          <span class="step-emoji">&#128181;</span>
-          <h1 class="step-title">Starting capital</h1>
-          <p class="step-sub">You can always add more later. Minimum is just $10.</p>
-          <div class="choice-grid cols-2">
-            <div class="choice-card" onclick="pick(this,event,'starting_capital','10_500',6)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127807;</span>
-              <div class="choice-title">$10 – $500</div><div class="choice-sub">Starting small</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'starting_capital','500_2500',6)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128188;</span>
-              <div class="choice-title">$500 – $2,500</div><div class="choice-sub">Solid foundation</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'starting_capital','2500_10k',6)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128202;</span>
-              <div class="choice-title">$2,500 – $10K</div><div class="choice-sub">Growing portfolio</div>
-            </div>
-            <div class="choice-card" onclick="pick(this,event,'starting_capital','10k_50k',6)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#127974;</span>
-              <div class="choice-title">$10K – $50K</div><div class="choice-sub">Serious capital</div>
-            </div>
-            <div class="choice-card" style="grid-column:1/-1" onclick="pick(this,event,'starting_capital','50k_plus',6)">
-              <div class="check-badge">&#10003;</div><span class="choice-emoji">&#128640;</span>
-              <div class="choice-title">$50,000+</div>
-              <div class="choice-sub">High-net-worth — unlock Elite tier benefits</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 6: Plan -->
-      <div class="step-pane">
-        <div class="card">
-          <div class="step-label">Step 6 of 7</div>
-          <span class="step-emoji">&#10024;</span>
-          <h1 class="step-title">Choose your plan</h1>
-          <p class="step-sub">Start free anytime. Upgrade when you're ready.</p>
-          <div class="tier-grid">
-            <div class="tier-card" onclick="selectTier(this,'free')">
-              <div class="tier-badge">FREE</div>
-              <div class="tier-name">Free</div>
-              <div class="tier-price">$0<span>/mo</span></div>
-              <div class="tier-share">Keep 70%</div>
-              <div class="tier-desc">Up to $500 deployed · Basic strategies · Delayed signals</div>
-            </div>
-            <div class="tier-card" onclick="selectTier(this,'starter')">
-              <div class="tier-badge">POPULAR</div>
-              <div class="tier-name">Starter</div>
-              <div class="tier-price">$29<span>/mo</span></div>
-              <div class="tier-share">Keep 80%</div>
-              <div class="tier-desc">Up to $2K deployed · All strategies · Live signals</div>
-            </div>
-            <div class="tier-card" onclick="selectTier(this,'pro')">
-              <div class="tier-badge">PRO</div>
-              <div class="tier-name">Pro</div>
-              <div class="tier-price">$99<span>/mo</span></div>
-              <div class="tier-share">Keep 90%</div>
-              <div class="tier-desc">Up to $10K · Options · API access · Grok research</div>
-            </div>
-            <div class="tier-card" onclick="selectTier(this,'elite')">
-              <div class="tier-badge">ELITE</div>
-              <div class="tier-name">Elite</div>
-              <div class="tier-price">$299<span>/mo</span></div>
-              <div class="tier-share">Keep 98%</div>
-              <div class="tier-desc">Unlimited · Custom strategies · White-glove setup</div>
-            </div>
-          </div>
-          <button class="btn-confirm" id="tierBtn" onclick="confirmTier()">Continue with this plan &#8594;</button>
-        </div>
-      </div>
-
-      <!-- STEP 7: Summary -->
-      <div class="step-pane">
-        <div class="card">
-          <div class="step-label">Step 7 of 7</div>
-          <span class="step-emoji">&#127881;</span>
-          <h1 class="step-title">You're all set!</h1>
-          <p class="step-sub">Your personalized trading profile is ready. We'll use this to optimize everything for you.</p>
-          <div class="summary-grid" id="summaryGrid"></div>
-          <button class="btn-cta" id="dashBtn" onclick="launchDashboard()">Open Dashboard &#8594;</button>
-        </div>
-      </div>
-
+    <div class="progress-row">
+      <div class="progress-step active" data-step="1"></div>
+      <div class="progress-step"        data-step="2"></div>
+      <div class="progress-step"        data-step="3"></div>
+      <div class="progress-step"        data-step="4"></div>
     </div>
+
+    <!-- ──────────────────────────────────────── STEP 1: Plan ─── -->
+    <div class="card fade-in" id="step1">
+      <div class="step-eyebrow">Pick a plan</div>
+      <div class="step-title">How serious are you?</div>
+      <div class="step-sub">
+        You keep <b>100% of profits</b> on every plan. Subscription only —
+        we win when you keep using the bot, not when we take from your wins.
+      </div>
+
+      <div class="plan-grid">
+        <div class="plan-card" data-tier="free" onclick="selectPlan(this, 'free')">
+          <div>
+            <div class="plan-name">Free</div>
+            <div class="plan-tagline">Paper trading · learn the brain risk-free</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$0<small>/mo</small></div>
+            <div class="plan-cap">50 AI calls/day</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+
+        <div class="plan-card" data-tier="starter" onclick="selectPlan(this, 'starter')">
+          <div>
+            <div class="plan-name">Starter <span style="font-size:10px;color:var(--green);font-weight:700;margin-left:6px;">14-day trial</span></div>
+            <div class="plan-tagline">First-time live · up to $5K deployed</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$19<small>/mo</small></div>
+            <div class="plan-cap">200 AI calls/day</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+
+        <div class="plan-card selected" data-tier="pro" onclick="selectPlan(this, 'pro')">
+          <div class="badge">POPULAR</div>
+          <div>
+            <div class="plan-name">Pro</div>
+            <div class="plan-tagline">Serious traders · Claude Sonnet · $50K cap</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$59<small>/mo</small></div>
+            <div class="plan-cap">1,000 AI calls/day</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+
+        <div class="plan-card" data-tier="elite" onclick="selectPlan(this, 'elite')">
+          <div>
+            <div class="plan-name">Elite</div>
+            <div class="plan-tagline">Funds &amp; pros · Claude Opus · unlimited</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$199<small>/mo</small></div>
+            <div class="plan-cap">Unlimited</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+      </div>
+
+      <div class="alert" id="alert1"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goStep(2)">Continue</button>
+      </div>
+    </div>
+
+    <!-- ──────────────────────────────────────── STEP 2: Risk + style ─── -->
+    <div class="card" id="step2" style="display:none;">
+      <div class="step-eyebrow">Trading style</div>
+      <div class="step-title">How aggressive should the bot be?</div>
+      <div class="step-sub">
+        We learn from every trade so this isn't permanent — change it anytime
+        from the dashboard. Lower risk = fewer trades, smaller positions.
+      </div>
+
+      <!-- Mode selector -->
+      <div class="plan-grid" style="margin-bottom: 1.25rem;">
+        <div class="plan-card selected" data-mode="passive" onclick="selectMode(this, 'passive')">
+          <div>
+            <div class="plan-name">Passive <span style="font-size:10px;color:var(--muted);font-weight:500;margin-left:4px;">recommended for new users</span></div>
+            <div class="plan-tagline">High-conviction setups only · ~5–15% expected annual</div>
+          </div>
+          <div class="plan-price-block"><div class="plan-cap">~6 trades/week</div></div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="plan-card" data-mode="aggressive" onclick="selectMode(this, 'aggressive')">
+          <div>
+            <div class="plan-name">Aggressive</div>
+            <div class="plan-tagline">More signals + scalping · ~15–25% expected · larger drawdowns</div>
+          </div>
+          <div class="plan-price-block"><div class="plan-cap">~30+ trades/week</div></div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Risk slider -->
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <span class="label">Max risk per trade</span>
+          <span class="value" id="riskValue">2.0%</span>
+        </div>
+        <input type="range" id="riskSlider" min="50" max="500" step="25" value="200"
+               oninput="document.getElementById('riskValue').textContent = (this.value/100).toFixed(1) + '%'">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;">
+          <span>0.5% safer</span><span>5% riskier</span>
+        </div>
+      </div>
+
+      <div class="alert" id="alert2"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="goStep(1)">Back</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Continue</button>
+      </div>
+    </div>
+
+    <!-- ──────────────────────────────────────── STEP 3: Connect ─── -->
+    <div class="card" id="step3" style="display:none;">
+      <div class="step-eyebrow">Connections</div>
+      <div class="step-title">Link a broker &amp; a payment method</div>
+      <div class="step-sub">
+        We need <b>one broker</b> for trading and <b>one funding method</b> for the
+        subscription. Everything is paper-trading until you flip the live switch later.
+      </div>
+
+      <!-- Broker section -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:.5rem 0 .75rem;">
+        Broker (where the bot trades)
+      </div>
+      <div class="conn-grid">
+        <div class="conn-tile" data-conn="alpaca" onclick="connectBroker('alpaca')">
+          <div class="conn-icon">A</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Alpaca</div>
+            <div class="conn-sub">Stocks, ETFs &amp; crypto · paper or live</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="freqtrade" onclick="connectBroker('freqtrade')">
+          <div class="conn-icon" style="background:#fbbf24;color:#fff;">F</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Freqtrade</div>
+            <div class="conn-sub">Self-hosted crypto · advanced</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+      </div>
+
+      <!-- Funding section -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:1.5rem 0 .75rem;">
+        Funding (subscription &amp; deposits)
+      </div>
+      <div class="conn-grid">
+        <div class="conn-tile" data-conn="card" onclick="connectFunding('card')">
+          <div class="conn-icon">💳</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Debit / Credit</div>
+            <div class="conn-sub">Instant · via Stripe</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="bank" onclick="connectFunding('bank')">
+          <div class="conn-icon">🏦</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Bank (ACH)</div>
+            <div class="conn-sub">1–3 days · via Plaid</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="metamask" onclick="connectFunding('metamask')">
+          <div class="conn-icon">🦊</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">MetaMask</div>
+            <div class="conn-sub">USDC / ETH on Ethereum</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="phantom" onclick="connectFunding('phantom')">
+          <div class="conn-icon">👻</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Phantom</div>
+            <div class="conn-sub">USDC / SOL on Solana</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+      </div>
+
+      <div class="alert" id="alert3"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="goStep(2)">Back</button>
+        <button class="btn btn-primary" id="step3Next" onclick="goStep(4)">
+          Continue
+        </button>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:.75rem;">
+        You can connect more later from your dashboard.
+      </div>
+    </div>
+
+    <!-- ──────────────────────────────────────── STEP 4: Recap + finish ─── -->
+    <div class="card" id="step4" style="display:none;text-align:center;">
+      <div class="ai-glow">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+        </svg>
+      </div>
+      <div class="step-eyebrow" style="justify-content:center;">All set</div>
+      <div class="step-title">Welcome to Ferchaud</div>
+      <div class="step-sub">
+        Your AI brain is ready. Paper-trading is on by default — flip to live whenever you're comfortable.
+      </div>
+
+      <div class="recap-list" style="text-align:left;">
+        <div class="recap-row"><span class="k">Plan</span><span class="v" id="recapPlan">Pro · $59/mo</span></div>
+        <div class="recap-row"><span class="k">Trading style</span><span class="v" id="recapMode">Passive</span></div>
+        <div class="recap-row"><span class="k">Max risk per trade</span><span class="v" id="recapRisk">2.0%</span></div>
+        <div class="recap-row"><span class="k">Broker</span><span class="v" id="recapBroker">Not linked</span></div>
+        <div class="recap-row"><span class="k">Funding</span><span class="v" id="recapFunding">Not linked</span></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="finish()">
+        Open Dashboard
+      </button>
+      <div style="margin-top:.75rem;font-size:11px;color:var(--muted);">
+        You can change any of this from the dashboard later.
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
-(function(){
-  const TOTAL = 7;
-  let step = 1;
-  let tier = null;
-  const answers = {};
+  // State
+  const state = {
+    tier: 'pro',
+    mode: 'passive',
+    risk: 2.0,
+    broker: null,
+    funding: null,
+  };
+  const STEP_NAMES = { 1: 'Choose plan', 2: 'Trading style', 3: 'Connections', 4: 'Done' };
 
-  // Build dots
-  const dotRow = document.getElementById('dotRow');
-  for(let i=1;i<=TOTAL;i++){
-    const d = document.createElement('div');
-    d.className='dot'; d.id='dot'+i;
-    dotRow.appendChild(d);
+  function showAlert(stepNum, msg, kind = 'error') {
+    const el = document.getElementById('alert' + stepNum);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'alert ' + kind;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, kind === 'error' ? 5000 : 3000);
   }
 
-  function updateUI() {
-    const pct = Math.round(((step-1)/(TOTAL-1))*100);
-    document.getElementById('progressFill').style.width = pct+'%';
-    document.getElementById('stepLabel').textContent = 'Step '+step+' of '+TOTAL;
-    for(let i=1;i<=TOTAL;i++){
-      const d=document.getElementById('dot'+i);
-      d.className='dot'+(i<step?' done':i===step?' active':'');
+  function selectPlan(el, tier) {
+    state.tier = tier;
+    document.querySelectorAll('.plan-card[data-tier]').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  function selectMode(el, mode) {
+    state.mode = mode;
+    document.querySelectorAll('.plan-card[data-mode]').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  async function goStep(n) {
+    // Persist data BEFORE moving forward
+    const cur = currentStep();
+    if (cur === 1 && n === 2) {
+      const ok = await saveTier();
+      if (!ok) return;
     }
-    const back=document.getElementById('backBtn');
-    step>1?back.classList.add('show'):back.classList.remove('show');
-    document.getElementById('stepsTrack').style.transform='translateX(-'+((step-1)*100)+'%)';
+    if (cur === 2 && n === 3) {
+      state.risk = parseFloat(document.getElementById('riskSlider').value) / 100;
+      // No server endpoint needed for risk — stored on submit
+    }
+    if (cur === 3 && n === 4) {
+      // Update recap
+      const tierLabels = { free:'Free · $0/mo', starter:'Starter · $19/mo', pro:'Pro · $59/mo', elite:'Elite · $199/mo' };
+      document.getElementById('recapPlan').textContent = tierLabels[state.tier] || state.tier;
+      document.getElementById('recapMode').textContent = state.mode === 'passive' ? 'Passive' : 'Aggressive';
+      document.getElementById('recapRisk').textContent = state.risk.toFixed(1) + '%';
+      document.getElementById('recapBroker').textContent  = state.broker || 'Skipped';
+      document.getElementById('recapFunding').textContent = state.funding || 'Skipped';
+    }
+
+    // Animate fade out → switch → fade in
+    const cardCur = document.getElementById('step' + cur);
+    const cardNxt = document.getElementById('step' + n);
+    if (cardCur === cardNxt) return;
+
+    cardCur.classList.add('fade-out');
+    setTimeout(() => {
+      cardCur.style.display = 'none';
+      cardCur.classList.remove('fade-out');
+      cardNxt.style.display = 'block';
+      cardNxt.classList.remove('fade-in');
+      void cardNxt.offsetWidth; // restart animation
+      cardNxt.classList.add('fade-in');
+
+      // Progress bar update
+      document.querySelectorAll('.progress-step').forEach(p => {
+        const i = parseInt(p.dataset.step, 10);
+        p.classList.remove('active', 'done');
+        if (i < n) p.classList.add('done');
+        if (i === n) p.classList.add('active');
+      });
+      document.getElementById('progressLabel').textContent = `Step ${n} of 4`;
+      document.getElementById('progressName').textContent  = STEP_NAMES[n];
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 240);
+  }
+  function currentStep() {
+    for (let i = 1; i <= 4; i++) {
+      if (document.getElementById('step' + i).style.display !== 'none') return i;
+    }
+    return 1;
   }
 
-  function goTo(s){
-    step=s;
-    updateUI();
-    window.scrollTo({top:0,behavior:'smooth'});
+  async function saveTier() {
+    try {
+      const r = await fetch('/api/onboarding/tier', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ tier: state.tier, mode: state.mode }),
+      });
+      if (!r.ok) {
+        showAlert(1, 'Could not save plan — try again.', 'error');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      showAlert(1, 'Network error — please retry.', 'error');
+      return false;
+    }
   }
 
-  window.goBack=function(){ if(step>1) goTo(step-1); };
-
-  function ripple(el,e){
-    const r=el.getBoundingClientRect();
-    const sz=Math.max(r.width,r.height);
-    const rip=document.createElement('span');
-    rip.className='ripple';
-    rip.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+(e.clientX-r.left-sz/2)+'px;top:'+(e.clientY-r.top-sz/2)+'px';
-    el.appendChild(rip);
-    rip.addEventListener('animationend',()=>rip.remove());
+  // ── Broker connections ────────────────────────────────────────────────
+  function setConnTile(kind, label) {
+    document.querySelectorAll(`.conn-tile[data-conn="${kind}"]`).forEach(el => {
+      el.classList.add('connected');
+      const status = el.querySelector('.conn-status');
+      if (status) {
+        status.style.display = 'inline-block';
+        status.classList.add('linked');
+        status.textContent = label || 'LINKED';
+      }
+    });
   }
-
-  async function saveProfile(field,val,s){
-    const body={step:s}; body[field]=val;
-    try{ await fetch('/api/onboarding/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}); }catch(e){}
+  function setConnTileConnecting(kind) {
+    document.querySelectorAll(`.conn-tile[data-conn="${kind}"]`).forEach(el => {
+      el.classList.add('connecting');
+    });
   }
-
-  window.pick=function(el,ev,field,val,next){
-    el.closest('.choice-grid').querySelectorAll('.choice-card').forEach(c=>c.classList.remove('selected'));
-    el.classList.add('selected');
-    answers[field]=val;
-    ripple(el,ev);
-    saveProfile(field,val,next-1);
-    setTimeout(()=>goTo(next),310);
-  };
-
-  window.selectTier=function(el,t){
-    document.querySelectorAll('.tier-card').forEach(c=>c.classList.remove('selected'));
-    el.classList.add('selected');
-    tier=t; answers.tier=t;
-    const btn=document.getElementById('tierBtn');
-    const names={free:'Free',starter:'Starter',pro:'Pro',elite:'Elite'};
-    btn.textContent='Continue with '+names[t]+' →';
-    btn.classList.add('show');
-  };
-
-  window.confirmTier=async function(){
-    if(!tier)return;
-    try{ await fetch('/api/onboarding/tier',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tier}),credentials:'same-origin'}); }catch(e){}
-    buildSummary();
-    goTo(7);
-    setTimeout(fireConfetti,420);
-  };
-
-  function buildSummary(){
-    const map={
-      trading_goal:{grow:'&#128640; Grow wealth',income:'&#128176; Generate income',learn:'&#128218; Learn trading',protect:'&#128737; Protect savings',active:'&#9889; Active trading'},
-      risk_tolerance:{conservative:'&#128994; Conservative',moderate:'&#128309; Moderate',balanced:'&#128993; Balanced',aggressive:'&#128992; Aggressive',maximum:'&#128308; Maximum'},
-      experience_level:{beginner:'&#128214; Beginner',some:'&#127807; Some exp.',intermediate:'&#128200; Intermediate',advanced:'&#127947; Advanced',professional:'&#127942; Professional'},
-      investment_horizon:{short:'&#9889; Short-term',medium:'&#128197; Medium-term',long:'&#127807; Long-term',very_long:'&#127956; Very long-term'},
-      starting_capital:{'10_500':'&#127807; $10–$500','500_2500':'&#128188; $500–$2.5K','2500_10k':'&#128202; $2.5K–$10K','10k_50k':'&#127974; $10K–$50K','50k_plus':'&#128640; $50K+'},
-      tier:{free:'&#10024; Free',starter:'&#11088; Starter',pro:'&#128156; Pro',elite:'&#128081; Elite'}
-    };
-    const keys=['trading_goal','risk_tolerance','experience_level','investment_horizon','starting_capital','tier'];
-    const titles=['Goal','Risk','Experience','Horizon','Capital','Plan'];
-    const g=document.getElementById('summaryGrid');
-    g.innerHTML='';
-    keys.forEach((k,i)=>{
-      const v=answers[k];
-      const item=document.createElement('div');
-      item.className='summary-item';
-      item.style.animationDelay=(0.1+i*0.07)+'s';
-      item.innerHTML='<div class="summary-key">'+titles[i]+'</div><div class="summary-val">'+(v?(map[k][v]||v):'&#8212;')+'</div>';
-      g.appendChild(item);
+  function clearConnTileConnecting(kind) {
+    document.querySelectorAll(`.conn-tile[data-conn="${kind}"]`).forEach(el => {
+      el.classList.remove('connecting');
     });
   }
 
-  function fireConfetti(){
-    const base={spread:65,origin:{y:0.55},zIndex:9999};
-    confetti({...base,particleCount:70,colors:['#22c55e','#16a34a','#86efac']});
-    setTimeout(()=>confetti({...base,particleCount:55,angle:65,origin:{x:0.1,y:0.6},colors:['#6366f1','#818cf8','#c7d2fe']}),200);
-    setTimeout(()=>confetti({...base,particleCount:55,angle:115,origin:{x:0.9,y:0.6},colors:['#f59e0b','#fbbf24','#fde68a']}),380);
+  async function connectBroker(kind) {
+    if (kind === 'alpaca') {
+      const key = prompt('Paste your Alpaca API Key (paper trading):');
+      if (!key) return;
+      const secret = prompt('Paste your Alpaca Secret Key:');
+      if (!secret) return;
+      setConnTileConnecting('alpaca');
+      try {
+        const r = await fetch('/api/onboarding/broker', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ broker:'alpaca', api_key: key.trim(), secret_key: secret.trim(), mode: 'paper' }),
+        });
+        clearConnTileConnecting('alpaca');
+        if (r.ok) {
+          state.broker = 'Alpaca (paper)';
+          setConnTile('alpaca', 'PAPER');
+          showAlert(3, 'Alpaca paper-trading account linked.', 'success');
+        } else {
+          const d = await r.json().catch(() => ({}));
+          showAlert(3, d.error || 'Could not validate Alpaca keys.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('alpaca');
+        showAlert(3, 'Network error — try again.', 'error');
+      }
+    } else if (kind === 'freqtrade') {
+      const url = prompt('Paste your Freqtrade REST URL (e.g. http://localhost:8080):');
+      if (!url) return;
+      setConnTileConnecting('freqtrade');
+      try {
+        const r = await fetch('/api/onboarding/broker', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ broker:'freqtrade', url }),
+        });
+        clearConnTileConnecting('freqtrade');
+        if (r.ok) {
+          state.broker = 'Freqtrade';
+          setConnTile('freqtrade');
+          showAlert(3, 'Freqtrade endpoint saved.', 'success');
+        } else {
+          showAlert(3, 'Could not save Freqtrade endpoint.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('freqtrade');
+        showAlert(3, 'Network error — try again.', 'error');
+      }
+    }
   }
 
-  window.launchDashboard=async function(){
-    const btn=document.getElementById('dashBtn');
-    btn.textContent='Launching…'; btn.disabled=true;
-    btn.style.transition='transform 0.15s ease';
-    btn.style.transform='scale(0.96)';
-    try{ await fetch('/api/onboarding/complete',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'}}); }catch(e){}
-    setTimeout(()=>{ window.location.href='/dashboard'; },340);
-  };
+  // ── Funding connections ───────────────────────────────────────────────
+  async function connectFunding(kind) {
+    if (kind === 'metamask') {
+      if (!window.ethereum) {
+        showAlert(3, 'MetaMask not detected. Install at metamask.io and try again.', 'error');
+        return;
+      }
+      setConnTileConnecting('metamask');
+      try {
+        const accounts = await window.ethereum.request({ method:'eth_requestAccounts' });
+        const addr = accounts[0];
+        const r = await fetch('/api/onboarding/wallet', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ wallet_address: addr, wallet_type: 'metamask' }),
+        });
+        clearConnTileConnecting('metamask');
+        if (r.ok) {
+          state.funding = `MetaMask · ${addr.slice(0,6)}…${addr.slice(-4)}`;
+          setConnTile('metamask');
+          showAlert(3, 'MetaMask linked.', 'success');
+        } else {
+          showAlert(3, 'Could not save wallet.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('metamask');
+        showAlert(3, 'MetaMask connection rejected.', 'error');
+      }
+    } else if (kind === 'phantom') {
+      if (!window.solana) {
+        showAlert(3, 'Phantom not detected. Install at phantom.app and try again.', 'error');
+        return;
+      }
+      setConnTileConnecting('phantom');
+      try {
+        const resp = await window.solana.connect();
+        const addr = resp.publicKey.toString();
+        const r = await fetch('/api/onboarding/wallet', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ wallet_address: addr, wallet_type: 'phantom' }),
+        });
+        clearConnTileConnecting('phantom');
+        if (r.ok) {
+          state.funding = `Phantom · ${addr.slice(0,4)}…${addr.slice(-4)}`;
+          setConnTile('phantom');
+          showAlert(3, 'Phantom linked.', 'success');
+        } else {
+          showAlert(3, 'Could not save wallet.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('phantom');
+        showAlert(3, 'Phantom connection rejected.', 'error');
+      }
+    } else if (kind === 'card') {
+      // Stripe checkout — open in same tab; user comes back via success_url
+      setConnTileConnecting('card');
+      try {
+        const r = await fetch('/api/subscription/checkout', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ tier: state.tier, annual: false }),
+        });
+        const d = await r.json();
+        if (d.url) {
+          // Mark optimistically; Stripe success_url will hit /dashboard
+          state.funding = 'Card (via Stripe)';
+          setConnTile('card');
+          showAlert(3, 'Opening Stripe Checkout…', 'info');
+          window.location.href = d.url;
+        } else {
+          clearConnTileConnecting('card');
+          showAlert(3, d.error || 'Stripe is not yet configured for this tier.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('card');
+        showAlert(3, 'Could not start Stripe checkout.', 'error');
+      }
+    } else if (kind === 'bank') {
+      showAlert(3, 'Bank-link via Plaid is enabled per-account. Reach out to support@ferchaud.com to enable.', 'info');
+    }
+  }
 
-  updateUI();
-})();
+  // ── Finish ────────────────────────────────────────────────────────────
+  async function finish() {
+    try {
+      await fetch('/api/onboarding/complete', { method:'POST' });
+    } catch (e) {}
+    window.location.href = '/dashboard';
+  }
 </script>
-</body>
-</html>
+{% endblock %}

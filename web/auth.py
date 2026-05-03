@@ -113,12 +113,19 @@ def _get_or_create_profile(supabase_id: str, email: str, username: str,
                     final_username = base_username[:20 - len(suffix)] + suffix
                     counter += 1
 
+                # New profile — auto-complete onboarding so user lands in
+                # /dashboard directly. Connections happen progressively from
+                # inside the app (per the no-onboarding-gate decision).
                 user = User(
                     email=email,
                     username=final_username,
                     hashed_password="supabase_managed",
                     auth_provider=auth_provider,
                     supabase_id=supabase_id,
+                    onboarding_complete=True,
+                    onboarding_step=4,
+                    subscription_tier="free",
+                    trading_mode="passive",
                 )
                 db.add(user)
                 db.flush()

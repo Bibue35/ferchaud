@@ -90,54 +90,84 @@ class MeanReversionStrategy(BaseStrategy):
         # Scale by regime
         scale = self.regime_scale
 
+        # Adapted parameters
+        stop_mult   = self.learn_param("stop_atr_mult",   self.ATR_STOP_MULT)
+        target_mult = self.learn_param("target_atr_mult", self.ATR_TARGET_MULT)
+
         # Long signal
         if last_close < last_lower and last_rsi < self.RSI_OVERSOLD:
             stop, target = self.risk.atr_stops(
-                last_close, last_atr, "buy", self.ATR_STOP_MULT, self.ATR_TARGET_MULT
+                last_close, last_atr, "buy", stop_mult, target_mult
             )
             stop_distance = abs(last_close - stop)
-            # Confidence: how far below band + how oversold RSI is
             bb_dev = (last_lower - last_close) / (last_upper - last_lower + 1e-9)
             rsi_dev = (self.RSI_OVERSOLD - last_rsi) / self.RSI_OVERSOLD
             confidence = float(min(0.5 + bb_dev * 1.5 + rsi_dev * 0.5, 1.0))
+
+            signals = {
+                "bb_pierce_low": 1,
+                "rsi_oversold":  1 if last_rsi < self.RSI_OVERSOLD else 0,
+                "rsi_extreme":   1 if last_rsi < 20 else 0,
+            }
+            decision = self.learn_before_entry(signals, confidence)
+            if decision["veto"]:
+                return
+            confidence = decision["confidence"]
+            size_mult = decision["size_mult"]
+
             qty = self.risk.risk_based_size(
                 self.portfolio.equity, last_close, stop_distance,
                 regime_scale=scale, confidence=confidence,
-            )
+            ) * size_mult
             if qty >= 1:
                 self.log.info(
                     "LONG %s | price=%.2f  BB_low=%.2f  RSI=%.1f  "
-                    "regime=%s(×%.1f)  conf=%.0f%%",
+                    "regime=%s(×%.1f)  conf=%.0f%% sm=%.2f",
                     symbol, last_close, last_lower, last_rsi,
                     self.regime.state_name if self.regime else "N/A",
-                    scale, confidence * 100,
+                    scale, confidence * 100, size_mult,
                 )
-                self.executor.enter_long(symbol, qty, stop_price=stop,
-                                         take_profit=target, strategy_tag="MR",
-                                         confidence=confidence)
+                self.executor.enter_long(
+                    symbol, qty, stop_price=stop, take_profit=target,
+                    strategy_tag=self.name, confidence=confidence,
+                    signals=signals, atr=last_atr,
+                )
 
         # Short signal
         elif last_close > last_upper and last_rsi > self.RSI_OVERBOUGHT:
             stop, target = self.risk.atr_stops(
-                last_close, last_atr, "sell", self.ATR_STOP_MULT, self.ATR_TARGET_MULT
+                last_close, last_atr, "sell", stop_mult, target_mult
             )
             stop_distance = abs(last_close - stop)
-            # Confidence: how far above band + how overbought RSI is
             bb_dev = (last_close - last_upper) / (last_upper - last_lower + 1e-9)
             rsi_dev = (last_rsi - self.RSI_OVERBOUGHT) / (100 - self.RSI_OVERBOUGHT)
             confidence = float(min(0.5 + bb_dev * 1.5 + rsi_dev * 0.5, 1.0))
+
+            signals = {
+                "bb_pierce_high": 1,
+                "rsi_overbought": 1 if last_rsi > self.RSI_OVERBOUGHT else 0,
+                "rsi_extreme":    1 if last_rsi > 80 else 0,
+            }
+            decision = self.learn_before_entry(signals, confidence)
+            if decision["veto"]:
+                return
+            confidence = decision["confidence"]
+            size_mult = decision["size_mult"]
+
             qty = self.risk.risk_based_size(
                 self.portfolio.equity, last_close, stop_distance,
                 regime_scale=scale, confidence=confidence,
-            )
+            ) * size_mult
             if qty >= 1:
                 self.log.info(
                     "SHORT %s | price=%.2f  BB_high=%.2f  RSI=%.1f  "
-                    "regime=%s(×%.1f)  conf=%.0f%%",
+                    "regime=%s(×%.1f)  conf=%.0f%% sm=%.2f",
                     symbol, last_close, last_upper, last_rsi,
                     self.regime.state_name if self.regime else "N/A",
-                    scale, confidence * 100,
+                    scale, confidence * 100, size_mult,
                 )
-                self.executor.enter_short(symbol, qty, stop_price=stop,
-                                          take_profit=target, strategy_tag="MR",
-                                          confidence=confidence)
+                self.executor.enter_short(
+                    symbol, qty, stop_price=stop, take_profit=target,
+                    strategy_tag=self.name, confidence=confidence,
+                    signals=signals, atr=last_atr,
+                )
