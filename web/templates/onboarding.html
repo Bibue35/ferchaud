@@ -1,384 +1,787 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Ferchaud</title>
-  <script>const saved=localStorage.getItem('theme');if(saved)document.documentElement.setAttribute('data-theme',saved);</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #fefefe; --bg-warm: #faf9f7; --bg-cream: #f5f3ef;
-      --surface: #ffffff; --surface-2: #f5f3ef; --surface-3: #ebebeb;
-      --border: #eaeaea; --border-hover: #d4d4d4; --border-strong: #a3a3a3;
-      --accent: #1a1a1a; --accent-light: #333;
-      --accent-glow: rgba(0,0,0,0.06);
-      --gradient-primary: linear-gradient(135deg, #1a1a1a, #333);
-      --text: #1a1a1a; --text-secondary: #666666;
-      --muted: #999999; --green: #22c55e; --red: #ef4444;
-    }
-    [data-theme="dark"] {
-      --bg: #0a0a0a; --bg-warm: #111111; --bg-cream: #1a1a1a;
-      --surface: #111111; --surface-2: #1a1a1a; --surface-3: #282828;
-      --border: #2a2a2a; --border-hover: #3a3a3a; --border-strong: #555;
-      --text: #f0f0f0; --text-secondary: #999; --muted: #666;
-      --accent: #fff; --accent-light: #e0e0e0; --accent-glow: rgba(255,255,255,0.06);
-      --gradient-primary: linear-gradient(135deg, #e8e8e8, #fff);
-      --green: #22c55e; --red: #ef4444;
-    }
-    body {
-      background: #e8e8e8; color: var(--text); font-family: 'Inter', sans-serif;
-      min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      background-image: radial-gradient(#d4d4d4 0.8px, transparent 0.8px);
-      background-size: 20px 20px;
-    }
-    [data-theme="dark"] body {
-      background: #000;
-      background-image: radial-gradient(rgba(255,255,255,0.03) 0.8px, transparent 0.8px);
-      background-size: 20px 20px;
-    }
-    .wizard { width: 100%; max-width: 560px; padding: 0 1.5rem; }
-    /* Progress bar */
-    .progress-bar { display: flex; gap: 8px; margin-bottom: 2.5rem; }
-    .progress-step { flex: 1; height: 4px; background: var(--border); border-radius: 50px; transition: background 0.4s, box-shadow 0.4s; }
-    .progress-step.done { background: #fff; }
-    .progress-step.active { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+{% extends "base.html" %}
+{% block title %}Welcome to Ferchaud{% endblock %}
+{% block head %}
+<style>
+  /* ═══════════════════════════════════════════════════════════════
+     ONBOARDING — depth, motion, real connection states
+     ═══════════════════════════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background:
+      radial-gradient(ellipse 800px 600px at 0% 0%, rgba(34,197,94,.04), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 100% 100%, rgba(99,102,241,.04), transparent 60%),
+      var(--bg-warm, #faf9f7);
+    color: var(--text, #1a1a1a);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  [data-theme="dark"] body {
+    background:
+      radial-gradient(ellipse 800px 600px at 0% 0%, rgba(34,197,94,.06), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 100% 100%, rgba(99,102,241,.06), transparent 60%),
+      #0a0a0a;
+  }
 
-    /* Card */
-    .card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
-      padding: 2.5rem; animation: fadeIn 0.35s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .card { transition: opacity 0.3s ease, transform 0.3s ease; }
-    .card.fade-out { opacity: 0; transform: translateY(-10px); }
+  /* Top mini nav */
+  .ob-top {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,255,255,.7); backdrop-filter: blur(12px);
+    border: 1px solid var(--border, #eaeaea); border-radius: 50px;
+    padding: 8px 16px; display: flex; align-items: center; gap: 14px;
+    font-size: 12px; z-index: 100;
+  }
+  [data-theme="dark"] .ob-top { background: rgba(17,17,17,.7); border-color: #2a2a2a; }
+  .ob-top .logo-link { font-weight: 800; letter-spacing: -.5px; color: var(--text); text-decoration: none; }
+  .ob-top a { color: var(--muted); text-decoration: none; font-size: 11px; transition: color .15s; }
+  .ob-top a:hover { color: var(--text); }
 
-    .step-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-secondary);
-      text-transform: uppercase; margin-bottom: 0.75rem;
-    }
-    .step-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text); }
-    .step-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
+  /* Wizard layout */
+  .ob-wrap {
+    min-height: 100vh; display: grid; place-items: center;
+    padding: 96px 1.5rem 4rem;
+  }
+  .wizard { width: 100%; max-width: 580px; }
 
-    /* Tier cards */
-    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
-    .tier-card {
-      border: 1.5px solid var(--border); border-radius: 24px; padding: 1.25rem;
-      cursor: pointer; transition: all 0.2s; position: relative;
-    }
-    .tier-card:hover, .hover-lift:hover { border-color: var(--border-hover); background: var(--bg-cream); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
-    .tier-card.selected {
-      border-color: transparent;
-      background: var(--bg-cream);
-      border: 1.5px solid transparent;
-      background-image: linear-gradient(var(--surface), var(--surface)), var(--gradient-primary);
-      background-origin: border-box;
-      background-clip: padding-box, border-box;
-      box-shadow: 0 0 20px var(--accent-glow);
-    }    .tier-card .badge {
-      position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
-      padding: 3px 10px; border-radius: 50px;
-      background: #fff; color: #08090a;
-    }
-    .tier-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
-    .tier-price { font-size: 1.4rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-    .tier-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
-    .tier-share { font-size: 12px; color: var(--green); font-weight: 600; }
-    .tier-desc { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  /* Progress bar */
+  .progress-row {
+    display: flex; gap: 4px; margin-bottom: 2rem;
+    padding: 0 4px;
+  }
+  .progress-step {
+    flex: 1; height: 3px; background: var(--border, #eaeaea);
+    border-radius: 50px; overflow: hidden; position: relative;
+    transition: background .3s;
+  }
+  .progress-step.done { background: var(--green, #22c55e); }
+  .progress-step.active { background: var(--border, #eaeaea); }
+  .progress-step.active::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--green, #22c55e), transparent);
+    animation: progress-flow 1.6s ease-in-out infinite;
+  }
+  @keyframes progress-flow {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .progress-meta {
+    display: flex; justify-content: space-between;
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.5rem;
+  }
 
-    /* Input / button */
-    input {
-      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 50px; color: var(--text); font-family: 'Inter', sans-serif;
-      font-size: 0.9rem; padding: 0.8rem 1.25rem; margin-bottom: 1rem;
-      outline: none; transition: border 0.2s;
-    }
-    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-    input::placeholder { color: var(--muted); }
+  /* Card */
+  .card {
+    background: var(--surface, #fff); border: 1px solid var(--border, #eaeaea);
+    border-radius: 28px; padding: 2.5rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.06);
+    position: relative; overflow: hidden;
+  }
+  [data-theme="dark"] .card { background: #111; border-color: #2a2a2a; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .card::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 80% at 0% 0%, rgba(34,197,94,.04), transparent 60%);
+  }
+  .card.fade-out { opacity: 0; transform: translateY(-8px); transition: all .25s ease; }
+  .card.fade-in  { animation: card-in .35s ease both; }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-    .btn {
-      width: 100%; padding: 0.875rem; border-radius: 50px; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700;
-      transition: all 0.2s; margin-top: 0.5rem;
-    }
-    .btn-primary {
-      background: var(--accent); color: var(--surface);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }    .btn-outline {
-      background: transparent; color: var(--text); border: 1px solid var(--border);
-    }
-    .btn-outline:hover { border-color: var(--border-strong); color: var(--text); }
-    .btn-green { background: var(--green); color: white; }
-    .btn-green:hover { background: #15803d; }
+  .step-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted);
+    text-transform: uppercase; margin-bottom: .75rem; display: flex; align-items: center; gap: 8px;
+  }
+  .step-eyebrow::before {
+    content: ''; width: 24px; height: 2px; background: var(--green); border-radius: 50px;
+  }
+  .step-title {
+    font-size: 1.85rem; font-weight: 800; letter-spacing: -.5px;
+    color: var(--text); margin-bottom: .5rem;
+  }
+  .step-sub {
+    color: var(--text-secondary); font-size: 14px; line-height: 1.6;
+    margin-bottom: 2rem;
+  }
 
-    /* Wallet buttons */
-    .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
-    .wallet-btn {
-      background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 24px;
-      padding: 1rem; display: flex; flex-direction: column; align-items: center;
-      gap: 8px; cursor: pointer; transition: all 0.2s;
-    }
-    .wallet-btn:hover { border-color: var(--border-hover); background: var(--bg-cream); }
-    .wallet-btn img { width: 36px; height: 36px; border-radius: 50px; }
-    .wallet-btn span { font-size: 12px; font-weight: 600; color: var(--text); }
-    .wallet-btn.connected { border-color: var(--green); }
-    .wallet-connected {
-      background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25);
-      border-radius: 50px; padding: 0.75rem 1rem; font-size: 13px;
-      color: var(--green); display: flex; align-items: center; gap: 8px;
-      margin-bottom: 1rem; display: none;
-    }
-    .wallet-connected .dot {
-      width: 8px; height: 8px; background: var(--green); border-radius: 50%;
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .skip-link {
-      text-align: center; margin-top: 1rem; font-size: 13px;
-      color: var(--muted); cursor: pointer;
-    }
-    .skip-link:hover { color: var(--text); }
+  /* Plan cards */
+  .plan-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+  .plan-card {
+    border: 1.5px solid var(--border); border-radius: 18px; padding: 1.1rem 1.25rem;
+    cursor: pointer; transition: all .2s ease; position: relative;
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 1rem;
+  }
+  .plan-card:hover { border-color: var(--border-hover, #d4d4d4); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.06); }
+  .plan-card.selected {
+    border-color: var(--green); background: rgba(34,197,94,.04);
+    box-shadow: 0 0 0 4px rgba(34,197,94,.08);
+  }
+  .plan-card .check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; transition: all .2s ease;
+  }
+  .plan-card.selected .check {
+    background: var(--green); border-color: var(--green);
+  }
+  .plan-card.selected .check svg { opacity: 1; transform: scale(1); }
+  .plan-card .check svg { opacity: 0; transform: scale(.5); transition: all .15s ease; }
+  .plan-name { font-weight: 700; color: var(--text); font-size: 15px; }
+  .plan-tagline { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .plan-price-block { text-align: right; }
+  .plan-price { font-weight: 800; font-size: 1.1rem; color: var(--text); }
+  .plan-price small { font-weight: 500; font-size: 11px; color: var(--muted); }
+  .plan-cap { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .plan-card .badge {
+    position: absolute; top: -8px; right: 16px;
+    background: var(--text); color: var(--surface);
+    font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 3px 10px; border-radius: 50px;
+  }
 
-    .logo {
-      text-align: center; font-size: 1.3rem; font-weight: 900;
-      letter-spacing: -0.5px; margin-bottom: 2rem; color: var(--text);
-    }
-    .logo span { color: var(--text); }
+  /* Connection picker (Step 3) */
+  .conn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  @media (max-width: 480px) { .conn-grid { grid-template-columns: 1fr; } }
+  .conn-tile {
+    border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem;
+    cursor: pointer; transition: all .2s; text-align: left;
+    background: var(--surface, #fff); position: relative;
+    display: flex; align-items: center; gap: .85rem;
+  }
+  .conn-tile:hover { border-color: var(--border-hover, #d4d4d4); transform: translateY(-2px); }
+  .conn-tile.connected { border-color: var(--green); background: rgba(34,197,94,.04); }
+  .conn-tile.connecting { border-color: var(--accent); animation: conn-pulse 1s ease-in-out infinite; }
+  @keyframes conn-pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+  .conn-icon {
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-cream, #f5f3ef); color: var(--text); font-size: 20px;
+  }
+  [data-theme="dark"] .conn-icon { background: #1a1a1a; }
+  .conn-name { font-weight: 700; color: var(--text); font-size: 14px; }
+  .conn-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .conn-status {
+    margin-left: auto; font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 50px; letter-spacing: .3px;
+  }
+  .conn-status.linked  { background: rgba(34,197,94,.12); color: #16a34a; }
+  .conn-status.pending { background: rgba(251,191,36,.12); color: #d97706; }
 
-    .success-icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
-    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
-    .feature-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
-    .feature-list li::before { content: "\2713"; color: var(--green); font-weight: 700; }
-  </style>
-</head>
-<body>
-<div class="wizard page-enter">
-  <div class="logo">Ferchaud</div>
+  /* Inputs */
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding-left: 4px; }
+  .field input, .field select {
+    width: 100%; background: var(--bg-warm, #faf9f7);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 16px; font-family: inherit; font-size: 14px;
+    color: var(--text); outline: none; transition: border-color .2s;
+  }
+  [data-theme="dark"] .field input, [data-theme="dark"] .field select { background: #1a1a1a; }
+  .field input:focus, .field select:focus { border-color: var(--text); box-shadow: 0 0 0 3px rgba(0,0,0,.04); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-step active" id="ps1"></div>
-    <div class="progress-step" id="ps2"></div>
-    <div class="progress-step" id="ps3"></div>
-    <div class="progress-step" id="ps4"></div>
-  </div>
-  <!-- STEP 1: Welcome + choose plan -->
-  <div class="card" id="step1">
-    <div class="step-label">Step 1 of 4</div>
-    <div class="step-title">Choose your plan</div>
-    <div class="step-sub">Pick the plan that fits your trading goals. Lower monthly cost = higher revenue share taken by us. Higher cost = you keep almost everything.</div>
+  /* Quick-amount chips */
+  .amt-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1rem; }
+  .amt-chip {
+    padding: 10px; border-radius: 50px; border: 1.5px solid var(--border);
+    background: transparent; color: var(--text-secondary); font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s;
+  }
+  .amt-chip:hover { border-color: var(--border-hover); color: var(--text); }
+  .amt-chip.active { background: var(--text); color: var(--surface); border-color: var(--text); }
 
-    <div class="tier-grid">
-      <div class="tier-card hover-lift" onclick="selectTier('free', this)">
-        <div class="tier-name">Free</div>
-        <div class="tier-price">$0<span>/mo</span></div>
-        <div class="tier-share">You keep 70%</div>
-        <div class="tier-desc">Great to start. We take 30% of profits.</div>
+  /* Risk slider */
+  .slider-wrap { padding: 1.25rem; background: var(--bg-cream); border-radius: 16px; margin-bottom: 1rem; }
+  [data-theme="dark"] .slider-wrap { background: #1a1a1a; }
+  .slider-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+  .slider-row .label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .slider-row .value {
+    font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 50px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px; background: var(--border);
+    border-radius: 50px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    background: var(--text); border-radius: 50%; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 10px; margin-top: 1.5rem; }
+  .btn {
+    flex: 1; padding: 14px 20px; border-radius: 50px; border: none; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 700; transition: all .2s;
+  }
+  .btn-primary {
+    background: var(--accent, #1a1a1a); color: var(--surface, #fff);
+    box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  }
+  [data-theme="dark"] .btn-primary { background: #fff; color: #000; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--border-hover); }
+  .btn-ghost { background: transparent; color: var(--muted); padding: 10px; }
+  .btn-ghost:hover { color: var(--text); }
+
+  /* Inline alert */
+  .alert {
+    padding: 10px 14px; border-radius: 12px; font-size: 13px;
+    margin-bottom: 1rem; display: none; line-height: 1.45;
+  }
+  .alert.error   { background: rgba(239,68,68,.08);  color: #dc2626; border: 1px solid rgba(239,68,68,.2); }
+  .alert.info    { background: rgba(59,130,246,.08); color: #2563eb; border: 1px solid rgba(59,130,246,.2); }
+  .alert.success { background: rgba(34,197,94,.08);  color: #16a34a; border: 1px solid rgba(34,197,94,.2); }
+
+  /* Recap (final step) */
+  .recap-list {
+    background: var(--bg-cream); border-radius: 16px; padding: 1rem; margin-bottom: 1.25rem;
+  }
+  [data-theme="dark"] .recap-list { background: #1a1a1a; }
+  .recap-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 4px; font-size: 13px; border-bottom: 1px dashed var(--border);
+  }
+  .recap-row:last-child { border-bottom: none; }
+  .recap-row .k { color: var(--muted); }
+  .recap-row .v { font-weight: 700; color: var(--text); }
+
+  .ai-glow {
+    width: 64px; height: 64px; margin: 0 auto 1rem;
+    background: radial-gradient(circle, var(--green), transparent 70%);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    animation: ai-glow 2s ease-in-out infinite;
+  }
+  @keyframes ai-glow {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50%     { transform: scale(1.05); opacity: .85; }
+  }
+  .ai-glow svg { color: #fff; }
+</style>
+{% endblock %}
+{% block body %}
+
+<nav class="ob-top">
+  <a href="/" class="logo-link">Ferchaud</a>
+  <span style="opacity:.3;">·</span>
+  <a href="/api/auth/logout">Sign out</a>
+</nav>
+
+<div class="ob-wrap">
+  <div class="wizard">
+
+    <!-- Progress -->
+    <div class="progress-meta">
+      <span id="progressLabel">Step 1 of 4</span>
+      <span id="progressName">Choose plan</span>
+    </div>
+    <div class="progress-row">
+      <div class="progress-step active" data-step="1"></div>
+      <div class="progress-step"        data-step="2"></div>
+      <div class="progress-step"        data-step="3"></div>
+      <div class="progress-step"        data-step="4"></div>
+    </div>
+
+    <!-- ──────────────────────────────────────── STEP 1: Plan ─── -->
+    <div class="card fade-in" id="step1">
+      <div class="step-eyebrow">Pick a plan</div>
+      <div class="step-title">How serious are you?</div>
+      <div class="step-sub">
+        You keep <b>100% of profits</b> on every plan. Subscription only —
+        we win when you keep using the bot, not when we take from your wins.
       </div>
-      <div class="tier-card hover-lift" onclick="selectTier('starter', this)">
-        <div class="tier-name">Starter</div>
-        <div class="tier-price">$29<span>/mo</span></div>
-        <div class="tier-share">You keep 80%</div>
-        <div class="tier-desc">14-day free trial. We take 20% of profits.</div>
+
+      <div class="plan-grid">
+        <div class="plan-card" data-tier="free" onclick="selectPlan(this, 'free')">
+          <div>
+            <div class="plan-name">Free</div>
+            <div class="plan-tagline">Paper trading · learn the brain risk-free</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$0<small>/mo</small></div>
+            <div class="plan-cap">50 AI calls/day</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+
+        <div class="plan-card" data-tier="starter" onclick="selectPlan(this, 'starter')">
+          <div>
+            <div class="plan-name">Starter <span style="font-size:10px;color:var(--green);font-weight:700;margin-left:6px;">14-day trial</span></div>
+            <div class="plan-tagline">First-time live · up to $5K deployed</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$19<small>/mo</small></div>
+            <div class="plan-cap">200 AI calls/day</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+
+        <div class="plan-card selected" data-tier="pro" onclick="selectPlan(this, 'pro')">
+          <div class="badge">POPULAR</div>
+          <div>
+            <div class="plan-name">Pro</div>
+            <div class="plan-tagline">Serious traders · Claude Sonnet · $50K cap</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$59<small>/mo</small></div>
+            <div class="plan-cap">1,000 AI calls/day</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+
+        <div class="plan-card" data-tier="elite" onclick="selectPlan(this, 'elite')">
+          <div>
+            <div class="plan-name">Elite</div>
+            <div class="plan-tagline">Funds &amp; pros · Claude Opus · unlimited</div>
+          </div>
+          <div class="plan-price-block">
+            <div class="plan-price">$199<small>/mo</small></div>
+            <div class="plan-cap">Unlimited</div>
+          </div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
       </div>
-      <div class="tier-card hover-lift selected" onclick="selectTier('pro', this)">
-        <div class="badge">Popular</div>
-        <div class="tier-name">Pro</div>
-        <div class="tier-price">$99<span>/mo</span></div>
-        <div class="tier-share">You keep 90%</div>
-        <div class="tier-desc">Options trading + Grok AI. We take 10%.</div>
-      </div>
-      <div class="tier-card hover-lift" onclick="selectTier('elite', this)">
-        <div class="tier-name">Elite</div>
-        <div class="tier-price">$299<span>/mo</span></div>
-        <div class="tier-share">You keep 98%</div>
-        <div class="tier-desc">Maximum returns. We take only 2%.</div>
+
+      <div class="alert" id="alert1"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goStep(2)">Continue</button>
       </div>
     </div>
-    <button class="btn btn-primary" onclick="goStep(2)">Continue</button>
-  </div>
-  <!-- STEP 2: Connect wallet -->
-  <div class="card" id="step2" style="display:none">
-    <div class="step-label">Step 2 of 4</div>
-    <div class="step-title">Connect a wallet</div>
-    <div class="step-sub">Link your crypto wallet to deposit funds instantly. Your keys remain yours — we only read your address.</div>
 
-    <div class="wallet-connected" id="walletConnected">
-      <div class="dot"></div>
-      <span id="walletAddr">Connected</span>
+    <!-- ──────────────────────────────────────── STEP 2: Risk + style ─── -->
+    <div class="card" id="step2" style="display:none;">
+      <div class="step-eyebrow">Trading style</div>
+      <div class="step-title">How aggressive should the bot be?</div>
+      <div class="step-sub">
+        We learn from every trade so this isn't permanent — change it anytime
+        from the dashboard. Lower risk = fewer trades, smaller positions.
+      </div>
+
+      <!-- Mode selector -->
+      <div class="plan-grid" style="margin-bottom: 1.25rem;">
+        <div class="plan-card selected" data-mode="passive" onclick="selectMode(this, 'passive')">
+          <div>
+            <div class="plan-name">Passive <span style="font-size:10px;color:var(--muted);font-weight:500;margin-left:4px;">recommended for new users</span></div>
+            <div class="plan-tagline">High-conviction setups only · ~5–15% expected annual</div>
+          </div>
+          <div class="plan-price-block"><div class="plan-cap">~6 trades/week</div></div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="plan-card" data-mode="aggressive" onclick="selectMode(this, 'aggressive')">
+          <div>
+            <div class="plan-name">Aggressive</div>
+            <div class="plan-tagline">More signals + scalping · ~15–25% expected · larger drawdowns</div>
+          </div>
+          <div class="plan-price-block"><div class="plan-cap">~30+ trades/week</div></div>
+          <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Risk slider -->
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <span class="label">Max risk per trade</span>
+          <span class="value" id="riskValue">2.0%</span>
+        </div>
+        <input type="range" id="riskSlider" min="50" max="500" step="25" value="200"
+               oninput="document.getElementById('riskValue').textContent = (this.value/100).toFixed(1) + '%'">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;">
+          <span>0.5% safer</span><span>5% riskier</span>
+        </div>
+      </div>
+
+      <div class="alert" id="alert2"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="goStep(1)">Back</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Continue</button>
+      </div>
     </div>
 
-    <div class="wallet-grid">
-      <div class="wallet-btn" onclick="connectWallet('metamask')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
-        <span>MetaMask</span>
+    <!-- ──────────────────────────────────────── STEP 3: Connect ─── -->
+    <div class="card" id="step3" style="display:none;">
+      <div class="step-eyebrow">Connections</div>
+      <div class="step-title">Link a broker &amp; a payment method</div>
+      <div class="step-sub">
+        We need <b>one broker</b> for trading and <b>one funding method</b> for the
+        subscription. Everything is paper-trading until you flip the live switch later.
       </div>
-      <div class="wallet-btn" onclick="connectWallet('coinbase')">
-        <img src="https://altcoinsbox.com/wp-content/uploads/2023/01/coinbase-wallet-logo.png" alt="Coinbase">
-        <span>Coinbase</span>
+
+      <!-- Broker section -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:.5rem 0 .75rem;">
+        Broker (where the bot trades)
       </div>
-      <div class="wallet-btn" onclick="connectWallet('phantom')">
-        <img src="https://cryptologos.cc/logos/solana-sol-logo.png" alt="Phantom">
-        <span>Phantom (SOL)</span>
+      <div class="conn-grid">
+        <div class="conn-tile" data-conn="alpaca" onclick="connectBroker('alpaca')">
+          <div class="conn-icon">A</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Alpaca</div>
+            <div class="conn-sub">Stocks, ETFs &amp; crypto · paper or live</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="freqtrade" onclick="connectBroker('freqtrade')">
+          <div class="conn-icon" style="background:#fbbf24;color:#fff;">F</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Freqtrade</div>
+            <div class="conn-sub">Self-hosted crypto · advanced</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
       </div>
-      <div class="wallet-btn" onclick="connectWallet('walletconnect')">
-        <img src="https://avatars.githubusercontent.com/u/37784886" alt="WalletConnect">
-        <span>WalletConnect</span>
+
+      <!-- Funding section -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:1.5rem 0 .75rem;">
+        Funding (subscription &amp; deposits)
+      </div>
+      <div class="conn-grid">
+        <div class="conn-tile" data-conn="card" onclick="connectFunding('card')">
+          <div class="conn-icon">💳</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Debit / Credit</div>
+            <div class="conn-sub">Instant · via Stripe</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="bank" onclick="connectFunding('bank')">
+          <div class="conn-icon">🏦</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Bank (ACH)</div>
+            <div class="conn-sub">1–3 days · via Plaid</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="metamask" onclick="connectFunding('metamask')">
+          <div class="conn-icon">🦊</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">MetaMask</div>
+            <div class="conn-sub">USDC / ETH on Ethereum</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+        <div class="conn-tile" data-conn="phantom" onclick="connectFunding('phantom')">
+          <div class="conn-icon">👻</div>
+          <div style="flex:1;min-width:0;">
+            <div class="conn-name">Phantom</div>
+            <div class="conn-sub">USDC / SOL on Solana</div>
+          </div>
+          <span class="conn-status" style="display:none;">LINKED</span>
+        </div>
+      </div>
+
+      <div class="alert" id="alert3"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="goStep(2)">Back</button>
+        <button class="btn btn-primary" id="step3Next" onclick="goStep(4)">
+          Continue
+        </button>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:.75rem;">
+        You can connect more later from your dashboard.
       </div>
     </div>
-    <button class="btn btn-primary" id="step2Next" onclick="goStep(3)">Continue</button>
-    <div class="skip-link" onclick="goStep(3)">Skip for now</div>
-  </div>
-  <!-- STEP 3: Fund account -->
-  <div class="card" id="step3" style="display:none">
-    <div class="step-label">Step 3 of 4</div>
-    <div class="step-title">Fund your account</div>
-    <div class="step-sub">Add funds to start trading. Minimum $50. Your balance is virtual — the bot trades on your behalf using Alpaca paper trading.</div>
 
-    <input type="number" id="depositAmount" placeholder="Amount in USD (min $50)" min="50" value="100">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.2rem">
-      <button class="btn btn-outline" onclick="setAmt(50)" style="margin:0;padding:0.55rem;border-radius:50px">$50</button>
-      <button class="btn btn-outline" onclick="setAmt(100)" style="margin:0;padding:0.55rem;border-radius:50px">$100</button>
-      <button class="btn btn-outline" onclick="setAmt(500)" style="margin:0;padding:0.55rem;border-radius:50px">$500</button>
-      <button class="btn btn-outline" onclick="setAmt(1000)" style="margin:0;padding:0.55rem;border-radius:50px">$1K</button>
+    <!-- ──────────────────────────────────────── STEP 4: Recap + finish ─── -->
+    <div class="card" id="step4" style="display:none;text-align:center;">
+      <div class="ai-glow">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+        </svg>
+      </div>
+      <div class="step-eyebrow" style="justify-content:center;">All set</div>
+      <div class="step-title">Welcome to Ferchaud</div>
+      <div class="step-sub">
+        Your AI brain is ready. Paper-trading is on by default — flip to live whenever you're comfortable.
+      </div>
+
+      <div class="recap-list" style="text-align:left;">
+        <div class="recap-row"><span class="k">Plan</span><span class="v" id="recapPlan">Pro · $59/mo</span></div>
+        <div class="recap-row"><span class="k">Trading style</span><span class="v" id="recapMode">Passive</span></div>
+        <div class="recap-row"><span class="k">Max risk per trade</span><span class="v" id="recapRisk">2.0%</span></div>
+        <div class="recap-row"><span class="k">Broker</span><span class="v" id="recapBroker">Not linked</span></div>
+        <div class="recap-row"><span class="k">Funding</span><span class="v" id="recapFunding">Not linked</span></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="finish()">
+        Open Dashboard
+      </button>
+      <div style="margin-top:.75rem;font-size:11px;color:var(--muted);">
+        You can change any of this from the dashboard later.
+      </div>
     </div>
 
-    <div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:6px">
-      <span>🔒</span> Secured by Stripe. Card data never touches our servers.
-    </div>
-
-    <button class="btn btn-primary" onclick="submitDeposit()">Add Funds</button>
-    <div class="skip-link" onclick="goStep(4)">Skip — I'll fund later</div>
-  </div>
-  <!-- STEP 4: All done -->
-  <div class="card" id="step4" style="display:none">
-    <div class="success-icon">🔥</div>
-    <div class="step-label">You're all set!</div>
-    <div class="step-title">Welcome to Ferchaud</div>
-    <div class="step-sub">Your bot is running 24/7 scanning thousands of stocks for breakout opportunities.</div>
-
-    <ul class="feature-list">
-      <li>Full market scanner — 12,000+ stocks monitored</li>
-      <li>Grok AI research — live X (Twitter) signals</li>
-      <li>Options trading on high-conviction plays</li>
-      <li>Real-time P&L dashboard</li>
-    </ul>
-
-    <button class="btn btn-primary" onclick="finish()">Open Dashboard</button>
   </div>
 </div>
+
 <script>
-let selectedTier = 'pro';
+  // State
+  const state = {
+    tier: 'pro',
+    mode: 'passive',
+    risk: 2.0,
+    broker: null,
+    funding: null,
+  };
+  const STEP_NAMES = { 1: 'Choose plan', 2: 'Trading style', 3: 'Connections', 4: 'Done' };
 
-function selectTier(tier, el) {
-  selectedTier = tier;
-  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function goStep(n) {
-  // Fade out current visible card
-  var current = document.querySelector('.card[style*="display: block"], .card:not([style*="display: none"]):not([style])');
-  if (current && current.id !== 'step' + n) {
-    current.classList.add('fade-out');
+  function showAlert(stepNum, msg, kind = 'error') {
+    const el = document.getElementById('alert' + stepNum);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'alert ' + kind;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, kind === 'error' ? 5000 : 3000);
   }
-  setTimeout(function() {
-    [1,2,3,4].forEach(i => {
-      var el = document.getElementById('step' + i);
-      el.style.display = i === n ? 'block' : 'none';
-      el.classList.remove('fade-out');
-      const ps = document.getElementById('ps' + i);
-      if (ps) {
-        ps.className = 'progress-step';
-        if (i < n) ps.classList.add('done');
-        if (i === n) ps.classList.add('active');
+
+  function selectPlan(el, tier) {
+    state.tier = tier;
+    document.querySelectorAll('.plan-card[data-tier]').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  function selectMode(el, mode) {
+    state.mode = mode;
+    document.querySelectorAll('.plan-card[data-mode]').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  async function goStep(n) {
+    // Persist data BEFORE moving forward
+    const cur = currentStep();
+    if (cur === 1 && n === 2) {
+      const ok = await saveTier();
+      if (!ok) return;
+    }
+    if (cur === 2 && n === 3) {
+      state.risk = parseFloat(document.getElementById('riskSlider').value) / 100;
+      // No server endpoint needed for risk — stored on submit
+    }
+    if (cur === 3 && n === 4) {
+      // Update recap
+      const tierLabels = { free:'Free · $0/mo', starter:'Starter · $19/mo', pro:'Pro · $59/mo', elite:'Elite · $199/mo' };
+      document.getElementById('recapPlan').textContent = tierLabels[state.tier] || state.tier;
+      document.getElementById('recapMode').textContent = state.mode === 'passive' ? 'Passive' : 'Aggressive';
+      document.getElementById('recapRisk').textContent = state.risk.toFixed(1) + '%';
+      document.getElementById('recapBroker').textContent  = state.broker || 'Skipped';
+      document.getElementById('recapFunding').textContent = state.funding || 'Skipped';
+    }
+
+    // Animate fade out → switch → fade in
+    const cardCur = document.getElementById('step' + cur);
+    const cardNxt = document.getElementById('step' + n);
+    if (cardCur === cardNxt) return;
+
+    cardCur.classList.add('fade-out');
+    setTimeout(() => {
+      cardCur.style.display = 'none';
+      cardCur.classList.remove('fade-out');
+      cardNxt.style.display = 'block';
+      cardNxt.classList.remove('fade-in');
+      void cardNxt.offsetWidth; // restart animation
+      cardNxt.classList.add('fade-in');
+
+      // Progress bar update
+      document.querySelectorAll('.progress-step').forEach(p => {
+        const i = parseInt(p.dataset.step, 10);
+        p.classList.remove('active', 'done');
+        if (i < n) p.classList.add('done');
+        if (i === n) p.classList.add('active');
+      });
+      document.getElementById('progressLabel').textContent = `Step ${n} of 4`;
+      document.getElementById('progressName').textContent  = STEP_NAMES[n];
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 240);
+  }
+  function currentStep() {
+    for (let i = 1; i <= 4; i++) {
+      if (document.getElementById('step' + i).style.display !== 'none') return i;
+    }
+    return 1;
+  }
+
+  async function saveTier() {
+    try {
+      const r = await fetch('/api/onboarding/tier', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ tier: state.tier, mode: state.mode }),
+      });
+      if (!r.ok) {
+        showAlert(1, 'Could not save plan — try again.', 'error');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      showAlert(1, 'Network error — please retry.', 'error');
+      return false;
+    }
+  }
+
+  // ── Broker connections ────────────────────────────────────────────────
+  function setConnTile(kind, label) {
+    document.querySelectorAll(`.conn-tile[data-conn="${kind}"]`).forEach(el => {
+      el.classList.add('connected');
+      const status = el.querySelector('.conn-status');
+      if (status) {
+        status.style.display = 'inline-block';
+        status.classList.add('linked');
+        status.textContent = label || 'LINKED';
       }
     });
-    // Re-trigger fadeIn animation on the new step
-    var newStep = document.getElementById('step' + n);
-    newStep.style.animation = 'none';
-    newStep.offsetHeight;
-    newStep.style.animation = '';
-  }, 250);
-  if (n === 2) saveTier();
-}
-
-function saveTier() {
-  fetch('/api/onboarding/tier', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({tier: selectedTier})
-  });
-}
-async function connectWallet(type) {
-  if (type === 'metamask') {
-    if (!window.ethereum) { alert('MetaMask not found. Install it at metamask.io'); return; }
-    try {
-      const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
-      const addr = accounts[0];
-      await fetch('/api/onboarding/wallet', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({wallet_address: addr, wallet_type: 'metamask'})
-      });
-      showWalletConnected(addr);
-    } catch(e) { alert('Connection rejected'); }
-  } else if (type === 'phantom') {
-    if (!window.solana) { alert('Phantom not found. Install it at phantom.app'); return; }
-    try {
-      const resp = await window.solana.connect();
-      const addr = resp.publicKey.toString();
-      await fetch('/api/onboarding/wallet', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({wallet_address: addr, wallet_type: 'phantom'})
-      });
-      showWalletConnected(addr);
-    } catch(e) { alert('Connection rejected'); }
-  } else {
-    alert(type + ' integration coming soon. Use MetaMask or Phantom for now.');
   }
-}
-function showWalletConnected(addr) {
-  const short = addr.slice(0, 6) + '...' + addr.slice(-4);
-  document.getElementById('walletAddr').textContent = short + ' connected';
-  document.getElementById('walletConnected').style.display = 'flex';
-}
+  function setConnTileConnecting(kind) {
+    document.querySelectorAll(`.conn-tile[data-conn="${kind}"]`).forEach(el => {
+      el.classList.add('connecting');
+    });
+  }
+  function clearConnTileConnecting(kind) {
+    document.querySelectorAll(`.conn-tile[data-conn="${kind}"]`).forEach(el => {
+      el.classList.remove('connecting');
+    });
+  }
 
-function setAmt(v) { document.getElementById('depositAmount').value = v; }
+  async function connectBroker(kind) {
+    if (kind === 'alpaca') {
+      const key = prompt('Paste your Alpaca API Key (paper trading):');
+      if (!key) return;
+      const secret = prompt('Paste your Alpaca Secret Key:');
+      if (!secret) return;
+      setConnTileConnecting('alpaca');
+      try {
+        const r = await fetch('/api/onboarding/broker', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ broker:'alpaca', api_key: key.trim(), secret_key: secret.trim(), mode: 'paper' }),
+        });
+        clearConnTileConnecting('alpaca');
+        if (r.ok) {
+          state.broker = 'Alpaca (paper)';
+          setConnTile('alpaca', 'PAPER');
+          showAlert(3, 'Alpaca paper-trading account linked.', 'success');
+        } else {
+          const d = await r.json().catch(() => ({}));
+          showAlert(3, d.error || 'Could not validate Alpaca keys.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('alpaca');
+        showAlert(3, 'Network error — try again.', 'error');
+      }
+    } else if (kind === 'freqtrade') {
+      const url = prompt('Paste your Freqtrade REST URL (e.g. http://localhost:8080):');
+      if (!url) return;
+      setConnTileConnecting('freqtrade');
+      try {
+        const r = await fetch('/api/onboarding/broker', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ broker:'freqtrade', url }),
+        });
+        clearConnTileConnecting('freqtrade');
+        if (r.ok) {
+          state.broker = 'Freqtrade';
+          setConnTile('freqtrade');
+          showAlert(3, 'Freqtrade endpoint saved.', 'success');
+        } else {
+          showAlert(3, 'Could not save Freqtrade endpoint.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('freqtrade');
+        showAlert(3, 'Network error — try again.', 'error');
+      }
+    }
+  }
 
-async function submitDeposit() {
-  const amount = parseFloat(document.getElementById('depositAmount').value);
-  if (!amount || amount < 50) { alert('Minimum deposit is $50'); return; }
-  const resp = await fetch('/api/deposit', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({amount})
-  });
-  if (resp.ok) { goStep(4); }
-  else { alert('Deposit failed. Please try again.'); }
-}
+  // ── Funding connections ───────────────────────────────────────────────
+  async function connectFunding(kind) {
+    if (kind === 'metamask') {
+      if (!window.ethereum) {
+        showAlert(3, 'MetaMask not detected. Install at metamask.io and try again.', 'error');
+        return;
+      }
+      setConnTileConnecting('metamask');
+      try {
+        const accounts = await window.ethereum.request({ method:'eth_requestAccounts' });
+        const addr = accounts[0];
+        const r = await fetch('/api/onboarding/wallet', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ wallet_address: addr, wallet_type: 'metamask' }),
+        });
+        clearConnTileConnecting('metamask');
+        if (r.ok) {
+          state.funding = `MetaMask · ${addr.slice(0,6)}…${addr.slice(-4)}`;
+          setConnTile('metamask');
+          showAlert(3, 'MetaMask linked.', 'success');
+        } else {
+          showAlert(3, 'Could not save wallet.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('metamask');
+        showAlert(3, 'MetaMask connection rejected.', 'error');
+      }
+    } else if (kind === 'phantom') {
+      if (!window.solana) {
+        showAlert(3, 'Phantom not detected. Install at phantom.app and try again.', 'error');
+        return;
+      }
+      setConnTileConnecting('phantom');
+      try {
+        const resp = await window.solana.connect();
+        const addr = resp.publicKey.toString();
+        const r = await fetch('/api/onboarding/wallet', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ wallet_address: addr, wallet_type: 'phantom' }),
+        });
+        clearConnTileConnecting('phantom');
+        if (r.ok) {
+          state.funding = `Phantom · ${addr.slice(0,4)}…${addr.slice(-4)}`;
+          setConnTile('phantom');
+          showAlert(3, 'Phantom linked.', 'success');
+        } else {
+          showAlert(3, 'Could not save wallet.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('phantom');
+        showAlert(3, 'Phantom connection rejected.', 'error');
+      }
+    } else if (kind === 'card') {
+      // Stripe checkout — open in same tab; user comes back via success_url
+      setConnTileConnecting('card');
+      try {
+        const r = await fetch('/api/subscription/checkout', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ tier: state.tier, annual: false }),
+        });
+        const d = await r.json();
+        if (d.url) {
+          // Mark optimistically; Stripe success_url will hit /dashboard
+          state.funding = 'Card (via Stripe)';
+          setConnTile('card');
+          showAlert(3, 'Opening Stripe Checkout…', 'info');
+          window.location.href = d.url;
+        } else {
+          clearConnTileConnecting('card');
+          showAlert(3, d.error || 'Stripe is not yet configured for this tier.', 'error');
+        }
+      } catch (e) {
+        clearConnTileConnecting('card');
+        showAlert(3, 'Could not start Stripe checkout.', 'error');
+      }
+    } else if (kind === 'bank') {
+      showAlert(3, 'Bank-link via Plaid is enabled per-account. Reach out to support@ferchaud.com to enable.', 'info');
+    }
+  }
 
-async function finish() {
-  await fetch('/api/onboarding/complete', {method: 'POST'});
-  window.location.href = '/dashboard';
-}
+  // ── Finish ────────────────────────────────────────────────────────────
+  async function finish() {
+    try {
+      await fetch('/api/onboarding/complete', { method:'POST' });
+    } catch (e) {}
+    window.location.href = '/dashboard';
+  }
 </script>
-<div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--muted);">
-  By continuing you agree to our <a href="/legal" style="color:var(--text-secondary);font-size:11px;">Terms &amp; Privacy Policy</a>
-</div>
-<footer style="text-align:center;padding:16px 24px 24px;font-size:12px;color:var(--muted);">
-  <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
-    <a href="/#features" style="color:var(--muted);font-size:12px;">Features</a>
-    <a href="/pricing" style="color:var(--muted);font-size:12px;">Pricing</a>
-    <a href="/sources" style="color:var(--muted);font-size:12px;">Sources</a>
-    <a href="/legal" style="color:var(--muted);font-size:12px;">Legal</a>
-    <a href="mailto:support@ferchaud.com" style="color:var(--muted);font-size:12px;">Support</a>
-  </div>
-  <p>&copy; 2026 Ferchaud</p>
-</footer>
-</body>
-</html>
+{% endblock %}

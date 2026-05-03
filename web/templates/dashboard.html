@@ -629,7 +629,7 @@
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;">
       {% for amt in [50,100,250,500,1000,2500] %}
       <button class="btn btn-outline btn-sm" style="border-radius:50px;" onclick="setDepAmt({{ amt }})">
-        ${{ amt if amt < 1000 else (amt//1000|string + 'K') }}
+        ${{ amt if amt < 1000 else ((amt // 1000)|string + 'K') }}
       </button>
       {% endfor %}
     </div>

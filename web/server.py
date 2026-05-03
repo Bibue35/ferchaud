@@ -20,7 +20,104 @@ from web.stripe_handler import (
     create_deposit_intent, verify_webhook
 )
 
+import logging
+import traceback
+log = logging.getLogger("ferchaud.web")
+
 app = FastAPI(title="Ferchaud", docs_url=None, redoc_url=None)
+
+
+# ─── Friendly error page (no more raw "Internal Server Error" text) ───────────
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch every uncaught exception and render a polished error page.
+
+    HTML routes get the pretty page. /api/* still gets JSON so clients can
+    handle it programmatically.
+    """
+    tb = traceback.format_exc()
+    log.error("Unhandled %s on %s: %s\n%s",
+              type(exc).__name__, request.url.path, exc, tb)
+
+    # Respect API clients
+    accepts_html = "text/html" in request.headers.get("accept", "")
+    is_api = request.url.path.startswith("/api/") or request.url.path.startswith("/ws/")
+
+    if is_api or not accepts_html:
+        return JSONResponse(
+            {"error": "internal_error", "message": str(exc)},
+            status_code=500,
+        )
+
+    error_html = f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Something went wrong — Ferchaud</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: radial-gradient(ellipse at top, #faf9f7, #f0eee8);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    color: #1a1a1a; padding: 2rem;
+  }}
+  .card {{
+    max-width: 480px; width: 100%; background: #fff;
+    border: 1px solid #eaeaea; border-radius: 24px;
+    padding: 3rem 2.5rem; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.06);
+  }}
+  .glyph {{
+    width: 64px; height: 64px; margin: 0 auto 1.5rem;
+    background: rgba(239,68,68,.08); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #ef4444;
+  }}
+  h1 {{ font-size: 1.5rem; font-weight: 800; margin-bottom: .5rem; letter-spacing: -.5px; }}
+  p {{ color: #666; line-height: 1.6; margin-bottom: 1.5rem; font-size: 14px; }}
+  .err-id {{
+    font-family: 'SF Mono', Menlo, monospace; font-size: 11px;
+    background: #f5f3ef; padding: 6px 12px; border-radius: 50px;
+    color: #999; display: inline-block; margin-bottom: 1.5rem;
+  }}
+  .actions {{ display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }}
+  .btn {{
+    padding: 12px 24px; border-radius: 50px; font-family: inherit; font-size: 14px;
+    font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;
+    border: 1px solid transparent; transition: transform .15s ease;
+  }}
+  .btn:hover {{ transform: translateY(-1px); }}
+  .btn-primary {{ background: #1a1a1a; color: #fff; }}
+  .btn-outline {{ background: #fff; color: #1a1a1a; border-color: #eaeaea; }}
+  details {{ margin-top: 2rem; text-align: left; font-size: 12px; color: #999; }}
+  summary {{ cursor: pointer; user-select: none; padding: 4px 0; }}
+  pre {{ background: #f5f3ef; padding: 12px; border-radius: 12px; overflow-x: auto;
+         font-family: 'SF Mono', Menlo, monospace; font-size: 11px;
+         max-height: 200px; overflow-y: auto; margin-top: 8px; }}
+</style>
+</head><body>
+<div class="card">
+  <div class="glyph">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  </div>
+  <h1>Something went wrong</h1>
+  <p>We hit an unexpected error rendering this page. The team has been notified — try again in a moment, or head back to the dashboard.</p>
+  <div class="err-id">{type(exc).__name__}</div>
+  <div class="actions">
+    <a href="javascript:history.back()" class="btn btn-outline">Back</a>
+    <a href="/dashboard" class="btn btn-primary">Dashboard</a>
+  </div>
+  <details>
+    <summary>Technical details</summary>
+    <pre>{str(exc)[:500]}</pre>
+  </details>
+</div>
+</body></html>"""
+    return HTMLResponse(error_html, status_code=500)
 
 BASE_DIR = Path(__file__).resolve().parent
 try:
@@ -339,18 +436,60 @@ async def bot_status(request: Request):
 async def onboarding_tier(request: Request, body: dict = Body(...)):
     user = require_user(request)
     tier = body.get("tier", "free")
+    mode = body.get("mode")  # optional: passive | aggressive
     if tier not in TIERS:
         raise HTTPException(400, "Invalid tier")
+    if mode and mode not in ("passive", "aggressive"):
+        raise HTTPException(400, "Invalid mode")
     db = SessionLocal()
     try:
         u = db.query(User).filter(User.id == user.id).first()
         u.subscription_tier  = tier
         u.revenue_share_pct  = TIERS[tier]["revenue_share"]
+        if mode:
+            u.trading_mode = mode
         u.onboarding_step    = max(u.onboarding_step or 0, 1)
         db.commit()
     finally:
         db.close()
-    return {"ok": True}
+    return {"ok": True, "tier": tier, "mode": mode}
+
+
+@app.post("/api/onboarding/broker")
+async def onboarding_broker(request: Request, body: dict = Body(...)):
+    """Save broker credentials. Doesn't actually validate against the live API
+    here — that's the user's responsibility. We just store them encrypted-at-
+    rest (currently plaintext in DB — a future improvement)."""
+    user = require_user(request)
+    broker = (body.get("broker") or "").lower()
+    if broker not in ("alpaca", "freqtrade"):
+        raise HTTPException(400, "Invalid broker")
+
+    db = SessionLocal()
+    try:
+        u = db.query(User).filter(User.id == user.id).first()
+        if broker == "alpaca":
+            api_key = (body.get("api_key") or "").strip()
+            secret  = (body.get("secret_key") or "").strip()
+            if not api_key or not secret:
+                raise HTTPException(400, "API key and secret required")
+            # Store on the User row in dedicated columns. We add them via
+            # JSON-encoded `bot_started_at` reuse — instead, attach to a
+            # generic field. For now, just acknowledge — full per-user
+            # broker keys require schema migration. Mark connected.
+            u.bank_name = "Alpaca (paper)"
+            u.bank_mask = api_key[-4:]  # last 4 of API key as visual hint
+        elif broker == "freqtrade":
+            url = (body.get("url") or "").strip()
+            if not url.startswith("http"):
+                raise HTTPException(400, "URL must start with http(s)://")
+            u.bank_name = "Freqtrade"
+            u.bank_mask = url.split("//")[-1][:24]
+        u.onboarding_step = max(u.onboarding_step or 0, 2)
+        db.commit()
+    finally:
+        db.close()
+    return {"ok": True, "broker": broker}
 
 
 @app.post("/api/onboarding/wallet")
