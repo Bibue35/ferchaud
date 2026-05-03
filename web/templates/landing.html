@@ -1,1346 +1,776 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ferchaud — AI-Powered Trading</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ferchaud — A trading bot that thinks</title>
+<meta name="description" content="Claude and Grok ratify every trade. Battle-tested execution. The bot learns from every win and loss. Honest about returns, calm about money.">
+<meta property="og:title" content="Ferchaud — A trading bot that thinks">
+<meta property="og:description" content="AI-ratified trades. Self-learning. Battle-tested execution.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  // Restore user theme preference (light/dark)
+  (function(){
+    const t = localStorage.getItem('theme');
+    if (t === 'light') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
 <style>
-/* ═══════════════════════════════════════════════════════════════
-   RESET & CSS VARIABLES
-   ═══════════════════════════════════════════════════════════════ */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --bg: #fefefe;
-  --bg-warm: #faf9f7;
-  --bg-cream: #f5f3ef;
-  --surface: #ffffff;
-  --border: #eaeaea;
-  --text: #1a1a1a;
-  --text-secondary: #666666;
-  --muted: #999999;
-  --accent: #1a1a1a;
-  --green: #22c55e;
-  --red: #ef4444;
-  --shell-bg: #e8e8e8;
-  --radius: 20px;
-  --nav-height: 64px;
-}
-
-/* DARK THEME */
-[data-theme="dark"] {
-  --bg: #0a0a0a;
-  --bg-warm: #111111;
-  --bg-cream: #1a1a1a;
-  --surface: #111111;
-  --border: #2a2a2a;
-  --text: #f0f0f0;
-  --text-secondary: #999999;
-  --muted: #666666;
-  --accent: #ffffff;
-  --shell-bg: #000000;
-}
-[data-theme="dark"] .navbar { background: rgba(10,10,10,0.92) !important; border-color: #2a2a2a !important; }
-[data-theme="dark"] .cta-section { background: #ffffff !important; }
-[data-theme="dark"] .cta-section h2,
-[data-theme="dark"] .cta-section p { color: #0a0a0a !important; }
-[data-theme="dark"] .cta-section .btn-cta { background: #0a0a0a !important; color: #fff !important; }
-[data-theme="dark"] .icon-sun { display: none; }
-[data-theme="dark"] .icon-moon { display: block; }
-[data-theme="dark"] .pricing-card.featured { border-color: #fff; }
-[data-theme="dark"] .pricing-card.featured .card-badge { background: #fff; color: #000; }
-
-/* ═══════════════════════════════════════════════════════════════
-   BASE STYLES
-   ═══════════════════════════════════════════════════════════════ */
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--text);
-  background: var(--shell-bg);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
-a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-.page-shell {
-  margin: 76px 12px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.page-shell > section, .page-shell > footer {
-  background: var(--bg);
-  border-radius: var(--radius);
-  overflow: hidden;
-  position: relative;
-}
-.container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
-
-/* ═══════════════════════════════════════════════════════════════
-   TEXTURE OVERLAYS
-   ═══════════════════════════════════════════════════════════════ */
-.noise::after {
-  content: ''; position: absolute; inset: 0; z-index: 1;
-  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  opacity: 0.4;
-}
-.dot-grid::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-  background-size: 24px 24px;
-  opacity: 0.5;
-  pointer-events: none;
-}
-.diag-lines::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background: repeating-linear-gradient(
-    -45deg, transparent, transparent 10px,
-    var(--border) 10px, var(--border) 10.5px
-  );
-  opacity: 0.3;
-  pointer-events: none;
-}
-.star-dots::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events: none;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   NAVBAR
-   ═══════════════════════════════════════════════════════════════ */
-.navbar {
-  position: fixed; top: 8px; left: 12px; right: 12px; z-index: 1000;
-  height: var(--nav-height);
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px;
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), background 0.3s, border-color 0.3s;
-}
-.navbar.hidden { transform: translateY(-120%); }
-.nav-logo {
-  font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
-  display: flex; align-items: center; gap: 8px;
-}
-.nav-logo .logo-dot {
-  width: 10px; height: 10px; background: var(--green);
-  border-radius: 50%; display: inline-block;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-.nav-links { display: flex; align-items: center; gap: 28px; }
-.nav-links a {
-  font-size: 14px; font-weight: 500; color: var(--text-secondary);
-  transition: color 0.2s;
-}
-.nav-links a:hover { color: var(--text); }
-
-.nav-actions { display: flex; align-items: center; gap: 12px; }
-.theme-toggle {
-  width: 36px; height: 36px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s;
-  color: var(--text-secondary);
-}
-.theme-toggle:hover { background: var(--bg-cream); }
-.theme-toggle svg { width: 18px; height: 18px; }
-.icon-moon { display: none; }
-.btn-signin {
-  font-size: 14px; font-weight: 500; color: var(--text-secondary);
-  padding: 8px 16px; border-radius: 10px; transition: color 0.2s, background 0.2s;
-}
-.btn-signin:hover { color: var(--text); background: var(--bg-cream); }
-.btn-get-started {
-  font-size: 14px; font-weight: 600; color: #fff;
-  background: var(--accent); padding: 8px 20px; border-radius: 10px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-get-started:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   HERO SECTION
-   ═══════════════════════════════════════════════════════════════ */
-.hero { background: var(--bg-warm); padding: 100px 0 80px; min-height: 90vh; display: flex; align-items: center; }
-.hero-mesh {
-  position: absolute; inset: 0; z-index: 0;
-  background:
-    radial-gradient(circle at 20% 50%, rgba(34,197,94,0.07) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(59,130,246,0.05) 0%, transparent 50%),
-    radial-gradient(circle at 50% 80%, rgba(245,158,11,0.04) 0%, transparent 50%);
-  animation: meshShift 15s ease-in-out infinite;
-}
-@keyframes meshShift {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  33% { transform: scale(1.1) rotate(1deg); }
-  66% { transform: scale(0.95) rotate(-1deg); }
-}
-.hero-grid {
-  position: relative; z-index: 2;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
-}
-.hero-left h1 {
-  font-size: 56px; font-weight: 800; letter-spacing: -2px;
-  line-height: 1.08; margin-bottom: 20px; min-height: 130px;
-}
-.typewriter-cursor {
-  display: inline-block; width: 3px; height: 52px;
-  background: var(--green); margin-left: 4px;
-  animation: blink 0.8s step-end infinite;
-  vertical-align: text-bottom;
-}
-@keyframes blink { 50% { opacity: 0; } }
-
-.hero-subtitle {
-  font-size: 18px; color: var(--text-secondary); line-height: 1.6;
-  margin-bottom: 32px; max-width: 440px;
-}
-.hero-ctas { display: flex; gap: 12px; margin-bottom: 40px; }
-.btn-hero-primary {
-  font-size: 16px; font-weight: 600; color: #fff;
-  background: var(--accent); padding: 14px 32px; border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-hero-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-}
-.btn-hero-secondary {
-  font-size: 16px; font-weight: 500; color: var(--text);
-  background: var(--surface); border: 1px solid var(--border);
-  padding: 14px 32px; border-radius: 12px;
-  transition: transform 0.2s, border-color 0.2s;
-}
-.btn-hero-secondary:hover {
-  transform: translateY(-2px);
-  border-color: var(--text-secondary);
-}
-.scanner-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 100px; padding: 8px 16px; font-size: 13px;
-  color: var(--text-secondary); font-weight: 500;
-  margin-bottom: 24px;
-}
-
-.scanner-dot {
-  width: 8px; height: 8px; background: var(--green);
-  border-radius: 50%; animation: pulse-dot 1.5s ease-in-out infinite;
-}
-.trust-row {
-  display: flex; gap: 24px; align-items: center;
-  font-size: 13px; color: var(--muted);
-}
-.trust-row span { display: flex; align-items: center; gap: 6px; }
-.trust-row svg { width: 14px; height: 14px; opacity: 0.5; }
-
-/* Hero Chart Area */
-.hero-chart-wrap {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
-  transition: box-shadow 0.3s;
-}
-.hero-chart-wrap:hover { box-shadow: 0 12px 48px rgba(0,0,0,0.1); }
-.chart-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px;
-}
-.chart-header .ticker { font-weight: 700; font-size: 16px; }
-.chart-header .price-up { color: var(--green); font-weight: 600; font-size: 14px; }
-#hero-chart { width: 100%; height: 280px; border-radius: 8px; overflow: hidden; }
-
-/* Floating badges */
-.float-badge {
-  position: absolute; z-index: 10;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 100px; padding: 6px 14px;
-  font-size: 12px; font-weight: 600;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-  animation: floatBob 3s ease-in-out infinite;
-}
-.float-badge.b1 { top: -12px; right: 30px; color: var(--green); animation-delay: 0s; }
-.float-badge.b2 { bottom: 60px; left: -20px; color: var(--accent); animation-delay: 0.8s; }
-.float-badge.b3 { bottom: -8px; right: 60px; color: var(--green); animation-delay: 1.6s; }
-@keyframes floatBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-/* Scroll indicator */
-.scroll-indicator {
-  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-  z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
-}
-.scroll-indicator svg {
-  width: 20px; height: 20px; animation: bounceDown 1.8s ease-in-out infinite;
-}
-@keyframes bounceDown {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(6px); }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   STATS ROW
-   ═══════════════════════════════════════════════════════════════ */
-.stats-section { background: var(--surface); padding: 60px 0; }
-.stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
-  text-align: center;
-}
-.stat-item { position: relative; }
-.stat-item:not(:last-child)::after {
-  content: ''; position: absolute; right: -16px; top: 10%;
-  height: 80%; width: 1px; background: var(--border);
-}
-.stat-number {
-  font-size: 42px; font-weight: 800; letter-spacing: -1.5px;
-  margin-bottom: 6px;
-}
-.stat-number .stat-suffix { font-size: 28px; }
-.stat-label { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
-
-/* ═══════════════════════════════════════════════════════════════
-   HOW IT WORKS
-   ═══════════════════════════════════════════════════════════════ */
-.how-section { background: var(--bg-cream); padding: 100px 0; }
-.section-label {
-  font-size: 12px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 2px; color: var(--muted); margin-bottom: 12px;
-}
-
-.section-title {
-  font-size: 40px; font-weight: 800; letter-spacing: -1.5px;
-  margin-bottom: 16px; line-height: 1.15;
-}
-.section-subtitle {
-  font-size: 17px; color: var(--text-secondary); line-height: 1.6;
-  max-width: 520px; margin-bottom: 60px;
-}
-.steps-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px;
-  position: relative;
-}
-.step-card {
-  position: relative; z-index: 2;
-  text-align: center; padding: 40px 24px;
-}
-.step-num {
-  width: 56px; height: 56px; border-radius: 16px;
-  background: var(--accent); color: var(--bg);
-  font-size: 22px; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 20px;
-}
-.step-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-.step-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
-.steps-connector {
-  position: absolute; top: 68px; left: 20%; right: 20%;
-  height: 2px; z-index: 1;
-  background: repeating-linear-gradient(90deg, var(--border) 0, var(--border) 8px, transparent 8px, transparent 16px);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   BENTO FEATURES GRID
-   ═══════════════════════════════════════════════════════════════ */
-.features-section { background: var(--surface); padding: 100px 0; }
-.bento-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: auto auto;
-  gap: 16px;
-}
-.bento-card {
-  background: var(--bg-warm);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 32px;
-  position: relative; z-index: 2;
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s, border-color 0.3s;
-  overflow: hidden;
-}
-.bento-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-  border-color: var(--text-secondary);
-}
-.bento-card.wide { grid-column: span 2; }
-.bento-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-.bento-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
-.bento-mini-chart {
-  margin-top: 20px; height: 60px;
-  display: flex; align-items: flex-end; gap: 3px;
-}
-.bento-mini-chart .bar {
-  flex: 1; border-radius: 3px 3px 0 0;
-  background: var(--green); opacity: 0.6;
-  transition: opacity 0.3s;
-}
-.bento-card:hover .bento-mini-chart .bar { opacity: 1; }
-.bento-mini-chart .bar.red { background: var(--red); }
-
-/* ═══════════════════════════════════════════════════════════════
-   STRATEGY CHART
-   ═══════════════════════════════════════════════════════════════ */
-.strategy-section { background: var(--bg-cream); padding: 100px 0; }
-.strategy-chart-wrap {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  margin-top: 40px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-}
-#strategy-chart { width: 100%; height: 340px; border-radius: 8px; overflow: hidden; }
-.strategy-stats {
-  display: flex; gap: 32px; margin-top: 16px; padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.strategy-stat-item .ss-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.strategy-stat-item .ss-value { font-size: 18px; font-weight: 700; }
-.strategy-stat-item .ss-value.green { color: var(--green); }
-
-/* ═══════════════════════════════════════════════════════════════
-   PRICING
-   ═══════════════════════════════════════════════════════════════ */
-.pricing-section { background: var(--surface); padding: 100px 0; }
-.pricing-toggle-wrap {
-  display: flex; align-items: center; justify-content: center;
-  gap: 12px; margin-bottom: 48px;
-}
-.pricing-toggle-label { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
-.pricing-toggle-label.active { color: var(--text); font-weight: 600; }
-.pricing-toggle {
-  width: 48px; height: 26px; border-radius: 100px;
-  background: var(--border); position: relative; cursor: pointer;
-  transition: background 0.3s;
-}
-.pricing-toggle.annual { background: var(--green); }
-.pricing-toggle .toggle-dot {
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #fff; position: absolute; top: 3px; left: 3px;
-  transition: transform 0.3s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-}
-.pricing-toggle.annual .toggle-dot { transform: translateX(22px); }
-.save-badge {
-  font-size: 11px; font-weight: 600; color: var(--green);
-  background: rgba(34,197,94,0.1); padding: 3px 8px; border-radius: 6px;
-}
-
-.pricing-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-}
-.pricing-card {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 16px; padding: 32px 24px;
-  position: relative;
-  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-}
-.pricing-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.06);
-  border-color: var(--text-secondary);
-}
-.pricing-card.featured {
-  border: 2px solid transparent;
-  background-image: linear-gradient(var(--bg), var(--bg)),
-    linear-gradient(135deg, var(--accent), var(--green), var(--accent));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-.card-badge {
-  position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
-  background: var(--accent); color: var(--bg); font-size: 11px;
-  font-weight: 700; padding: 4px 14px; border-radius: 100px;
-  text-transform: uppercase; letter-spacing: 0.5px;
-}
-.pricing-tier { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
-.pricing-price { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 4px; }
-.pricing-price .period { font-size: 14px; font-weight: 500; color: var(--muted); }
-
-.pricing-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
-.pricing-features { list-style: none; margin-bottom: 28px; }
-.pricing-features li {
-  font-size: 13px; color: var(--text-secondary); padding: 6px 0;
-  display: flex; align-items: center; gap: 8px;
-}
-.pricing-features li::before {
-  content: ''; width: 16px; height: 16px; flex-shrink: 0;
-  background: var(--green); border-radius: 50%;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
-}
-.btn-pricing {
-  display: block; width: 100%; text-align: center;
-  padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
-  border: 1px solid var(--border); color: var(--text);
-  transition: all 0.2s;
-}
-.btn-pricing:hover { border-color: var(--accent); background: var(--bg-cream); }
-.btn-pricing.primary {
-  background: var(--accent); color: var(--bg); border-color: var(--accent);
-}
-.btn-pricing.primary:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CTA SECTION — THE ONE BLACK SECTION
-   ═══════════════════════════════════════════════════════════════ */
-.cta-section {
-  background: #0a0a0a !important; padding: 100px 0; text-align: center;
-}
-.cta-section h2 {
-  font-size: 44px; font-weight: 800; letter-spacing: -1.5px;
-  color: #ffffff; margin-bottom: 16px;
-}
-.cta-section p {
-  font-size: 17px; color: #999; margin-bottom: 36px; max-width: 440px; margin-left: auto; margin-right: auto;
-}
-.btn-cta {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: #ffffff; color: #0a0a0a;
-  font-size: 16px; font-weight: 600;
-  padding: 16px 36px; border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  animation: ctaPulse 3s ease-in-out infinite;
-}
-.btn-cta:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 32px rgba(255,255,255,0.15);
-}
-@keyframes ctaPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.1); }
-  50% { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   FOOTER
-   ═══════════════════════════════════════════════════════════════ */
-.footer { background: var(--bg-cream) !important; padding: 60px 0 32px; }
-.footer-grid {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
-  margin-bottom: 48px;
-}
-.footer-brand { max-width: 280px; }
-.footer-brand .nav-logo { margin-bottom: 16px; }
-.footer-brand p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
-.footer-col h4 {
-  font-size: 12px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px;
-}
-.footer-col a {
-  display: block; font-size: 14px; color: var(--text-secondary);
-  padding: 4px 0; transition: color 0.2s;
-}
-.footer-col a:hover { color: var(--text); }
-.footer-bottom {
-  border-top: 1px solid var(--border); padding-top: 24px;
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 13px; color: var(--muted);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   SCROLL REVEAL ANIMATIONS
-   ═══════════════════════════════════════════════════════════════ */
-.reveal {
-  opacity: 0; transform: translateY(28px);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
-}
-.reveal.visible { opacity: 1; transform: translateY(0); }
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
-.reveal-delay-5 { transition-delay: 0.5s; }
-.reveal-delay-6 { transition-delay: 0.6s; }
-
-/* ═══════════════════════════════════════════════════════════════
-   REDUCED MOTION
-   ═══════════════════════════════════════════════════════════════ */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+  /* ─── Tokens ─── */
+  :root {
+    --bg:#fafaf9; --bg-soft:#f4f3f0; --surface:#ffffff; --surface-2:#f7f6f4;
+    --border:#e8e7e3; --border-strong:#cfcdc7;
+    --text:#0c0d0e; --text-secondary:#525355; --muted:#8b8d91;
+    --accent:#0c0d0e; --green:#16a34a; --red:#dc2626;
+    --shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px rgba(0,0,0,.06);
+    --ease:cubic-bezier(.2,.7,.2,1);
   }
-  .reveal { opacity: 1; transform: none; }
-  .hero-mesh { animation: none; }
-  .typewriter-cursor { animation: none; opacity: 1; }
-}
+  [data-theme="dark"] {
+    --bg:#08090a; --bg-soft:#0d0e10; --surface:#101113; --surface-2:#16181b;
+    --border:#22252a; --border-strong:#373a40;
+    --text:#f0eee9; --text-secondary:#9b9ca0; --muted:#65676b;
+    --accent:#f0eee9; --green:#22c55e; --red:#ef4444;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 48px rgba(0,0,0,.5);
+  }
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  .container { padding: 0 20px; }
-  .page-shell { margin: 68px 8px 8px; }
-  .navbar { left: 8px; right: 8px; padding: 0 16px; }
-  .nav-links { display: none; }
-  .hero { padding: 60px 0 60px; min-height: auto; }
-  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
-  .hero-left h1 { font-size: 36px; min-height: 90px; }
-  .typewriter-cursor { height: 34px; }
-  .hero-subtitle { font-size: 16px; }
-  #hero-chart { height: 220px; }
-  .float-badge.b2 { display: none; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
-  .stat-item:not(:last-child)::after { display: none; }
-  .stat-number { font-size: 32px; }
-  .steps-grid { grid-template-columns: 1fr; gap: 24px; }
-  .steps-connector { display: none; }
-  .section-title { font-size: 30px; }
-  .bento-grid { grid-template-columns: 1fr; }
-  .bento-card.wide { grid-column: span 1; }
-  #strategy-chart { height: 250px; }
-  .strategy-stats { flex-wrap: wrap; gap: 16px; }
-  .pricing-grid { grid-template-columns: 1fr; gap: 12px; }
-  .cta-section h2 { font-size: 30px; }
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
-  .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
-}
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family:'Inter',-apple-system,sans-serif;
+    background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased; line-height:1.55;
+  }
+  a { color:inherit; text-decoration:none; }
+  button { font-family:inherit; cursor:pointer; border:none; background:none; }
 
+  /* ─── Layout ─── */
+  .container { max-width:1180px; margin:0 auto; padding:0 24px; }
+  @media (min-width:900px) { .container { padding:0 48px; } }
+  section { padding:96px 0; position:relative; }
+  @media (max-width:600px) { section { padding:64px 0; } }
+
+  /* ─── Nav ─── */
+  .nav {
+    position:fixed; top:16px; left:50%; transform:translateX(-50%);
+    width:calc(100% - 32px); max-width:780px; z-index:100;
+    background:color-mix(in oklab, var(--surface) 80%, transparent);
+    backdrop-filter:blur(16px) saturate(140%);
+    -webkit-backdrop-filter:blur(16px) saturate(140%);
+    border:1px solid var(--border); border-radius:50px;
+    padding:8px 8px 8px 24px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow:var(--shadow);
+  }
+  .nav-logo {
+    font-weight:800; letter-spacing:-.5px; font-size:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .nav-logo::before {
+    content:''; width:8px; height:8px; border-radius:50%;
+    background:var(--green); box-shadow:0 0 12px var(--green);
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:.4;} }
+  .nav-links { display:flex; align-items:center; gap:8px; }
+  .nav-link {
+    padding:8px 14px; font-size:13px; font-weight:500;
+    color:var(--text-secondary); border-radius:50px;
+    transition:color .15s var(--ease), background .15s var(--ease);
+  }
+  .nav-link:hover { color:var(--text); background:var(--bg-soft); }
+  @media (max-width:680px) {
+    .nav-links a:not(.btn-primary) { display:none; }
+  }
+  .nav-cta {
+    background:var(--text); color:var(--surface);
+    padding:9px 18px; font-size:13px; font-weight:600;
+    border-radius:50px; transition:transform .15s var(--ease);
+  }
+  .nav-cta:hover { transform:translateY(-1px); }
+
+  /* ─── Hero ─── */
+  .hero {
+    padding-top:160px; padding-bottom:80px; position:relative; overflow:hidden;
+  }
+  .hero::before {
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(800px 500px at 80% 0%, rgba(34,197,94,.08), transparent 60%),
+      radial-gradient(700px 400px at 0% 100%, rgba(99,102,241,.05), transparent 60%);
+  }
+  .hero-inner { position:relative; z-index:1; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 14px; border-radius:50px;
+    background:color-mix(in oklab, var(--surface) 60%, transparent);
+    border:1px solid var(--border);
+    font-size:12px; font-weight:500; color:var(--text-secondary);
+    margin-bottom:32px;
+  }
+  .hero-badge::before {
+    content:''; width:6px; height:6px; border-radius:50%;
+    background:var(--green); box-shadow:0 0 8px var(--green);
+  }
+  .hero h1 {
+    font-size:clamp(40px, 7vw, 80px);
+    font-weight:800; letter-spacing:-2.5px; line-height:1.05;
+    margin-bottom:24px; max-width:900px;
+  }
+  .hero h1 .accent {
+    background:linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .hero p {
+    font-size:clamp(16px, 1.3vw, 19px);
+    color:var(--text-secondary); max-width:620px;
+    line-height:1.6; margin-bottom:40px;
+  }
+  .hero-cta { display:flex; gap:12px; flex-wrap:wrap; }
+  .btn {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:14px 24px; border-radius:50px; font-size:14px; font-weight:600;
+    transition:transform .15s var(--ease), box-shadow .15s var(--ease);
+  }
+  .btn-primary { background:var(--text); color:var(--surface); box-shadow:0 4px 16px rgba(0,0,0,.1); }
+  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.15); }
+  .btn-outline {
+    background:color-mix(in oklab, var(--surface) 70%, transparent);
+    color:var(--text); border:1px solid var(--border);
+  }
+  .btn-outline:hover { border-color:var(--border-strong); }
+
+  /* ─── Live preview chip (under hero) ─── */
+  .hero-preview {
+    margin-top:80px; max-width:980px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:24px; box-shadow:var(--shadow); overflow:hidden;
+    position:relative;
+  }
+  .preview-bar {
+    display:flex; align-items:center; gap:8px; padding:12px 16px;
+    border-bottom:1px solid var(--border); background:var(--bg-soft);
+  }
+  .preview-dot { width:11px; height:11px; border-radius:50%; }
+  .preview-dot.r { background:#fc615d; }
+  .preview-dot.y { background:#fdbc40; }
+  .preview-dot.g { background:#34c84a; }
+  .preview-title {
+    margin-left:auto; margin-right:auto; font-size:12px;
+    color:var(--muted); font-family:'JetBrains Mono',monospace;
+  }
+  .preview-body { padding:32px 28px; display:grid; grid-template-columns:1fr 1.4fr; gap:32px; }
+  @media (max-width:760px) { .preview-body { grid-template-columns:1fr; } }
+
+  .ai-msg {
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:14px; padding:14px 16px;
+    font-size:13.5px; line-height:1.55; color:var(--text);
+    margin-bottom:10px; position:relative;
+  }
+  .ai-msg-label {
+    font-size:10px; font-weight:700; letter-spacing:1.5px;
+    color:var(--muted); text-transform:uppercase; margin-bottom:6px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .ai-msg-label::before {
+    content:''; width:6px; height:6px; border-radius:50%; background:var(--green);
+  }
+  .ai-msg b { color:var(--text); }
+  .ai-msg .num { font-family:'JetBrains Mono',monospace; }
+
+  .ratio-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+  .ratio-cell {
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:10px; padding:8px 12px;
+  }
+  .ratio-cell .k { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .ratio-cell .v { font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px; margin-top:2px; }
+  .ratio-cell .v.up { color:var(--green); }
+
+  /* Mini chart in preview */
+  .mini-chart-wrap { display:flex; flex-direction:column; gap:8px; }
+  .mini-chart-head { display:flex; justify-content:space-between; align-items:flex-end; }
+  .mini-chart-sym { font-weight:700; font-size:14px; }
+  .mini-chart-px {
+    font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:600;
+    color:var(--green);
+  }
+  .mini-chart-px small { font-size:11px; font-weight:500; color:var(--muted); margin-left:6px; }
+  .mini-chart-svg { width:100%; height:120px; }
+  .mini-chart-svg path.line { fill:none; stroke:var(--green); stroke-width:1.5; }
+  .mini-chart-svg path.fill { fill:rgba(34,197,94,.08); }
+  .mini-chart-svg path.entry-line { stroke:var(--text-secondary); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+
+  /* ─── Section header pattern ─── */
+  .section-eyebrow {
+    display:inline-block; font-size:11px; font-weight:700;
+    text-transform:uppercase; letter-spacing:1.5px;
+    color:var(--text-secondary); margin-bottom:16px;
+  }
+  .section-eyebrow::before {
+    content:''; display:inline-block; width:24px; height:1px;
+    background:var(--text-secondary); vertical-align:middle; margin-right:10px;
+  }
+  .section-title {
+    font-size:clamp(28px, 4vw, 44px); font-weight:800;
+    letter-spacing:-1px; line-height:1.15; margin-bottom:16px;
+    max-width:740px;
+  }
+  .section-sub {
+    font-size:16px; color:var(--text-secondary); max-width:680px; line-height:1.6;
+    margin-bottom:48px;
+  }
+
+  /* ─── Trust bar (under hero) ─── */
+  .trust {
+    padding:48px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:var(--bg-soft);
+  }
+  .trust-grid {
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:24px;
+    text-align:center;
+  }
+  @media (max-width:700px) { .trust-grid { grid-template-columns:repeat(2, 1fr); } }
+  .trust-num {
+    font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:600;
+    letter-spacing:-1px; color:var(--text);
+  }
+  .trust-label {
+    font-size:11px; text-transform:uppercase; letter-spacing:1.5px;
+    color:var(--muted); margin-top:6px; font-weight:600;
+  }
+
+  /* ─── Loop / how it works ─── */
+  .loop-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+  }
+  @media (max-width:900px) { .loop-grid { grid-template-columns:1fr; } }
+  .loop-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:18px; padding:32px; transition:transform .2s var(--ease), border-color .2s var(--ease);
+  }
+  .loop-card:hover { transform:translateY(-2px); border-color:var(--border-strong); }
+  .loop-num {
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px; font-weight:500; color:var(--muted); margin-bottom:16px;
+  }
+  .loop-card h3 {
+    font-size:20px; font-weight:700; letter-spacing:-.3px;
+    margin-bottom:12px;
+  }
+  .loop-card p { font-size:14px; color:var(--text-secondary); line-height:1.6; }
+  .loop-card .icon {
+    width:44px; height:44px; border-radius:12px;
+    background:var(--surface-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:24px; color:var(--text);
+  }
+
+  /* ─── Feature split ─── */
+  .features { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; margin-top:80px; }
+  @media (max-width:900px) { .features { grid-template-columns:1fr; gap:32px; } }
+  .feature-list { display:flex; flex-direction:column; gap:20px; }
+  .feature-item { display:flex; gap:16px; align-items:flex-start; }
+  .feature-item .check {
+    width:24px; height:24px; border-radius:50%; flex-shrink:0;
+    background:rgba(34,197,94,.12); color:var(--green);
+    display:flex; align-items:center; justify-content:center; margin-top:2px;
+  }
+  .feature-item h4 { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .feature-item p { font-size:14px; color:var(--text-secondary); line-height:1.55; }
+  .features-img {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:18px; padding:32px; box-shadow:var(--shadow);
+  }
+  .stat-line {
+    display:flex; justify-content:space-between; padding:14px 0;
+    border-bottom:1px dashed var(--border); font-size:14px;
+  }
+  .stat-line:last-child { border-bottom:none; }
+  .stat-line .k { color:var(--muted); }
+  .stat-line .v { font-family:'JetBrains Mono',monospace; font-weight:600; }
+  .stat-line .v.up { color:var(--green); }
+
+  /* ─── Pricing ─── */
+  .pricing-grid {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:32px;
+  }
+  @media (max-width:1000px) { .pricing-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px)  { .pricing-grid { grid-template-columns:1fr; } }
+  .price-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:18px; padding:28px 24px; position:relative;
+    transition:transform .2s var(--ease), border-color .2s var(--ease);
+  }
+  .price-card:hover { transform:translateY(-2px); }
+  .price-card.featured { border-color:var(--text); box-shadow:0 0 0 4px var(--accent-glow); }
+  .price-tag {
+    position:absolute; top:-10px; left:24px;
+    background:var(--text); color:var(--surface);
+    font-size:10px; font-weight:700; letter-spacing:.5px;
+    padding:3px 12px; border-radius:50px;
+  }
+  .price-name { font-size:14px; font-weight:600; color:var(--text-secondary); margin-bottom:6px; }
+  .price-amount {
+    font-size:36px; font-weight:800; letter-spacing:-1px; line-height:1;
+    margin-bottom:4px; font-family:'JetBrains Mono',monospace;
+  }
+  .price-amount span { font-size:14px; font-weight:500; color:var(--muted); margin-left:4px; }
+  .price-tagline { font-size:12px; color:var(--muted); margin-bottom:24px; min-height:32px; }
+  .price-features { list-style:none; margin-bottom:24px; }
+  .price-features li {
+    font-size:13px; color:var(--text-secondary); padding:6px 0;
+    display:flex; align-items:flex-start; gap:8px;
+  }
+  .price-features li::before {
+    content:''; width:14px; height:14px; flex-shrink:0; margin-top:2px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='3'><polyline points='20 6 9 17 4 12'/></svg>");
+    background-size:contain; background-repeat:no-repeat;
+  }
+  .price-cta {
+    display:block; text-align:center; padding:11px;
+    border-radius:50px; font-size:13px; font-weight:600;
+    border:1px solid var(--border); color:var(--text);
+    transition:border-color .15s var(--ease), background .15s var(--ease);
+  }
+  .price-cta:hover { border-color:var(--border-strong); background:var(--bg-soft); }
+  .price-card.featured .price-cta {
+    background:var(--text); color:var(--surface); border-color:var(--text);
+  }
+
+  /* ─── Final CTA ─── */
+  .cta-band {
+    background:var(--text); color:var(--bg);
+    border-radius:24px; padding:64px 48px;
+    text-align:center; position:relative; overflow:hidden;
+  }
+  [data-theme="dark"] .cta-band { background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+  .cta-band h2 {
+    font-size:clamp(28px, 4vw, 40px); font-weight:800;
+    letter-spacing:-1px; margin-bottom:12px;
+    color:inherit;
+  }
+  .cta-band p { font-size:15px; opacity:.7; margin-bottom:32px; max-width:520px; margin-left:auto; margin-right:auto; }
+  .cta-band .btn-primary {
+    background:var(--bg); color:var(--text);
+  }
+  [data-theme="dark"] .cta-band .btn-primary { background:var(--text); color:var(--surface); }
+
+  /* ─── Footer ─── */
+  footer { padding:48px 0 32px; border-top:1px solid var(--border); margin-top:96px; }
+  .footer-grid {
+    display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px;
+    margin-bottom:40px;
+  }
+  @media (max-width:700px) { .footer-grid { grid-template-columns:1fr 1fr; gap:24px; } }
+  .footer-col h4 {
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px;
+    color:var(--muted); margin-bottom:16px;
+  }
+  .footer-col a {
+    display:block; font-size:13px; color:var(--text-secondary);
+    padding:5px 0; transition:color .15s;
+  }
+  .footer-col a:hover { color:var(--text); }
+  .footer-bottom {
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:24px; border-top:1px solid var(--border);
+    font-size:12px; color:var(--muted); flex-wrap:wrap; gap:12px;
+  }
+
+  /* ─── Reveal on scroll ─── */
+  .reveal { opacity:0; transform:translateY(16px); transition:opacity .6s var(--ease), transform .6s var(--ease); }
+  .reveal.show { opacity:1; transform:none; }
+
+  /* Theme toggle */
+  .theme-tog {
+    position:fixed; bottom:24px; right:24px; z-index:90;
+    width:42px; height:42px; border-radius:50%;
+    background:var(--surface); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow); cursor:pointer; color:var(--text);
+    transition:transform .15s var(--ease);
+  }
+  .theme-tog:hover { transform:scale(1.05); }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     NAVBAR
-     ═══════════════════════════════════════════════════════════════ -->
-<nav class="navbar" id="navbar">
-  <div class="nav-logo">
-    <span class="logo-dot"></span>
-    Ferchaud
-  </div>
+<!-- Nav -->
+<nav class="nav">
+  <a class="nav-logo" href="/">Ferchaud</a>
   <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#sources">Sources</a>
-    <a href="#support">Support</a>
-  </div>
-  <div class="nav-actions">
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-      </svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-      </svg>
-    </button>
-    <a href="/login" class="btn-signin">Sign In</a>
-    <a href="/register" class="btn-get-started">Get Started</a>
+    <a class="nav-link" href="/how-it-works">How it works</a>
+    <a class="nav-link" href="#pricing">Pricing</a>
+    <a class="nav-link" href="/login">Sign in</a>
+    <a class="nav-cta" href="/signup">Start free</a>
   </div>
 </nav>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     PAGE SHELL
-     ═══════════════════════════════════════════════════════════════ -->
-<div class="page-shell">
+<!-- Hero -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-badge">Live · paper-trading by default</div>
+    <h1>A trading bot that <span class="accent">thinks</span>, learns, and tells you why.</h1>
+    <p>Claude and Grok ratify every candidate trade with full market context. The bot labels its own mistakes after each close and tunes itself overnight. We charge a flat sub — you keep 100% of profits.</p>
+    <div class="hero-cta">
+      <a href="/signup" class="btn btn-primary">
+        Start free
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <a href="/how-it-works" class="btn btn-outline">See how it works</a>
+    </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     HERO
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="hero noise">
-  <div class="hero-mesh"></div>
-  <div class="container">
-    <div class="hero-grid">
-      <div class="hero-left">
-        <div class="scanner-badge">
-          <span class="scanner-dot"></span>
-          Scanning <span id="stock-counter">12,847</span> stocks...
-        </div>
-        <h1 id="typewriter-target"></h1>
-        <p class="hero-subtitle">Claude and Grok ratify every trade. The bot learns from every win and every loss. Battle-tested execution stack — Alpaca for stocks, Freqtrade for crypto. No emotion. No hesitation.</p>
-        <div class="hero-ctas">
-          <a href="/register" class="btn-hero-primary">Start Trading Free</a>
-          <a href="#how" class="btn-hero-secondary">See How It Works</a>
-        </div>
-        <div class="trust-row">
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Bank-level encryption
-          </span>
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Paper trade first
-          </span>
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Cancel anytime
-          </span>
-        </div>
+    <!-- Live AI-decision preview -->
+    <div class="hero-preview reveal">
+      <div class="preview-bar">
+        <div class="preview-dot r"></div>
+        <div class="preview-dot y"></div>
+        <div class="preview-dot g"></div>
+        <div class="preview-title">ferchaud · brain · live</div>
       </div>
-
-      <div class="hero-right">
-        <div class="hero-chart-wrap">
-          <div class="float-badge b1">+18.4%</div>
-          <div class="float-badge b2">AI Signal</div>
-          <div class="float-badge b3">Auto-Executed</div>
-          <div class="chart-header">
-            <span class="ticker">NVDA</span>
-            <span class="price-up">+$12.34 (2.8%)</span>
+      <div class="preview-body">
+        <!-- Left: AI rationale -->
+        <div>
+          <div class="ai-msg">
+            <div class="ai-msg-label">Claude · momentum strategy</div>
+            <div>
+              Recommend <b>ENTER NVDA long</b> at <b class="num">$842.30</b>. EMA(9/21) crossover confirmed, ADX <b class="num">28</b>, MACD histogram rising. Recent winrate on this signal combo: <b class="num">68%</b> over 22 trades.
+            </div>
           </div>
-          <div id="hero-chart"></div>
+          <div class="ai-msg" style="opacity:.7">
+            <div class="ai-msg-label">Risk engine</div>
+            <div>Sized to <b class="num">2.0%</b> portfolio risk · stop <b class="num">$830.50</b> · target <b class="num">$865</b> · vol-targeting leverage <b class="num">1.4×</b>.</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-cell"><div class="k">Confidence</div><div class="v up">78%</div></div>
+            <div class="ratio-cell"><div class="k">Size mult</div><div class="v">1.30×</div></div>
+            <div class="ratio-cell"><div class="k">Hold</div><div class="v">~2 days</div></div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-  <div class="scroll-indicator">
-    <span>Scroll</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
-  </div>
-</section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     STATS ROW
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="stats-section">
-  <div class="container">
-    <div class="stats-grid">
-      <div class="stat-item reveal">
-        <div class="stat-number"><span class="counter" data-target="15000">0</span><span class="stat-suffix">+</span></div>
-        <div class="stat-label">Stocks Scanned Daily</div>
-      </div>
-      <div class="stat-item reveal reveal-delay-1">
-        <div class="stat-number"><span class="counter" data-target="4">0</span></div>
-        <div class="stat-label">Supported Brokers</div>
-      </div>
-      <div class="stat-item reveal reveal-delay-2">
-        <div class="stat-number"><span class="counter" data-target="24" data-suffix="/7">0</span></div>
-        <div class="stat-label">Market Monitoring</div>
-      </div>
-      <div class="stat-item reveal reveal-delay-3">
-        <div class="stat-number"><span class="counter" data-target="12" data-suffix="ms">0</span></div>
-        <div class="stat-label">Avg Execution Speed</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     HOW IT WORKS
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="how-section diag-lines" id="how">
-  <div class="container">
-    <div class="section-label reveal">How It Works</div>
-    <h2 class="section-title reveal">Proven infrastructure. AI on top.</h2>
-    <p class="section-subtitle reveal">We don't reinvent the wheel — we make it think. Battle-tested execution platforms, supercharged with a Claude/Grok decision layer that learns from every trade.</p>
-    <div class="steps-grid">
-      <div class="steps-connector"></div>
-      <div class="step-card reveal reveal-delay-1">
-        <div class="step-num">1</div>
-        <h3 class="step-title">Scan &amp; Detect</h3>
-        <p class="step-desc">Our 12,000-symbol scanner + Freqtrade strategies + technical indicators surface candidate trades every few seconds, 24/7.</p>
-      </div>
-      <div class="step-card reveal reveal-delay-2">
-        <div class="step-num">2</div>
-        <h3 class="step-title">AI Ratifies</h3>
-        <p class="step-desc">Every candidate is sent to Claude (or Grok) with full market context. The AI vetoes weak setups, sizes the strong ones, and explains why in plain English.</p>
-      </div>
-      <div class="step-card reveal reveal-delay-3">
-        <div class="step-num">3</div>
-        <h3 class="step-title">Learn &amp; Adapt</h3>
-        <p class="step-desc">After every trade the bot labels its own mistakes — sold too early, false signal, late stop — and tunes stops, targets, and confidence thresholds for next time.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     BENTO FEATURES
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="features-section dot-grid" id="features">
-  <div class="container">
-    <div class="section-label reveal">Features</div>
-    <h2 class="section-title reveal">Everything you need,<br>nothing you don't</h2>
-    <p class="section-subtitle reveal">Built by traders, for traders. Every feature solves a real problem.</p>
-    <div class="bento-grid">
-      <div class="bento-card wide reveal reveal-delay-1">
-        <h3 class="bento-title">Claude + Grok Decision Brain</h3>
-        <p class="bento-desc">Every candidate trade is sent to a frontier LLM with full context: technicals, regime, recent mistakes, portfolio exposure. The AI returns a verdict — enter, skip, or wait — and explains why in plain English. Provider fallback chain (Claude → Grok → rule-based) means you're never offline.</p>
-        <div class="bento-mini-chart">
-          <div class="bar" style="height:30%"></div><div class="bar" style="height:45%"></div>
-          <div class="bar" style="height:35%"></div><div class="bar" style="height:60%"></div>
-          <div class="bar" style="height:80%"></div><div class="bar" style="height:55%"></div>
-          <div class="bar" style="height:90%"></div><div class="bar" style="height:70%"></div>
-          <div class="bar" style="height:85%"></div><div class="bar red" style="height:40%"></div>
-          <div class="bar" style="height:65%"></div><div class="bar" style="height:95%"></div>
-        </div>
-      </div>
-      <div class="bento-card reveal reveal-delay-2">
-        <h3 class="bento-title">Self-Learning</h3>
-        <p class="bento-desc">After every closed trade the bot labels its own mistake — sold too early, late stop, false signal — and tunes parameters automatically. The bot you start with is not the bot you finish with.</p>
-      </div>
-
-      <div class="bento-card reveal reveal-delay-3">
-        <h3 class="bento-title">Risk Management</h3>
-        <p class="bento-desc">Bayesian Kelly sizing, VaR/CVaR, vol-targeting, and a hard max-drawdown circuit breaker. Position sizing scales with the AI's confidence — never blindly fixed.</p>
-      </div>
-      <div class="bento-card reveal reveal-delay-4">
-        <h3 class="bento-title">Battle-Tested Execution</h3>
-        <p class="bento-desc">Alpaca for stocks, Freqtrade adapter for crypto. We don't reinvent execution — we make it think. Bracket orders, smart routing, slippage control, all included.</p>
-      </div>
-      <div class="bento-card wide reveal reveal-delay-5">
-        <h3 class="bento-title">Alerts & Notifications</h3>
-        <p class="bento-desc">Get notified via SMS, email, or push when trades execute, signals trigger, or risk thresholds are hit. Stay informed without being glued to a screen. Configure quiet hours so you only hear what matters.</p>
-        <div class="bento-mini-chart">
-          <div class="bar" style="height:50%"></div><div class="bar" style="height:70%"></div>
-          <div class="bar red" style="height:25%"></div><div class="bar" style="height:80%"></div>
-          <div class="bar" style="height:60%"></div><div class="bar" style="height:90%"></div>
-          <div class="bar" style="height:75%"></div><div class="bar red" style="height:35%"></div>
-          <div class="bar" style="height:85%"></div><div class="bar" style="height:65%"></div>
-          <div class="bar" style="height:95%"></div><div class="bar" style="height:55%"></div>
-        </div>
-      </div>
-      <div class="bento-card reveal reveal-delay-6">
-        <h3 class="bento-title">Backtesting</h3>
-        <p class="bento-desc">Test any strategy against years of historical data before risking real capital. See exact entries, exits, and drawdowns.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     STRATEGY CHART
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="strategy-section noise">
-  <div class="container">
-    <div class="section-label reveal">Performance</div>
-    <h2 class="section-title reveal">See the strategy in action</h2>
-    <p class="section-subtitle reveal">Simulated backtest showing AI-identified entry and exit points across multiple trades. Past performance does not guarantee future results.</p>
-    <div class="strategy-chart-wrap reveal">
-      <div id="strategy-chart"></div>
-      <div class="strategy-stats">
-        <div class="strategy-stat-item">
-          <div class="ss-label">Win Rate</div>
-          <div class="ss-value green">68.4%</div>
-        </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Avg Return</div>
-          <div class="ss-value green">+4.2%</div>
-        </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Max Drawdown</div>
-          <div class="ss-value">-8.1%</div>
-        </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Sharpe Ratio</div>
-          <div class="ss-value">2.14</div>
-        </div>
-        <div class="strategy-stat-item">
-          <div class="ss-label">Total Trades</div>
-          <div class="ss-value">247</div>
+        <!-- Right: chart -->
+        <div class="mini-chart-wrap">
+          <div class="mini-chart-head">
+            <div>
+              <div class="mini-chart-sym">NVDA · 1H</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">Past 24 hours</div>
+            </div>
+            <div class="mini-chart-px">$842.30 <small>+2.4%</small></div>
+          </div>
+          <svg class="mini-chart-svg" viewBox="0 0 320 120" preserveAspectRatio="none">
+            <path class="fill" d="M0,80 L20,75 L40,82 L60,70 L80,72 L100,65 L120,68 L140,55 L160,60 L180,48 L200,52 L220,40 L240,44 L260,30 L280,36 L300,24 L320,28 L320,120 L0,120 Z"/>
+            <path class="line" d="M0,80 L20,75 L40,82 L60,70 L80,72 L100,65 L120,68 L140,55 L160,60 L180,48 L200,52 L220,40 L240,44 L260,30 L280,36 L300,24 L320,28"/>
+            <path class="entry-line" d="M180,0 L180,120"/>
+            <circle cx="180" cy="48" r="4" fill="var(--green)"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+            <span>−24h</span>
+            <span style="color:var(--green);">↑ entry</span>
+            <span>now</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     PRICING
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="pricing-section" id="pricing">
+<!-- Trust bar -->
+<section class="trust" style="padding:48px 0;">
   <div class="container">
-    <div class="section-label reveal" style="text-align:center">Pricing</div>
-    <h2 class="section-title reveal" style="text-align:center">You keep 100% of your profits</h2>
-    <p class="section-subtitle reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
-      Flat monthly subscription. No revenue share. No commission on your trades. The bot works for you, not us.
+    <div class="trust-grid">
+      <div>
+        <div class="trust-num">12K+</div>
+        <div class="trust-label">Symbols scanned</div>
+      </div>
+      <div>
+        <div class="trust-num">~10s</div>
+        <div class="trust-label">Decision loop</div>
+      </div>
+      <div>
+        <div class="trust-num">100%</div>
+        <div class="trust-label">Profits yours</div>
+      </div>
+      <div>
+        <div class="trust-num">24/7</div>
+        <div class="trust-label">Cloud-hosted</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works (loop) -->
+<section id="how">
+  <div class="container">
+    <div class="section-eyebrow">The loop</div>
+    <h2 class="section-title">Scan, ratify, learn — every 10 seconds.</h2>
+    <p class="section-sub">
+      Three stages, repeating endlessly. Each stage is auditable: you can read the rationale of every decision, the parameters the bot adapted, and the mistake it labelled itself with after each exit.
     </p>
-    <div class="pricing-toggle-wrap reveal">
-      <span class="pricing-toggle-label active" id="label-monthly">Monthly</span>
-      <div class="pricing-toggle" id="pricing-toggle" onclick="togglePricing()">
-        <div class="toggle-dot"></div>
-      </div>
-      <span class="pricing-toggle-label" id="label-annual">Annual</span>
-      <span class="save-badge">2 months free</span>
-    </div>
-    <div class="pricing-grid">
 
-      <!-- Free -->
-      <div class="pricing-card reveal reveal-delay-1">
-        <div class="pricing-tier">Free</div>
-        <div class="pricing-price"><span class="price-val">$0</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">Test the AI brain risk-free in paper trading. No credit card required.</p>
-        <ul class="pricing-features">
+    <div class="loop-grid">
+      <div class="loop-card reveal">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <div class="loop-num">01 / Scan</div>
+        <h3>Scan 12,000+ symbols</h3>
+        <p>Full-market scanner finds movers. 13 strategies (mean-reversion, momentum, stat-arb, multi-factor ML) generate candidate trades. Grok pulls live X/Twitter context.</p>
+      </div>
+
+      <div class="loop-card reveal">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/></svg>
+        </div>
+        <div class="loop-num">02 / Ratify</div>
+        <h3>Claude reads every trade</h3>
+        <p>Each candidate goes to Claude (or Grok) with regime, recent winrate, mistake history, portfolio context. The AI vetoes, sizes, and writes the rationale in one JSON object.</p>
+      </div>
+
+      <div class="loop-card reveal">
+        <div class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="loop-num">03 / Learn</div>
+        <h3>Adapts after every close</h3>
+        <p>Each closed trade is labelled — sold-too-early, late-stop, false-signal, clean. The tuner widens stops or raises confidence thresholds when the same mistake repeats.</p>
+      </div>
+    </div>
+
+    <div class="features">
+      <div>
+        <div class="section-eyebrow">Built on what works</div>
+        <h2 class="section-title" style="font-size:32px;">Battle-tested infra. AI on top.</h2>
+        <p style="color:var(--text-secondary); margin-bottom:24px;">
+          Alpaca runs the brokerage side. Freqtrade handles crypto. Both have years of real-world hardening. We don't reinvent execution — we make it think with a Claude/Grok decision layer and a learning engine that watches every fill.
+        </p>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="check">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <h4>Bayesian Kelly sizing</h4>
+              <p>Position sizes shrink toward zero when edge is uncertain. No fixed-fraction bets.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="check">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <h4>HMM regime detector</h4>
+              <p>Three-state Hidden Markov Model. Bull = full risk. Crisis = 30% sizing or out.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="check">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <h4>VPIN toxicity halt</h4>
+              <p>Volume-Synchronized Probability of Informed Trading detects toxic flow and halts entries when smart money is moving.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="check">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <h4>Hard max-drawdown circuit breaker</h4>
+              <p>If portfolio drawdown breaches your limit, every strategy halts immediately. No exceptions.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="features-img reveal">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:16px;">
+          Recent strategy stats · last 30d
+        </div>
+        <div class="stat-line"><span class="k">Trades closed</span> <span class="v">214</span></div>
+        <div class="stat-line"><span class="k">Win rate</span> <span class="v up">62%</span></div>
+        <div class="stat-line"><span class="k">Sharpe</span> <span class="v">1.84</span></div>
+        <div class="stat-line"><span class="k">Max drawdown</span> <span class="v">−4.2%</span></div>
+        <div class="stat-line"><span class="k">Profit factor</span> <span class="v">2.31</span></div>
+        <div class="stat-line"><span class="k">Avg hold</span> <span class="v">3.2h</span></div>
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); line-height:1.5;">
+          Illustrative — your actual stats appear in your dashboard. Past performance does not guarantee future results.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing" style="background:var(--bg-soft);">
+  <div class="container">
+    <div class="section-eyebrow">Pricing</div>
+    <h2 class="section-title">You keep 100% of every dollar you make.</h2>
+    <p class="section-sub">
+      Flat subscription. No revenue share, ever. We get paid when you keep using the bot — that means our incentives line up with yours, not against them.
+    </p>
+
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="price-name">Free</div>
+        <div class="price-amount">$0<span>/mo</span></div>
+        <div class="price-tagline">Test the brain in paper trading.</div>
+        <ul class="price-features">
           <li>Paper trading only</li>
-          <li>50 AI decisions per day</li>
+          <li>50 AI decisions/day</li>
           <li>All 13 strategies in dry-run</li>
           <li>Mistake-detection journal</li>
-          <li>Real-time scanner & charts</li>
-          <li>30-day delayed live signals</li>
         </ul>
-        <a href="/signup" class="btn-pricing">Start free</a>
+        <a href="/signup" class="price-cta">Start free</a>
       </div>
 
-      <!-- Starter -->
-      <div class="pricing-card reveal reveal-delay-2">
-        <div class="pricing-tier">Starter</div>
-        <div class="pricing-price"><span class="price-val" data-monthly="19" data-annual="190">$19</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">First-time live traders. Goes live with a small account, learns from every trade.</p>
-        <ul class="pricing-features">
+      <div class="price-card reveal">
+        <div class="price-name">Starter</div>
+        <div class="price-amount">$19<span>/mo</span></div>
+        <div class="price-tagline">First-time live · 14-day trial.</div>
+        <ul class="price-features">
           <li>Live: stocks + crypto</li>
-          <li>Up to <b>$5K</b> deployed capital</li>
+          <li>Up to $5K deployed</li>
           <li>200 AI decisions/day</li>
-          <li>All strategies + self-learning</li>
-          <li>Real-time signals & alerts</li>
-          <li>Trade journal CSV export</li>
-          <li>14-day free trial</li>
+          <li>Email alerts</li>
         </ul>
-        <a href="/signup?plan=starter" class="btn-pricing">Start trial</a>
+        <a href="/signup?plan=starter" class="price-cta">Start trial</a>
       </div>
 
-      <!-- Pro (featured) -->
-      <div class="pricing-card featured reveal reveal-delay-3">
-        <div class="card-badge">Most Popular</div>
-        <div class="pricing-tier">Pro</div>
-        <div class="pricing-price"><span class="price-val" data-monthly="59" data-annual="590">$59</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">Serious traders ready to scale. Priority Claude on every trade.</p>
-        <ul class="pricing-features">
-          <li>Up to <b>$50K</b> deployed</li>
+      <div class="price-card featured reveal">
+        <div class="price-tag">POPULAR</div>
+        <div class="price-name">Pro</div>
+        <div class="price-amount">$59<span>/mo</span></div>
+        <div class="price-tagline">Serious traders · Sonnet brain.</div>
+        <ul class="price-features">
+          <li>Up to $50K deployed</li>
           <li>1,000 AI decisions/day</li>
           <li>Priority Claude Sonnet</li>
-          <li>Options + insider-buy strategies</li>
+          <li>Options + insider strategies</li>
           <li>Grok X/Twitter sentiment</li>
-          <li>Custom strategy weights</li>
-          <li>5-year backtesting</li>
           <li>API access</li>
         </ul>
-        <a href="/signup?plan=pro" class="btn-pricing primary">Get Pro</a>
+        <a href="/signup?plan=pro" class="price-cta">Get Pro</a>
       </div>
 
-      <!-- Elite -->
-      <div class="pricing-card reveal reveal-delay-4">
-        <div class="pricing-tier">Elite</div>
-        <div class="pricing-price"><span class="price-val" data-monthly="199" data-annual="1990">$199</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">Funds, family offices, power users. Claude Opus on every trade.</p>
-        <ul class="pricing-features">
-          <li><b>Unlimited</b> deployed capital</li>
-          <li><b>Unlimited</b> AI decisions</li>
+      <div class="price-card reveal">
+        <div class="price-name">Elite</div>
+        <div class="price-amount">$199<span>/mo</span></div>
+        <div class="price-tagline">Funds · Claude Opus · unlimited.</div>
+        <ul class="price-features">
+          <li>Unlimited deployed</li>
+          <li>Unlimited AI decisions</li>
           <li>Claude Opus on every trade</li>
           <li>Multi-account / co-managed</li>
-          <li>Custom strategies built for you</li>
           <li>White-glove onboarding</li>
-          <li>24/7 phone & Slack support</li>
-          <li>Optional 10% perf fee &gt;$10K/mo</li>
+          <li>24/7 phone support</li>
         </ul>
-        <a href="mailto:elite@ferchaud.com" class="btn-pricing">Talk to us</a>
+        <a href="mailto:elite@ferchaud.com" class="price-cta">Talk to us</a>
       </div>
-
     </div>
 
-    <!-- Realistic returns disclosure (research-grounded) -->
-    <div class="reveal" style="max-width: 900px; margin: 60px auto 0; padding: 28px 32px; border: 1px solid var(--border); border-radius: 18px; background: var(--bg-cream);">
-      <div style="display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px; opacity:.7;">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <div style="flex:1; min-width:280px;">
-          <div style="font-weight:700; color:var(--text); margin-bottom:8px; font-size:14px;">Honest math, not hype</div>
-          <p style="font-size:13px; color:var(--text-secondary); line-height:1.65; margin:0;">
-            Realistic algo-trading returns range from <b>5–15% per year for beginners</b> and <b>15–25% for experienced traders</b>. Roughly 60% of retail algo-traders are profitable annually (vs 5–10% of manual day-traders). Past performance does not guarantee future results — markets are non-stationary. We charge a flat sub so we make money whether you win or lose, which means we have <i>zero incentive</i> to push you into bad trades.
-          </p>
-        </div>
+    <!-- Honest math callout -->
+    <div style="max-width:780px; margin:64px auto 0; padding:24px 28px; background:var(--surface); border:1px solid var(--border); border-radius:18px; display:flex; gap:16px; align-items:flex-start;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-secondary); flex-shrink:0; margin-top:2px;">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div style="flex:1; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+        <div style="color:var(--text); font-weight:700; margin-bottom:4px;">Honest math</div>
+        Realistic algo-trading returns: <b style="color:var(--text);">5–15% annual for beginners, 15–25% for experienced</b>. About 60% of retail algo-traders are profitable annually (vs 5–10% of manual day-traders). Past performance does not guarantee future results — markets are non-stationary. We charge a flat subscription so we make money whether you win or lose, which means we have <i>zero incentive</i> to push you into bad trades.
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     CTA — THE ONE BLACK SECTION
-     ═══════════════════════════════════════════════════════════════ -->
-<section class="cta-section star-dots">
+<!-- Final CTA -->
+<section style="padding-bottom:0;">
   <div class="container">
-    <h2 class="reveal">Ready to trade smarter?</h2>
-    <p class="reveal reveal-delay-1">Use AI to find better entries, manage risk, and execute without emotion.</p>
-    <a href="/register" class="btn-cta reveal reveal-delay-2">
-      Start Trading Free
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </a>
+    <div class="cta-band">
+      <h2>The bot is ready when you are.</h2>
+      <p>Sign up, paper-trade for free, flip to live whenever you're comfortable. Your data, your rules, your money.</p>
+      <a href="/signup" class="btn btn-primary">
+        Start free
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     FOOTER
-     ═══════════════════════════════════════════════════════════════ -->
-<footer class="footer noise" id="support">
+<!-- Footer -->
+<footer>
   <div class="container">
     <div class="footer-grid">
-      <div class="footer-brand">
-        <div class="nav-logo">
-          <span class="logo-dot"></span>
-          Ferchaud
-        </div>
-        <p>AI-powered trading signals and automated execution. Built for traders who want an edge without the noise.</p>
+      <div>
+        <div class="nav-logo" style="margin-bottom:12px;">Ferchaud</div>
+        <p style="font-size:13px; color:var(--text-secondary); max-width:280px; line-height:1.6;">
+          AI-ratified trading. Honest about returns. Calm about money. Built on Alpaca and Freqtrade.
+        </p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
-        <a href="#features">Features</a>
+        <a href="/how-it-works">How it works</a>
         <a href="#pricing">Pricing</a>
-        <a href="#">Changelog</a>
-        <a href="#">API Docs</a>
-      </div>
-      <div class="footer-col" id="sources">
-        <h4>Sources</h4>
-        <a href="#">Market Data</a>
-        <a href="#">Signal Methodology</a>
-        <a href="#">Backtests</a>
-        <a href="#">Research</a>
+        <a href="/sources">Data sources</a>
+        <a href="/dashboard">Dashboard</a>
       </div>
       <div class="footer-col">
-        <h4>Company</h4>
-        <a href="#">About</a>
-        <a href="#">Blog</a>
-        <a href="#">Careers</a>
-        <a href="mailto:support@ferchaud.com">Contact</a>
+        <h4>Account</h4>
+        <a href="/login">Sign in</a>
+        <a href="/signup">Sign up</a>
+        <a href="/legal">Terms</a>
+        <a href="/legal">Privacy</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="mailto:support@ferchaud.com">Support</a>
+        <a href="mailto:elite@ferchaud.com">Elite plan</a>
       </div>
     </div>
-
     <div class="footer-bottom">
-      <span>&copy; 2026 Ferchaud. All rights reserved.</span>
-      <span>
-        <a href="#" style="margin-right:16px;">Privacy Policy</a>
-        <a href="#" style="margin-right:16px;">Terms of Service</a>
-        <a href="#">Risk Disclosure</a>
-      </span>
+      <span>© 2026 Ferchaud · All rights reserved</span>
+      <span>Trading involves risk. Read the <a href="/legal" style="color:inherit;text-decoration:underline;">disclaimers</a>.</span>
     </div>
   </div>
 </footer>
 
-</div><!-- end .page-shell -->
-
-<!-- ═══════════════════════════════════════════════════════════════
-     JAVASCRIPT
-     ═══════════════════════════════════════════════════════════════ -->
-<script>
-/* ── Theme Toggle ─────────────────────────────────────────────── */
-(function() {
-  const saved = localStorage.getItem('theme');
-  if (saved) document.documentElement.setAttribute('data-theme', saved);
-})();
-function toggleTheme() {
-  const html = document.documentElement;
-  const current = html.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
-  // Re-apply chart colors
-  if (window.heroChart) initHeroChart();
-  if (window.strategyChart) initStrategyChart();
-}
-
-/* ── Navbar Hide/Show on Scroll ───────────────────────────────── */
-(function() {
-  const nav = document.getElementById('navbar');
-  let lastY = 0;
-  let ticking = false;
-  window.addEventListener('scroll', function() {
-    if (!ticking) {
-      window.requestAnimationFrame(function() {
-        const y = window.scrollY;
-        if (y > lastY && y > 100) nav.classList.add('hidden');
-        else nav.classList.remove('hidden');
-        lastY = y;
-        ticking = false;
-      });
-      ticking = true;
-    }
-  });
-})();
-</script>
+<!-- Theme toggle -->
+<button class="theme-tog" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
+  <svg id="iconLight" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+  <svg id="iconDark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
 
 <script>
-/* ── Typewriter Effect ────────────────────────────────────────── */
-(function() {
-  const target = document.getElementById('typewriter-target');
-  const text = 'AI that thinks.\nA bot that learns.';
-  let i = 0;
-  const cursor = document.createElement('span');
-  cursor.className = 'typewriter-cursor';
-
-  function type() {
-    if (i < text.length) {
-      if (text[i] === '\n') {
-        target.appendChild(document.createElement('br'));
-      } else {
-        target.appendChild(document.createTextNode(text[i]));
-      }
-      i++;
-      // Remove and re-add cursor at end
-      if (cursor.parentNode) cursor.remove();
-      target.appendChild(cursor);
-      setTimeout(type, 65 + Math.random() * 40);
-    }
+  // Theme toggle
+  function syncThemeIcon(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('iconLight').style.display = dark ? 'block' : 'none';
+    document.getElementById('iconDark').style.display  = dark ? 'none'  : 'block';
   }
-  // Small delay before starting
-  setTimeout(type, 600);
-})();
+  function toggleTheme(){
+    const cur = document.documentElement.getAttribute('data-theme');
+    if (cur === 'dark') { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme','light'); }
+    else { document.documentElement.setAttribute('data-theme','dark'); localStorage.setItem('theme','dark'); }
+    syncThemeIcon();
+  }
+  syncThemeIcon();
 
-/* ── Stock Counter Tick ───────────────────────────────────────── */
-(function() {
-  const el = document.getElementById('stock-counter');
-  let count = 12847;
-  setInterval(function() {
-    count += Math.floor(Math.random() * 5) + 1;
-    el.textContent = count.toLocaleString();
-  }, 200);
-})();
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('show'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Smooth scroll for in-page anchors (already covered by html scroll-behavior)
 </script>
-
-<script>
-/* ── Scroll Reveal (IntersectionObserver) ─────────────────────── */
-(function() {
-  const reveals = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-    reveals.forEach(function(el) { observer.observe(el); });
-  } else {
-    // Fallback: show everything
-    reveals.forEach(function(el) { el.classList.add('visible'); });
-  }
-})();
-
-/* ── Animated Counters ────────────────────────────────────────── */
-(function() {
-  const counters = document.querySelectorAll('.counter');
-  const observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        const el = entry.target;
-        const target = parseFloat(el.getAttribute('data-target'));
-        const decimal = parseInt(el.getAttribute('data-decimal') || '0');
-        const suffix = el.getAttribute('data-suffix') || '';
-        const duration = 1800;
-        const start = performance.now();
-
-        function tick(now) {
-          const elapsed = now - start;
-          const progress = Math.min(elapsed / duration, 1);
-          // Ease out cubic
-          const eased = 1 - Math.pow(1 - progress, 3);
-          const current = eased * target;
-          if (decimal > 0) {
-            el.textContent = current.toFixed(decimal) + suffix;
-          } else {
-            el.textContent = Math.floor(current).toLocaleString() + suffix;
-          }
-          if (progress < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-        observer.unobserve(el);
-      }
-    });
-  }, { threshold: 0.3 });
-  counters.forEach(function(el) { observer.observe(el); });
-})();
-</script>
-
-<script>
-/* ── Pricing Toggle ───────────────────────────────────────────── */
-var isAnnual = false;
-
-function togglePricing() {
-  isAnnual = !isAnnual;
-  var toggle = document.getElementById('pricing-toggle');
-  var labelM = document.getElementById('label-monthly');
-  var labelA = document.getElementById('label-annual');
-
-  if (isAnnual) {
-    toggle.classList.add('annual');
-    labelM.classList.remove('active');
-    labelA.classList.add('active');
-  } else {
-    toggle.classList.remove('annual');
-    labelM.classList.add('active');
-    labelA.classList.remove('active');
-  }
-
-  // Update prices using data-monthly / data-annual attributes
-  document.querySelectorAll('.price-val').forEach(function(el) {
-    var monthly = el.getAttribute('data-monthly');
-    var annual  = el.getAttribute('data-annual');
-    if (!monthly) return;  // Free tier has no data attrs
-    if (isAnnual) {
-      // Display annual price, but show effective monthly (annual / 12)
-      var perMonth = Math.round(parseInt(annual) / 12);
-      el.textContent = '$' + perMonth;
-    } else {
-      el.textContent = '$' + monthly;
-    }
-  });
-
-  // Update the period label to show /yr billing on annual
-  document.querySelectorAll('.pricing-price .period').forEach(function(el) {
-    el.textContent = isAnnual ? '/mo, billed yearly' : '/mo';
-  });
-}
-</script>
-
-<script>
-/* ── Helper: detect dark mode for charts ──────────────────────── */
-function isDark() {
-  return document.documentElement.getAttribute('data-theme') === 'dark';
-}
-function chartColors() {
-  var d = isDark();
-  return {
-    bg: d ? '#111111' : '#ffffff',
-    text: d ? '#999999' : '#999999',
-    grid: d ? '#1e1e1e' : '#f0f0f0',
-    line: d ? '#22c55e' : '#22c55e',
-    area1: d ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.08)',
-    area2: 'rgba(34,197,94,0)',
-    border: d ? '#2a2a2a' : '#eaeaea',
-  };
-}
-
-/* ── Hero Chart (Lightweight Charts) ──────────────────────────── */
-function initHeroChart() {
-  var container = document.getElementById('hero-chart');
-  container.innerHTML = '';
-  var c = chartColors();
-
-  var chart = LightweightCharts.createChart(container, {
-    width: container.clientWidth,
-    height: container.clientHeight,
-    layout: { background: { type: 'solid', color: c.bg }, textColor: c.text, fontFamily: 'Inter' },
-    grid: { vertLines: { color: c.grid }, horzLines: { color: c.grid } },
-    rightPriceScale: { borderColor: c.border },
-    timeScale: { borderColor: c.border, timeVisible: false },
-    crosshair: { mode: 0 },
-    handleScroll: false,
-    handleScale: false,
-  });
-
-  var data = [];
-  var base = 420;
-  for (var i = 0; i < 60; i++) {
-    base += (Math.random() - 0.42) * 6;
-    data.push({ time: '2025-01-' + String(i + 1).padStart(2, '0'), value: parseFloat(base.toFixed(2)) });
-  }
-
-  var series = chart.addAreaSeries({
-    lineColor: c.line,
-    topColor: c.area1,
-    bottomColor: c.area2,
-    lineWidth: 2,
-    priceLineVisible: false,
-    crosshairMarkerVisible: true,
-    crosshairMarkerRadius: 4,
-  });
-  series.setData(data);
-
-  // BUY and SELL markers
-  var buyIdx = 15;
-  var sellIdx = 38;
-  series.setMarkers([
-    { time: data[buyIdx].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp', text: 'BUY' },
-    { time: data[sellIdx].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-  ]);
-
-  chart.timeScale().fitContent();
-  window.heroChart = chart;
-
-  // Resize handler
-  var ro = new ResizeObserver(function() {
-    chart.applyOptions({ width: container.clientWidth });
-  });
-  ro.observe(container);
-}
-
-/* ── Strategy Chart (Lightweight Charts) ──────────────────────── */
-function initStrategyChart() {
-  var container = document.getElementById('strategy-chart');
-  container.innerHTML = '';
-  var c = chartColors();
-
-  var chart = LightweightCharts.createChart(container, {
-    width: container.clientWidth,
-    height: container.clientHeight,
-    layout: { background: { type: 'solid', color: c.bg }, textColor: c.text, fontFamily: 'Inter' },
-    grid: { vertLines: { color: c.grid }, horzLines: { color: c.grid } },
-    rightPriceScale: { borderColor: c.border },
-    timeScale: { borderColor: c.border, timeVisible: false },
-    crosshair: { mode: 0 },
-    handleScroll: false,
-    handleScale: false,
-  });
-
-  // Generate more complex data with multiple trades
-  var data2 = [];
-  var price = 180;
-  for (var j = 0; j < 120; j++) {
-    price += (Math.random() - 0.46) * 4;
-    if (price < 150) price = 150 + Math.random() * 5;
-    data2.push({ time: '2024-06-' + String(j + 1).padStart(2, '0'), value: parseFloat(price.toFixed(2)) });
-  }
-
-  var series2 = chart.addAreaSeries({
-    lineColor: c.line,
-    topColor: c.area1,
-    bottomColor: c.area2,
-    lineWidth: 2,
-    priceLineVisible: false,
-  });
-  series2.setData(data2);
-
-  // Multiple trade markers
-  series2.setMarkers([
-    { time: data2[8].time,  position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[22].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-    { time: data2[35].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[52].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-    { time: data2[65].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[80].time, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-    { time: data2[90].time, position: 'belowBar', color: '#22c55e', shape: 'arrowUp',   text: 'BUY' },
-    { time: data2[110].time,position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SELL' },
-  ]);
-
-  chart.timeScale().fitContent();
-  window.strategyChart = chart;
-
-  var ro2 = new ResizeObserver(function() {
-    chart.applyOptions({ width: container.clientWidth });
-  });
-  ro2.observe(container);
-}
-
-// Initialize both charts on load
-document.addEventListener('DOMContentLoaded', function() {
-  initHeroChart();
-  initStrategyChart();
-});
-</script>
-
 </body>
 </html>

@@ -175,6 +175,86 @@
   </div>
 </nav>
 
+<!-- Risk disclosure modal — required acknowledgment on first dashboard visit -->
+<div id="risk-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9998;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px;max-width:560px;width:100%;padding:36px 32px;box-shadow:0 30px 80px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:rgba(220,38,38,.08);color:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="m4.93 19.07 14.14-14.14a2 2 0 0 0 0-2.83 2 2 0 0 0-2.83 0L2.1 16.24a2 2 0 0 0 0 2.83 2 2 0 0 0 2.83 0z" stroke="none"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:20px;letter-spacing:-.5px;color:var(--text);">Trading involves substantial risk.</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Read this once. We won't show it again.</div>
+      </div>
+    </div>
+
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:18px;">
+      Algorithmic trading is not a path to guaranteed returns. Before you proceed, understand and accept the following:
+    </div>
+
+    <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">You can lose your entire deposit.</b> Stops don't fire during market closures, gap-downs, or API outages.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">Past performance does not guarantee future results.</b> Markets are non-stationary; what worked yesterday may fail tomorrow.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">Realistic returns are 5–25% per year</b>, not 10× per month. About 60% of retail algo-traders are profitable annually.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">Software has bugs.</b> The bot is best-effort, not failsafe. Manual override is your responsibility.</span>
+      </li>
+      <li style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.55;">
+        <span style="color:var(--red);font-weight:700;flex-shrink:0;">·</span>
+        <span><b style="color:var(--text);">We are not your financial advisor.</b> Consult a licensed professional before trading money you cannot afford to lose.</span>
+      </li>
+    </ul>
+
+    <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:var(--text-secondary);margin-bottom:20px;background:var(--bg-cream);padding:12px 14px;border-radius:12px;cursor:pointer;" onclick="document.getElementById('riskAck').click()">
+      <input type="checkbox" id="riskAck" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;" onchange="document.getElementById('riskAccept').disabled = !this.checked;">
+      <label for="riskAck" style="cursor:pointer;line-height:1.5;">I understand and accept these risks. I have read the <a href="/legal" style="color:var(--text);text-decoration:underline;" target="_blank">full disclaimers</a> and the <a href="/how-it-works#limits" style="color:var(--text);text-decoration:underline;" target="_blank">honest math page</a>.</label>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <a href="/" style="flex:1;padding:13px;border-radius:50px;border:1px solid var(--border);text-align:center;font-size:13px;font-weight:600;color:var(--text);text-decoration:none;">Not yet</a>
+      <button id="riskAccept" onclick="acceptRisk()" disabled style="flex:2;padding:13px;border-radius:50px;background:var(--text);color:var(--surface);border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;opacity:.4;transition:opacity .15s;">
+        I accept the risks · continue
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+  // Show on first dashboard visit per user
+  (function() {
+    const KEY = 'ferchaud_risk_acknowledged_v1';
+    if (!localStorage.getItem(KEY)) {
+      const m = document.getElementById('risk-modal');
+      if (m) m.style.display = 'flex';
+    }
+    window.acceptRisk = function() {
+      const ack = document.getElementById('riskAck');
+      if (!ack || !ack.checked) return;
+      localStorage.setItem(KEY, new Date().toISOString());
+      const m = document.getElementById('risk-modal');
+      if (m) m.style.display = 'none';
+    };
+    // Style the disabled state
+    const btn = document.getElementById('riskAccept');
+    if (btn) {
+      const obs = new MutationObserver(() => {
+        btn.style.opacity = btn.disabled ? '.4' : '1';
+        btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+      });
+      obs.observe(btn, { attributes: true, attributeFilter: ['disabled'] });
+    }
+  })();
+</script>
+
 <div class="dash-wrap page-enter">
   <!-- Today's P&L Banner (Bloomberg-density: most important info, top of fold) -->
   <div id="today-banner" style="background:linear-gradient(135deg, var(--surface) 0%, var(--bg-cream) 100%);border:1px solid var(--border);border-radius:24px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.25rem;">

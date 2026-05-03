@@ -1,87 +1,87 @@
 /* =====================================================
-   FERCHAUD — MONOCHROME DESIGN SYSTEM
-   Inspired by Linear / X — Clean, Premium, Minimal
+   FERCHAUD — DESIGN SYSTEM
+   See design.md for the complete spec. This file
+   implements those tokens. Do not introduce hex codes
+   outside :root / [data-theme="dark"] blocks.
    ===================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* -- Design Tokens ---------------------------------- */
+/* -- Light theme (default) -------------------------- */
 :root {
-  /* Warm white base */
-  --bg: #fefefe;
-  --bg-warm: #faf9f7;
-  --bg-cream: #f5f3ef;
-  --surface: #ffffff;
-  --surface-2: #f5f3ef;
-  --surface-3: #ebebeb;
-
-  /* Borders */
-  --border: #eaeaea;
-  --border-hover: #d4d4d4;
-  --border-strong: #a3a3a3;
-
-  /* Text */
-  --text: #1a1a1a;
-  --text-secondary: #666666;
-  --muted: #999999;
-  --text-dim: #d4d4d4;
-
-  /* Accent — black primary */
-  --accent: #1a1a1a;
-  --accent-hover: #262626;
-  --accent-glow: rgba(0,0,0,0.08);
-
-  /* Status — only colors on the site */
-  --green: #22c55e;
-  --red: #ef4444;
-  --amber: #f59e0b;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #1a1a1a, #262626);
-  --gradient-subtle: linear-gradient(135deg, #faf9f7, #f5f3ef);
-
-  /* Fonts */
-  --font: 'Inter', -apple-system, system-ui, sans-serif;
-  --mono: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+  --bg:             #fafaf9;
+  --bg-soft:        #f4f3f0;
+  --bg-warm:        #f4f3f0;     /* legacy alias */
+  --bg-cream:       #efeeea;     /* legacy alias */
+  --surface:        #ffffff;
+  --surface-2:      #f7f6f4;
+  --surface-3:      #efeeea;
+  --border:         #e8e7e3;
+  --border-hover:   #d6d4ce;
+  --border-strong:  #cfcdc7;
+  --text:           #0c0d0e;
+  --text-secondary: #525355;
+  --muted:          #8b8d91;
+  --text-dim:       #c2c4c8;
+  --accent:         #0c0d0e;
+  --accent-hover:   #25282b;
+  --accent-glow:    rgba(0,0,0,.06);
+  --green:          #16a34a;
+  --red:            #dc2626;
+  --amber:          #d97706;
+  --gradient-primary: linear-gradient(135deg, #0c0d0e, #25282b);
+  --gradient-subtle:  linear-gradient(135deg, #f4f3f0, #efeeea);
+  --shadow-sm:      0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:      0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04);
+  --shadow-lg:      0 1px 2px rgba(0,0,0,.04), 0 18px 48px rgba(0,0,0,.06);
+  --font:           'Inter', -apple-system, system-ui, sans-serif;
+  --mono:           'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+  --ease:           cubic-bezier(.2, .7, .2, 1);
 }
 
-/* -- Night Theme ------------------------------------ */
+/* -- Dark theme ------------------------------------- */
 [data-theme="dark"] {
-  --bg: #0a0a0a;
-  --bg-warm: #111111;
-  --bg-cream: #1a1a1a;
-  --surface: #111111;
-  --surface-2: #1a1a1a;
-  --surface-3: #282828;
-  --border: #2a2a2a;
-  --border-hover: #3a3a3a;
-  --border-strong: #555555;
-  --text: #f0f0f0;
-  --text-secondary: #999999;
-  --muted: #666666;
-  --text-dim: #444444;
-  --accent: #ffffff;
-  --accent-hover: #e0e0e0;
-  --accent-glow: rgba(255,255,255,0.06);
-  --gradient-primary: linear-gradient(135deg, #e8e8e8, #ffffff);
-  --gradient-subtle: linear-gradient(135deg, #111111, #1a1a1a);
+  --bg:             #08090a;
+  --bg-soft:        #0d0e10;
+  --bg-warm:        #0d0e10;
+  --bg-cream:       #16181b;
+  --surface:        #101113;
+  --surface-2:      #16181b;
+  --surface-3:      #1d2024;
+  --border:         #22252a;
+  --border-hover:   #2a2d33;
+  --border-strong:  #373a40;
+  --text:           #f0eee9;
+  --text-secondary: #9b9ca0;
+  --muted:          #65676b;
+  --text-dim:       #2f3236;
+  --accent:         #f0eee9;
+  --accent-hover:   #d8d6d2;
+  --accent-glow:    rgba(255,255,255,.06);
+  --green:          #22c55e;
+  --red:            #ef4444;
+  --amber:          #fbbf24;
+  --gradient-primary: linear-gradient(135deg, #f0eee9, #ffffff);
+  --gradient-subtle:  linear-gradient(135deg, #0d0e10, #16181b);
+  --shadow-sm:      0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:      0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.4);
+  --shadow-lg:      0 1px 2px rgba(0,0,0,.4), 0 18px 48px rgba(0,0,0,.5);
 }
 
 /* -- Reset & Base ----------------------------------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 15px; scroll-behavior: smooth; }
 body {
-  background: #e8e8e8; color: var(--text);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5; min-height: 100vh;
-  background-image: radial-gradient(circle, #d4d4d4 0.8px, transparent 0.8px);
-  background-size: 20px 20px;
+  line-height: 1.5;
+  min-height: 100vh;
 }
-[data-theme="dark"] body {
-  background: #000;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 0.8px, transparent 0.8px);
-  background-size: 20px 20px;
+/* Tabular nums on numeric containers for stable column widths */
+.num, .mono, [data-num], .metric-value {
+  font-variant-numeric: tabular-nums;
 }
 a { color: var(--text-secondary); text-decoration: none; transition: color 0.15s; }
 a:hover { color: var(--text); }

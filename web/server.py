@@ -238,12 +238,11 @@ def _html_require_user(request: Request):
     return user
 
 
-@app.get("/onboarding", response_class=HTMLResponse)
+@app.get("/onboarding")
 async def onboarding_page(request: Request):
-    user = _html_require_user(request)
-    if isinstance(user, RedirectResponse):
-        return user
-    return templates.TemplateResponse("onboarding.html", {"request": request, "user": user})
+    """Onboarding has been removed — connections happen from inside the
+    dashboard. Legacy links land in /dashboard."""
+    return RedirectResponse("/dashboard", status_code=307)
 
 
 @app.get("/pricing", response_class=HTMLResponse)
@@ -263,13 +262,21 @@ async def legal_page(request: Request):
     return templates.TemplateResponse("legal.html", {"request": request})
 
 
+@app.get("/how-it-works", response_class=HTMLResponse)
+async def how_it_works_page(request: Request):
+    return templates.TemplateResponse("how_it_works.html", {"request": request})
+
+
+@app.get("/how", response_class=HTMLResponse)
+async def how_alias(request: Request):
+    return RedirectResponse("/how-it-works", status_code=307)
+
+
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     user = _html_require_user(request)
     if isinstance(user, RedirectResponse):
         return user
-    if not user.onboarding_complete:
-        return RedirectResponse("/onboarding")
     db = SessionLocal()
     try:
         trades = db.query(Trade).filter(Trade.user_id == user.id).order_by(Trade.timestamp.desc()).limit(50).all()
@@ -325,7 +332,7 @@ async def api_signup(request: Request, body: dict = Body(...)):
     result = signup_user(email, username, password)
     if "error" in result:
         return JSONResponse(result, status_code=400)
-    response = JSONResponse({**result, "redirect": "/onboarding"})
+    response = JSONResponse({**result, "redirect": "/dashboard"})
     _set_auth_cookie(response, result["token"])
     return response
 

@@ -74,7 +74,9 @@ def require_user(request: Request, token: Optional[str] = None):
 
 
 def signup_user(email: str, username: str, password: str, full_name: str = "") -> dict:
-    """Create a new user."""
+    """Create a new user. Onboarding is auto-completed — user lands directly
+    on the dashboard. Connections (broker, funding) happen progressively
+    from inside the dashboard, not blocking the first session."""
     db = SessionLocal()
     try:
         if db.query(User).filter(User.email == email).first():
@@ -85,6 +87,10 @@ def signup_user(email: str, username: str, password: str, full_name: str = "") -
         user = User(
             email=email, username=username,
             hashed_password=hash_password(password),
+            onboarding_complete=True,
+            onboarding_step=4,
+            subscription_tier="free",
+            trading_mode="passive",
         )
         db.add(user)
         db.flush()
