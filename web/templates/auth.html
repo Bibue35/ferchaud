@@ -264,6 +264,27 @@ function toggleTheme() {
   document.getElementById('themeBtn').textContent = t === 'dark' ? '\u2600' : '\u263E';
 })();
 
+// Read ?next= from URL so we can honor where user was originally going
+function getNextUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('next') || null;
+}
+
+// Show ?error= from query string (e.g. OAuth coming-soon)
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const err = params.get('error');
+  if (err) {
+    const errEl = document.getElementById('auth-error');
+    const msgs = {
+      oauth_coming_soon: 'OAuth sign-in is coming soon. Please use email + password for now.',
+      session_expired:   'Your session expired. Please sign in again.',
+    };
+    errEl.textContent = msgs[err] || err;
+    errEl.style.display = 'block';
+  }
+})();
+
 async function handleAuth(e) {
   e.preventDefault();
   const form = e.target;
@@ -273,7 +294,31 @@ async function handleAuth(e) {
   const errEl = document.getElementById('auth-error');
   const btn = document.getElementById('auth-btn');
 
-  btn.textContent = 'Loading...';
+  // Trim everything to avoid trailing-space bugs
+  for (const k of Object.keys(data)) {
+    if (typeof data[k] === 'string') data[k] = data[k].trim();
+  }
+  // Lowercase email so login matches signup
+  if (data.email) data.email = data.email.toLowerCase();
+
+  // Client-side validation
+  if (!data.email || !data.password) {
+    errEl.textContent = 'Email and password are required.';
+    errEl.style.display = 'block';
+    return false;
+  }
+  if (isSignup && !data.username) {
+    errEl.textContent = 'Username is required.';
+    errEl.style.display = 'block';
+    return false;
+  }
+  if (isSignup && data.password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.style.display = 'block';
+    return false;
+  }
+
+  btn.textContent = isSignup ? 'Creating account…' : 'Signing in…';
   btn.disabled = true;
   errEl.style.display = 'none';
 
@@ -281,17 +326,25 @@ async function handleAuth(e) {
     const resp = await fetch(url, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',  // ensure cookie is set on response
       body: JSON.stringify(data),
     });
-    const result = await resp.json();
-    if (result.error) {
-      errEl.textContent = result.error;
+    let result;
+    try { result = await resp.json(); }
+    catch (_) { result = { error: 'Server error (invalid response)' }; }
+
+    if (!resp.ok || result.error) {
+      errEl.textContent = result.error || ('Error ' + resp.status);
       errEl.style.display = 'block';
       btn.textContent = isSignup ? 'Create Account' : 'Sign In';
       btn.disabled = false;
-    } else {
-      window.location.href = '/dashboard';
+      return false;
     }
+
+    // Server tells us where to go (onboarding for new signups, dashboard for logins).
+    // ?next= overrides if present.
+    const next = getNextUrl();
+    window.location.href = next || result.redirect || '/dashboard';
   } catch (err) {
     errEl.textContent = 'Network error. Please try again.';
     errEl.style.display = 'block';
@@ -300,9 +353,12 @@ async function handleAuth(e) {
   }
   return false;
 }
-// Click outside card -> go back to home
+
+// Click outside card -> go back to home (only on the page background itself)
 document.querySelector('.auth-page').addEventListener('click', function(e) {
-  if (!e.target.closest('.auth-card') && !e.target.closest('.auth-navbar')) {
+  // Only trigger when clicking the background element directly,
+  // not labels, dividers, nav links, or anything else.
+  if (e.target === e.currentTarget) {
     window.location.href = '/';
   }
 });

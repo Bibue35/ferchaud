@@ -94,17 +94,58 @@ async def root(request: Request):
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
+    # If already logged in, go straight to dashboard
+    if get_current_user(request):
+        return RedirectResponse("/dashboard")
     return templates.TemplateResponse("auth.html", {"request": request, "mode": "login"})
 
 
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_page(request: Request):
+    if get_current_user(request):
+        return RedirectResponse("/dashboard")
     return templates.TemplateResponse("auth.html", {"request": request, "mode": "signup"})
+
+
+# Alias: many landing CTAs link to /register — keep both working
+@app.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    return RedirectResponse("/signup", status_code=307)
+
+
+@app.get("/logout")
+async def logout_page():
+    """User-friendly /logout link — clears cookie and goes home."""
+    response = RedirectResponse("/")
+    response.delete_cookie("token")
+    return response
+
+
+def _redirect_to_login(request: Request) -> RedirectResponse:
+    """Build a /login redirect that remembers where the user was going."""
+    nxt = request.url.path
+    if request.url.query:
+        nxt += "?" + request.url.query
+    return RedirectResponse(f"/login?next={nxt}")
+
+
+def _html_require_user(request: Request):
+    """
+    Like require_user, but for HTML pages: instead of raising 401 JSON,
+    return a RedirectResponse to /login. Caller must check if the result
+    is a User or a Response.
+    """
+    user = get_current_user(request)
+    if not user:
+        return _redirect_to_login(request)
+    return user
 
 
 @app.get("/onboarding", response_class=HTMLResponse)
 async def onboarding_page(request: Request):
-    user = require_user(request)
+    user = _html_require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
     return templates.TemplateResponse("onboarding.html", {"request": request, "user": user})
 
 
@@ -127,7 +168,9 @@ async def legal_page(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    user = require_user(request)
+    user = _html_require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
     if not user.onboarding_complete:
         return RedirectResponse("/onboarding")
     db = SessionLocal()
@@ -154,6 +197,23 @@ async def dashboard(request: Request):
 
 # ─── Auth APIs ────────────────────────────────────────────────────────────────
 
+def _set_auth_cookie(response, token: str) -> None:
+    """Set the JWT cookie on a response. 30-day expiry, lax SameSite for cross-nav.
+
+    `secure=False` is intentional so the cookie also works on http://localhost
+    during development. In production behind HTTPS the browser will still send
+    it; FastAPI/Starlette doesn't downgrade Secure=True over HTTPS.
+    """
+    response.set_cookie(
+        key="token",
+        value=token,
+        httponly=True,
+        max_age=86400 * 30,
+        samesite="lax",
+        path="/",
+    )
+
+
 @app.post("/api/auth/signup")
 async def api_signup(request: Request, body: dict = Body(...)):
     email    = body.get("email", "").strip().lower()
@@ -161,11 +221,15 @@ async def api_signup(request: Request, body: dict = Body(...)):
     password = body.get("password", "")
     if not email or not username or not password:
         return JSONResponse({"error": "All fields required"}, status_code=400)
+    if len(password) < 6:
+        return JSONResponse({"error": "Password must be at least 6 characters"}, status_code=400)
+    if "@" not in email or "." not in email:
+        return JSONResponse({"error": "Invalid email"}, status_code=400)
     result = signup_user(email, username, password)
     if "error" in result:
         return JSONResponse(result, status_code=400)
-    response = JSONResponse(result)
-    response.set_cookie("token", result["token"], httponly=True, max_age=86400 * 30, samesite="lax")
+    response = JSONResponse({**result, "redirect": "/onboarding"})
+    _set_auth_cookie(response, result["token"])
     return response
 
 
@@ -173,11 +237,13 @@ async def api_signup(request: Request, body: dict = Body(...)):
 async def api_login(request: Request, body: dict = Body(...)):
     email    = body.get("email", "").strip().lower()
     password = body.get("password", "")
+    if not email or not password:
+        return JSONResponse({"error": "Email and password required"}, status_code=400)
     result   = login_user(email, password)
     if "error" in result:
         return JSONResponse(result, status_code=401)
-    response = JSONResponse(result)
-    response.set_cookie("token", result["token"], httponly=True, max_age=86400 * 30, samesite="lax")
+    response = JSONResponse({**result, "redirect": "/dashboard"})
+    _set_auth_cookie(response, result["token"])
     return response
 
 
@@ -613,14 +679,18 @@ async def api_system_health(request: Request):
 
 @app.get("/feed", response_class=HTMLResponse)
 async def feed_page(request: Request):
-    user = require_user(request)
+    user = _html_require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
     return templates.TemplateResponse("feed.html", {"request": request, "user": user})
 
 
 @app.get("/analytics", response_class=HTMLResponse)
 async def analytics_page(request: Request):
     """Dedicated bot brain analytics page."""
-    user = require_user(request)
+    user = _html_require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
     return templates.TemplateResponse("analytics.html", {"request": request, "user": user})
 
 
