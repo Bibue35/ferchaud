@@ -555,6 +555,17 @@ async def api_llm_status(request: Request):
         return JSONResponse({"error": str(e), "active": False}, status_code=200)
 
 
+@app.get("/api/llm/decisions")
+async def api_llm_decisions(request: Request, limit: int = 20):
+    """Recent LLM decisions for the dashboard rationale feed."""
+    require_user(request)
+    try:
+        from core.llm_brain import get_brain
+        return get_brain().recent_decisions(limit=limit)
+    except Exception as e:
+        return JSONResponse({"error": str(e), "decisions": []}, status_code=200)
+
+
 @app.get("/api/freqtrade/status")
 async def api_freqtrade_status(request: Request):
     """Show Freqtrade integration health if configured."""

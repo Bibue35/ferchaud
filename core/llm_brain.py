@@ -39,7 +39,7 @@ import json
 import os
 import threading
 import time
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Dict, List, Optional
@@ -213,6 +213,9 @@ class LLMBrain:
         self.cache = _DecisionCache()
         self._claude_ok = bool(ANTHROPIC_API_KEY)
         self._grok_ok = bool(XAI_API_KEY)
+        # Recent decision log (last 50) for the dashboard
+        self._recent: deque = deque(maxlen=50)
+        self._recent_lock = threading.RLock()
         if self._claude_ok:
             log.info("LLMBrain: Claude provider ready (model=%s)", ANTHROPIC_MODEL)
         if self._grok_ok:
@@ -252,6 +255,7 @@ class LLMBrain:
         if not self.has_provider or not self.budget.can_spend():
             dec = self._fallback_decision(side, signals, regime, recent_winrate)
             self.cache.put(cache_key, dec)
+            self._log_recent(strategy, symbol, side, dec)
             return dec
 
         prompt = self._build_user_prompt(
@@ -273,7 +277,28 @@ class LLMBrain:
         dec.elapsed_ms = int((time.time() - t0) * 1000)
         self.budget.spend()
         self.cache.put(cache_key, dec)
+        self._log_recent(strategy, symbol, side, dec)
         return dec
+
+    def _log_recent(self, strategy: str, symbol: str, side: str, dec: "Decision") -> None:
+        with self._recent_lock:
+            self._recent.appendleft({
+                "ts":         time.time(),
+                "strategy":   strategy,
+                "symbol":     symbol,
+                "side":       side,
+                "action":     dec.action,
+                "confidence": round(dec.confidence, 2),
+                "size_mult":  round(dec.size_mult, 2),
+                "rationale":  dec.rationale,
+                "provider":   dec.provider,
+                "elapsed_ms": dec.elapsed_ms,
+            })
+
+    def recent_decisions(self, limit: int = 20) -> list:
+        """Return the N most recent LLM decisions (for the dashboard)."""
+        with self._recent_lock:
+            return list(self._recent)[:limit]
 
     # ── Prompt building ───────────────────────────────────────────────────────
 

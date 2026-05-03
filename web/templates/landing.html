@@ -672,7 +672,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
           Scanning <span id="stock-counter">12,847</span> stocks...
         </div>
         <h1 id="typewriter-target"></h1>
-        <p class="hero-subtitle">AI-powered signals that scan the entire market, identify high-probability setups, and execute trades automatically. No emotion. No hesitation.</p>
+        <p class="hero-subtitle">Claude and Grok ratify every trade. The bot learns from every win and every loss. Battle-tested execution stack — Alpaca for stocks, Freqtrade for crypto. No emotion. No hesitation.</p>
         <div class="hero-ctas">
           <a href="/register" class="btn-hero-primary">Start Trading Free</a>
           <a href="#how" class="btn-hero-secondary">See How It Works</a>
@@ -747,24 +747,24 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 <section class="how-section diag-lines" id="how">
   <div class="container">
     <div class="section-label reveal">How It Works</div>
-    <h2 class="section-title reveal">Three steps to smarter trades</h2>
-    <p class="section-subtitle reveal">No PhD required. Connect your broker, set your risk level, and let the AI handle the rest.</p>
+    <h2 class="section-title reveal">Proven infrastructure. AI on top.</h2>
+    <p class="section-subtitle reveal">We don't reinvent the wheel — we make it think. Battle-tested execution platforms, supercharged with a Claude/Grok decision layer that learns from every trade.</p>
     <div class="steps-grid">
       <div class="steps-connector"></div>
       <div class="step-card reveal reveal-delay-1">
         <div class="step-num">1</div>
-        <h3 class="step-title">Connect</h3>
-        <p class="step-desc">Link your brokerage account in seconds. We support Alpaca, Interactive Brokers, and more. Your credentials never touch our servers.</p>
+        <h3 class="step-title">Scan &amp; Detect</h3>
+        <p class="step-desc">Our 12,000-symbol scanner + Freqtrade strategies + technical indicators surface candidate trades every few seconds, 24/7.</p>
       </div>
       <div class="step-card reveal reveal-delay-2">
         <div class="step-num">2</div>
-        <h3 class="step-title">Configure</h3>
-        <p class="step-desc">Set your risk tolerance, position sizes, and which strategies to run. Start with paper trading to build confidence.</p>
+        <h3 class="step-title">AI Ratifies</h3>
+        <p class="step-desc">Every candidate is sent to Claude (or Grok) with full market context. The AI vetoes weak setups, sizes the strong ones, and explains why in plain English.</p>
       </div>
       <div class="step-card reveal reveal-delay-3">
         <div class="step-num">3</div>
-        <h3 class="step-title">Execute</h3>
-        <p class="step-desc">The AI scans thousands of stocks in real-time, identifies setups, and executes trades automatically with strict risk management.</p>
+        <h3 class="step-title">Learn &amp; Adapt</h3>
+        <p class="step-desc">After every trade the bot labels its own mistakes — sold too early, false signal, late stop — and tunes stops, targets, and confidence thresholds for next time.</p>
       </div>
     </div>
   </div>
@@ -780,8 +780,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     <p class="section-subtitle reveal">Built by traders, for traders. Every feature solves a real problem.</p>
     <div class="bento-grid">
       <div class="bento-card wide reveal reveal-delay-1">
-        <h3 class="bento-title">AI Signal Engine</h3>
-        <p class="bento-desc">Multi-factor analysis combining technical indicators, volume profiles, and market microstructure data. Signals update in real-time as conditions change.</p>
+        <h3 class="bento-title">Claude + Grok Decision Brain</h3>
+        <p class="bento-desc">Every candidate trade is sent to a frontier LLM with full context: technicals, regime, recent mistakes, portfolio exposure. The AI returns a verdict — enter, skip, or wait — and explains why in plain English. Provider fallback chain (Claude → Grok → rule-based) means you're never offline.</p>
         <div class="bento-mini-chart">
           <div class="bar" style="height:30%"></div><div class="bar" style="height:45%"></div>
           <div class="bar" style="height:35%"></div><div class="bar" style="height:60%"></div>
@@ -792,17 +792,17 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
         </div>
       </div>
       <div class="bento-card reveal reveal-delay-2">
-        <h3 class="bento-title">Auto Execution</h3>
-        <p class="bento-desc">Sub-millisecond order routing directly to your broker. Market, limit, and trailing stop orders handled automatically.</p>
+        <h3 class="bento-title">Self-Learning</h3>
+        <p class="bento-desc">After every closed trade the bot labels its own mistake — sold too early, late stop, false signal — and tunes parameters automatically. The bot you start with is not the bot you finish with.</p>
       </div>
 
       <div class="bento-card reveal reveal-delay-3">
         <h3 class="bento-title">Risk Management</h3>
-        <p class="bento-desc">Position sizing, stop-losses, and portfolio-level risk limits enforced on every trade. Never risk more than you define.</p>
+        <p class="bento-desc">Bayesian Kelly sizing, VaR/CVaR, vol-targeting, and a hard max-drawdown circuit breaker. Position sizing scales with the AI's confidence — never blindly fixed.</p>
       </div>
       <div class="bento-card reveal reveal-delay-4">
-        <h3 class="bento-title">Live Dashboard</h3>
-        <p class="bento-desc">Real-time P&L, open positions, signal history, and performance analytics. All in one clean interface.</p>
+        <h3 class="bento-title">Battle-Tested Execution</h3>
+        <p class="bento-desc">Alpaca for stocks, Freqtrade adapter for crypto. We don't reinvent execution — we make it think. Bracket orders, smart routing, slippage control, all included.</p>
       </div>
       <div class="bento-card wide reveal reveal-delay-5">
         <h3 class="bento-title">Alerts & Notifications</h3>
@@ -1050,7 +1050,7 @@ function toggleTheme() {
 /* ── Typewriter Effect ────────────────────────────────────────── */
 (function() {
   const target = document.getElementById('typewriter-target');
-  const text = 'Buy the dip.\nSell the peak.';
+  const text = 'AI that thinks.\nA bot that learns.';
   let i = 0;
   const cursor = document.createElement('span');
   cursor.className = 'typewriter-cursor';

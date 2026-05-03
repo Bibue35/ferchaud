@@ -492,6 +492,22 @@
           <span style="font-weight:700;color:var(--text);">${{ "%.2f"|format(broker.cash if broker else 0) }}</span>
         </div>
       </div>
+      <!-- Latest AI Brain Decisions -->
+      <div class="panel" id="ai-decisions-panel">
+        <div class="panel-title">
+          <span style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/></svg>
+            <span>Latest AI Decisions</span>
+          </span>
+          <span id="ai-provider-pill" style="font-size:10px;font-weight:700;padding:2px 10px;border-radius:50px;background:var(--bg-cream);color:var(--muted);">FALLBACK</span>
+        </div>
+        <div id="ai-decisions-list" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;font-size:12px;">
+          <div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:12px;">
+            No AI decisions yet — start the bot to see rationale
+          </div>
+        </div>
+      </div>
+
       <!-- Market Scanner -->
       <div class="panel">
         <div class="panel-title"><span>Hot Movers</span>
@@ -704,7 +720,64 @@ async function loadTrades() {
 loadTrades();
 loadLearning();
 loadAnalytics();
-setInterval(function() { loadPortfolio(); loadTrades(); loadLearning(); loadAnalytics(); }, 15000);
+loadAIDecisions();
+setInterval(function() {
+  loadPortfolio(); loadTrades(); loadLearning();
+  loadAnalytics(); loadAIDecisions();
+}, 15000);
+
+// ── Latest AI decisions ───────────────────────────────────────────────────
+async function loadAIDecisions() {
+  try {
+    const [decs, status] = await Promise.all([
+      fetch('/api/llm/decisions?limit=15').then(r => r.json()),
+      fetch('/api/llm/status').then(r => r.json()),
+    ]);
+
+    // Update provider pill
+    const pill = document.getElementById('ai-provider-pill');
+    if (status && status.providers) {
+      if (status.providers.claude) {
+        pill.textContent = 'CLAUDE LIVE';
+        pill.style.background = 'rgba(217, 119, 87, 0.15)';
+        pill.style.color = '#d97757';
+      } else if (status.providers.grok) {
+        pill.textContent = 'GROK LIVE';
+        pill.style.background = 'rgba(99, 102, 241, 0.15)';
+        pill.style.color = '#6366f1';
+      } else {
+        pill.textContent = 'RULE-BASED';
+      }
+    }
+
+    const list = document.getElementById('ai-decisions-list');
+    if (!decs || !decs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:12px;">No AI decisions yet — start the bot to see rationale</div>';
+      return;
+    }
+    list.innerHTML = decs.map(d => {
+      const ago = Math.max(0, Math.floor((Date.now()/1000 - d.ts) / 60));
+      const actionColor = d.action === 'enter' ? '#22c55e' :
+                         d.action === 'wait'  ? '#fbbf24' : '#6b7280';
+      const actionLabel = d.action.toUpperCase();
+      return '<div style="background:var(--surface-2);border-radius:10px;padding:.6rem .8rem;border-left:3px solid '+actionColor+';">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+          '<span style="font-weight:700;color:var(--text);font-size:13px;">' + d.symbol + ' <span style="color:var(--muted);font-weight:500;">'+(d.side||'').toUpperCase()+'</span></span>' +
+          '<span style="font-size:10px;color:'+actionColor+';font-weight:700;">'+actionLabel+'</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--text-secondary);line-height:1.4;margin-bottom:4px;">' +
+          (d.rationale || '—') +
+        '</div>' +
+        '<div style="display:flex;gap:8px;font-size:10px;color:var(--muted);">' +
+          '<span>conf '+ ((d.confidence||0)*100).toFixed(0) +'%</span>' +
+          '<span>·</span><span>size ×'+ (d.size_mult||1).toFixed(2) +'</span>' +
+          '<span>·</span><span>'+ (d.provider||'?')+ '</span>' +
+          '<span style="margin-left:auto;">'+ago+'m ago</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {}
+}
 
 // ── Performance metrics ───────────────────────────────────────────────────
 async function loadAnalytics() {
