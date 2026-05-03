@@ -336,8 +336,13 @@ async def subscription_checkout(request: Request, body: dict = Body(...)):
     if not user:
         return JSONResponse({"error": "not_logged_in"})
     tier = body.get("tier", "pro")
-    if tier not in TIERS or not TIERS[tier]["stripe_price_id"]:
+    annual = bool(body.get("annual", False))
+    if tier not in TIERS:
         raise HTTPException(400, "Invalid tier")
+    info = TIERS[tier]
+    price_id = info.get("stripe_price_id_annual") if annual else info.get("stripe_price_id")
+    if not price_id:
+        raise HTTPException(400, f"No Stripe price configured for {tier} {'annual' if annual else 'monthly'}")
     db = SessionLocal()
     try:
         u = db.query(User).filter(User.id == user.id).first()
@@ -346,14 +351,13 @@ async def subscription_checkout(request: Request, body: dict = Body(...)):
             if cid:
                 u.stripe_customer_id = cid
                 db.commit()
-        price_id = TIERS[tier]["stripe_price_id"]
         base = str(request.base_url).rstrip("/")
         url  = create_checkout_session(
             u.stripe_customer_id or "", price_id,
-            success_url=f"{base}/dashboard?subscribed=1",
-            cancel_url=f"{base}/pricing",
+            success_url=f"{base}/dashboard?subscribed=1&tier={tier}",
+            cancel_url=f"{base}/#pricing",
         )
-        return {"url": url or f"{base}/pricing?error=stripe"}
+        return {"url": url or f"{base}/#pricing?error=stripe"}
     finally:
         db.close()
 

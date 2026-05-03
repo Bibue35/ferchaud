@@ -866,79 +866,105 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 <section class="pricing-section" id="pricing">
   <div class="container">
     <div class="section-label reveal" style="text-align:center">Pricing</div>
-    <h2 class="section-title reveal" style="text-align:center">Simple, transparent pricing</h2>
-    <p class="section-subtitle reveal" style="text-align:center; margin-left:auto; margin-right:auto;">No hidden fees. No commission on your trades. Upgrade or cancel anytime.</p>
+    <h2 class="section-title reveal" style="text-align:center">You keep 100% of your profits</h2>
+    <p class="section-subtitle reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
+      Flat monthly subscription. No revenue share. No commission on your trades. The bot works for you, not us.
+    </p>
     <div class="pricing-toggle-wrap reveal">
       <span class="pricing-toggle-label active" id="label-monthly">Monthly</span>
       <div class="pricing-toggle" id="pricing-toggle" onclick="togglePricing()">
         <div class="toggle-dot"></div>
       </div>
       <span class="pricing-toggle-label" id="label-annual">Annual</span>
-      <span class="save-badge">Save 20%</span>
+      <span class="save-badge">2 months free</span>
     </div>
     <div class="pricing-grid">
 
       <!-- Free -->
       <div class="pricing-card reveal reveal-delay-1">
         <div class="pricing-tier">Free</div>
-        <div class="pricing-price">$0<span class="period">/mo</span></div>
-        <p class="pricing-desc">Paper trading and basic signals. Perfect for learning the platform.</p>
+        <div class="pricing-price"><span class="price-val">$0</span><span class="period">/mo</span></div>
+        <p class="pricing-desc">Test the AI brain risk-free in paper trading. No credit card required.</p>
         <ul class="pricing-features">
           <li>Paper trading only</li>
-          <li>5 AI signals per day</li>
-          <li>Basic dashboard</li>
-          <li>Community support</li>
-          <li>1 strategy slot</li>
+          <li>50 AI decisions per day</li>
+          <li>All 13 strategies in dry-run</li>
+          <li>Mistake-detection journal</li>
+          <li>Real-time scanner & charts</li>
+          <li>30-day delayed live signals</li>
         </ul>
-        <a href="/register" class="btn-pricing">Get Started</a>
+        <a href="/signup" class="btn-pricing">Start free</a>
       </div>
+
       <!-- Starter -->
       <div class="pricing-card reveal reveal-delay-2">
         <div class="pricing-tier">Starter</div>
-        <div class="pricing-price"><span class="price-val">$29</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">For traders ready to go live with a small portfolio.</p>
+        <div class="pricing-price"><span class="price-val" data-monthly="19" data-annual="190">$19</span><span class="period">/mo</span></div>
+        <p class="pricing-desc">First-time live traders. Goes live with a small account, learns from every trade.</p>
         <ul class="pricing-features">
-          <li>Live trading enabled</li>
-          <li>25 AI signals per day</li>
-          <li>Auto-execution (up to $10K)</li>
-          <li>Email alerts</li>
-          <li>3 strategy slots</li>
-          <li>Email support</li>
+          <li>Live: stocks + crypto</li>
+          <li>Up to <b>$5K</b> deployed capital</li>
+          <li>200 AI decisions/day</li>
+          <li>All strategies + self-learning</li>
+          <li>Real-time signals & alerts</li>
+          <li>Trade journal CSV export</li>
+          <li>14-day free trial</li>
         </ul>
-        <a href="/register" class="btn-pricing">Start Free Trial</a>
+        <a href="/signup?plan=starter" class="btn-pricing">Start trial</a>
       </div>
 
       <!-- Pro (featured) -->
       <div class="pricing-card featured reveal reveal-delay-3">
         <div class="card-badge">Most Popular</div>
         <div class="pricing-tier">Pro</div>
-        <div class="pricing-price"><span class="price-val">$99</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">Full power for serious traders. No portfolio limits.</p>
+        <div class="pricing-price"><span class="price-val" data-monthly="59" data-annual="590">$59</span><span class="period">/mo</span></div>
+        <p class="pricing-desc">Serious traders ready to scale. Priority Claude on every trade.</p>
         <ul class="pricing-features">
-          <li>Unlimited AI signals</li>
-          <li>Auto-execution (unlimited)</li>
-          <li>SMS + push alerts</li>
-          <li>10 strategy slots</li>
-          <li>Advanced backtesting</li>
-          <li>Priority support</li>
+          <li>Up to <b>$50K</b> deployed</li>
+          <li>1,000 AI decisions/day</li>
+          <li>Priority Claude Sonnet</li>
+          <li>Options + insider-buy strategies</li>
+          <li>Grok X/Twitter sentiment</li>
+          <li>Custom strategy weights</li>
+          <li>5-year backtesting</li>
+          <li>API access</li>
         </ul>
-        <a href="/register" class="btn-pricing primary">Start Free Trial</a>
+        <a href="/signup?plan=pro" class="btn-pricing primary">Get Pro</a>
       </div>
+
       <!-- Elite -->
       <div class="pricing-card reveal reveal-delay-4">
         <div class="pricing-tier">Elite</div>
-        <div class="pricing-price"><span class="price-val">$299</span><span class="period">/mo</span></div>
-        <p class="pricing-desc">For power traders who want every possible edge.</p>
+        <div class="pricing-price"><span class="price-val" data-monthly="199" data-annual="1990">$199</span><span class="period">/mo</span></div>
+        <p class="pricing-desc">Funds, family offices, power users. Claude Opus on every trade.</p>
         <ul class="pricing-features">
-          <li>Everything in Pro</li>
-          <li>Custom strategy config</li>
-          <li>Dedicated support</li>
-          <li>API access</li>
-          <li>You keep 98% of profits</li>
+          <li><b>Unlimited</b> deployed capital</li>
+          <li><b>Unlimited</b> AI decisions</li>
+          <li>Claude Opus on every trade</li>
+          <li>Multi-account / co-managed</li>
+          <li>Custom strategies built for you</li>
+          <li>White-glove onboarding</li>
+          <li>24/7 phone & Slack support</li>
+          <li>Optional 10% perf fee &gt;$10K/mo</li>
         </ul>
-        <a href="#support" class="btn-pricing">Contact Us</a>
+        <a href="mailto:elite@ferchaud.com" class="btn-pricing">Talk to us</a>
       </div>
 
+    </div>
+
+    <!-- Realistic returns disclosure (research-grounded) -->
+    <div class="reveal" style="max-width: 900px; margin: 60px auto 0; padding: 28px 32px; border: 1px solid var(--border); border-radius: 18px; background: var(--bg-cream);">
+      <div style="display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px; opacity:.7;">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div style="flex:1; min-width:280px;">
+          <div style="font-weight:700; color:var(--text); margin-bottom:8px; font-size:14px;">Honest math, not hype</div>
+          <p style="font-size:13px; color:var(--text-secondary); line-height:1.65; margin:0;">
+            Realistic algo-trading returns range from <b>5–15% per year for beginners</b> and <b>15–25% for experienced traders</b>. Roughly 60% of retail algo-traders are profitable annually (vs 5–10% of manual day-traders). Past performance does not guarantee future results — markets are non-stationary. We charge a flat sub so we make money whether you win or lose, which means we have <i>zero incentive</i> to push you into bad trades.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1142,8 +1168,6 @@ function toggleTheme() {
 <script>
 /* ── Pricing Toggle ───────────────────────────────────────────── */
 var isAnnual = false;
-var monthlyPrices = { starter: 29, pro: 99, elite: 299 };
-var annualPrices  = { starter: 23, pro: 79, elite: 239 };
 
 function togglePricing() {
   isAnnual = !isAnnual;
@@ -1161,14 +1185,23 @@ function togglePricing() {
     labelA.classList.remove('active');
   }
 
-  var prices = isAnnual ? annualPrices : monthlyPrices;
-  var vals = document.querySelectorAll('.price-val');
-  vals.forEach(function(el) {
-    var card = el.closest('.pricing-card');
-    var tier = card.querySelector('.pricing-tier').textContent.trim().toLowerCase();
-    if (prices[tier] !== undefined) {
-      el.textContent = '$' + prices[tier];
+  // Update prices using data-monthly / data-annual attributes
+  document.querySelectorAll('.price-val').forEach(function(el) {
+    var monthly = el.getAttribute('data-monthly');
+    var annual  = el.getAttribute('data-annual');
+    if (!monthly) return;  // Free tier has no data attrs
+    if (isAnnual) {
+      // Display annual price, but show effective monthly (annual / 12)
+      var perMonth = Math.round(parseInt(annual) / 12);
+      el.textContent = '$' + perMonth;
+    } else {
+      el.textContent = '$' + monthly;
     }
+  });
+
+  // Update the period label to show /yr billing on annual
+  document.querySelectorAll('.pricing-price .period').forEach(function(el) {
+    el.textContent = isAnnual ? '/mo, billed yearly' : '/mo';
   });
 }
 </script>

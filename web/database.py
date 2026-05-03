@@ -26,7 +26,7 @@ class User(Base):
     trial_ends_at        = Column(DateTime, nullable=True)
     stripe_customer_id   = Column(String, nullable=True)
     stripe_sub_id        = Column(String, nullable=True)
-    revenue_share_pct    = Column(Float, default=0.80)         # fraction user keeps (e.g. 0.80 = 80%)
+    revenue_share_pct    = Column(Float, default=1.00)         # User keeps 100% — flat-sub model (May 2026 pricing change)
 
     # Wallet / bank
     wallet_address   = Column(String, nullable=True)           # ETH/EVM wallet
@@ -102,43 +102,125 @@ class Subscription(Base):
     updated_at     = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-# Subscription tier definitions
+# ══════════════════════════════════════════════════════════════════════════════
+#  Subscription tier definitions
+#
+#  Pricing strategy (post-research, May 2026):
+#    - Subscription-only — NO revenue share. Revenue share + sub double-dips
+#      and kills the funnel for small accounts ($1K @ 1.5%/mo = $15 profit;
+#      a $29 sub + 20% cut would leave the user net negative).
+#    - Tiers scale with AI compute (LLM calls/day) + deployed capital cap +
+#      access to advanced features (options, custom strategies).
+#    - Aligned with WunderTrading $20/$45/$90, Bitsgap $18/$44/$110,
+#      3Commas $15-$110. Coinrule Fund tier ($749/mo) is what we beat with
+#      our Elite at $199/mo.
+#    - Annual billing: 2 months free (16.7% off) — standard SaaS practice.
+#    - Performance fee is OPT-IN only on Elite, not bundled — keeps trust.
+# ══════════════════════════════════════════════════════════════════════════════
 TIERS = {
     "free": {
         "name": "Free",
+        "tagline": "Test the brain risk-free",
         "price_monthly": 0,
-        "revenue_share": 0.70,   # user keeps 70%
-        "platform_cut": 0.30,
-        "features": ["Up to $500 deployed", "Basic strategies", "24h delay on signals"],
-        "stripe_price_id": None,
+        "price_annual":  0,
+        "deployed_cap":  0,
+        "llm_calls_day": 50,
+        "revenue_share": 1.00,        # user keeps 100% — paper trading anyway
+        "platform_cut":  0.0,
+        "perf_fee":      0.0,
+        "features": [
+            "Paper trading only",
+            "50 AI decisions/day (Claude haiku)",
+            "All 13 core strategies in dry-run",
+            "Mistake-detection journal",
+            "Real-time scanner & charts",
+            "30-day delayed live signals",
+        ],
+        "cta": "Start free",
+        "stripe_price_id":        None,
+        "stripe_price_id_annual": None,
         "color": "#6b7280",
+        "popular": False,
     },
     "starter": {
         "name": "Starter",
-        "price_monthly": 29,
-        "revenue_share": 0.80,   # user keeps 80%
-        "platform_cut": 0.20,
-        "features": ["Up to $2K deployed", "All strategies", "Live signals", "Email alerts"],
-        "stripe_price_id": os.getenv("STRIPE_PRICE_STARTER", "price_starter"),
+        "tagline": "First-time live traders",
+        "price_monthly": 19,
+        "price_annual":  190,         # 16.7% off ($228 → $190)
+        "deployed_cap":  5000,
+        "llm_calls_day": 200,
+        "revenue_share": 1.00,        # NO revenue share
+        "platform_cut":  0.0,
+        "perf_fee":      0.0,
+        "features": [
+            "Live trading: stocks + crypto",
+            "Up to $5K deployed capital",
+            "200 AI decisions/day",
+            "All strategies + self-learning ON",
+            "Real-time signals & WebSocket feed",
+            "Email alerts on every trade",
+            "Trade journal export (CSV)",
+            "14-day free trial",
+        ],
+        "cta": "Start trial",
+        "stripe_price_id":        os.getenv("STRIPE_PRICE_STARTER", "price_starter"),
+        "stripe_price_id_annual": os.getenv("STRIPE_PRICE_STARTER_ANNUAL", "price_starter_annual"),
         "color": "#3b82f6",
+        "popular": False,
     },
     "pro": {
         "name": "Pro",
-        "price_monthly": 99,
-        "revenue_share": 0.90,   # user keeps 90%
-        "platform_cut": 0.10,
-        "features": ["Up to $10K deployed", "All strategies + options", "Priority signals", "API access", "Grok research"],
-        "stripe_price_id": os.getenv("STRIPE_PRICE_PRO", "price_pro"),
+        "tagline": "Serious traders ready to scale",
+        "price_monthly": 59,
+        "price_annual":  590,         # 16.7% off ($708 → $590)
+        "deployed_cap":  50000,
+        "llm_calls_day": 1000,
+        "revenue_share": 1.00,        # NO revenue share
+        "platform_cut":  0.0,
+        "perf_fee":      0.0,
+        "features": [
+            "Up to $50K deployed capital",
+            "1,000 AI decisions/day",
+            "Priority Claude Sonnet (better reasoning)",
+            "Options & insider-buy strategies",
+            "Grok X/Twitter sentiment research",
+            "Custom strategy weights",
+            "Full backtesting (5y history)",
+            "API access for custom alerts",
+            "Priority email support",
+        ],
+        "cta": "Get Pro",
+        "stripe_price_id":        os.getenv("STRIPE_PRICE_PRO", "price_pro"),
+        "stripe_price_id_annual": os.getenv("STRIPE_PRICE_PRO_ANNUAL", "price_pro_annual"),
         "color": "#8b5cf6",
+        "popular": True,              # featured tier
     },
     "elite": {
         "name": "Elite",
-        "price_monthly": 299,
-        "revenue_share": 0.98,   # user keeps 98%
-        "platform_cut": 0.02,
-        "features": ["Unlimited deployment", "White-glove setup", "Custom strategies", "Dedicated support", "0% revenue share on losses"],
-        "stripe_price_id": os.getenv("STRIPE_PRICE_ELITE", "price_elite"),
+        "tagline": "Funds, family offices, power users",
+        "price_monthly": 199,         # was 299 — Coinrule Fund tier was $749, we crush
+        "price_annual":  1990,        # 16.7% off ($2388 → $1990)
+        "deployed_cap":  None,        # unlimited
+        "llm_calls_day": None,        # unlimited
+        "revenue_share": 1.00,        # NO mandatory revenue share
+        "platform_cut":  0.0,
+        "perf_fee":      0.10,        # OPT-IN: 10% of profits above $10K/month
+        "features": [
+            "Unlimited deployed capital",
+            "Unlimited AI decisions/day",
+            "Claude Opus on every trade",
+            "Multi-account / co-managed",
+            "Custom strategies built for you",
+            "White-glove onboarding (1:1 call)",
+            "Dedicated account manager",
+            "24/7 phone & Slack support",
+            "Optional 10% perf fee >$10K/mo profits",
+        ],
+        "cta": "Talk to us",
+        "stripe_price_id":        os.getenv("STRIPE_PRICE_ELITE", "price_elite"),
+        "stripe_price_id_annual": os.getenv("STRIPE_PRICE_ELITE_ANNUAL", "price_elite_annual"),
         "color": "#f59e0b",
+        "popular": False,
     },
 }
 
