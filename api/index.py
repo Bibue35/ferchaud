@@ -1,11 +1,13 @@
-"""Vercel serverless entrypoint"""
-import sys, os
+"""Vercel deployment disabled — app moved to Railway."""
+from http.server import BaseHTTPRequestHandler
 
-# Add project root to path
-root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if root not in sys.path:
-    sys.path.insert(0, root)
 
-os.environ.setdefault("PYTHONPATH", root)
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(302)
+        self.send_header("Location", "https://ferchaud.up.railway.app")
+        self.end_headers()
 
-from web.server import app  # noqa: F401 — Vercel discovers `app`
+    do_POST = do_GET
+    do_PUT = do_GET
+    do_DELETE = do_GET
