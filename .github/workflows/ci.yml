@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-web.txt supabase python-dotenv stripe
+
+      - name: Compile Python modules
+        run: python -m compileall -q config.py core web api main.py cloud_start.py
+
+      - name: Import FastAPI app
+        run: python -c "from web.server import app; assert app.title == 'Ferchaud'"
