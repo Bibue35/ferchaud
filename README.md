@@ -8,7 +8,7 @@ Autonomous multi-strategy trading platform with a FastAPI web app, optional LLM 
 
 - **Parallel strategy engine** — Mean reversion, momentum, stat arb, scalper, catalyst, multi-factor ML, gap short, options catalyst, aggressive breakout, and more; combined via an alpha combiner with risk-parity or fixed weights.
 - **Risk & market structure** — Portfolio risk caps, drawdown halt, Kelly sizing, vol targeting, HMM regime detection, VPIN toxicity monitor.
-- **LLM judgment layer** — Claude (Anthropic) or Grok (xAI) can ratify, veto, and explain candidate signals; rule-based fallback when no API key is set.
+- **LLM judgment layer** — Claude, OpenAI, or Grok can ratify, veto, and explain candidate signals; rule-based fallback when no API key is set.
 - **Adaptive learning** — Trade journal and per-strategy “arms” that tune over time.
 - **Multi-broker adapters** — Alpaca (primary), plus Robinhood, Webull, IBKR, Tradier, Coinbase, Binance, Bybit, Kraken, and others under `core/brokers/`.
 - **Web dashboard** — Landing, dashboard, analytics, live feed, connections, auth (Supabase), Stripe subscriptions, and legal pages.
@@ -51,7 +51,7 @@ flowchart TB
 
 - Python **3.11+**
 - [Alpaca](https://alpaca.markets) API keys (paper or live)
-- Optional: `ANTHROPIC_API_KEY`, `XAI_API_KEY`, Supabase, Stripe, `DATABASE_URL` for production web
+- Optional: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`, Supabase, Stripe, `DATABASE_URL` for production web
 
 ## Quick start
 

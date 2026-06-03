@@ -23,9 +23,10 @@ returns a structured JSON decision:
     }
 
 Provider fallback:
-  1. Anthropic (Claude opus / sonnet / haiku) if ANTHROPIC_API_KEY set
-  2. xAI Grok if XAI_API_KEY set
-  3. Local rule-based fallback (no LLM) — never blocks the bot
+  1. Anthropic (Claude) if ANTHROPIC_API_KEY set
+  2. OpenAI if OPENAI_API_KEY set
+  3. xAI Grok if XAI_API_KEY set
+  4. Local rule-based fallback (no LLM) — never blocks the bot
 
 Cost control:
   • Decisions cached for 60 seconds per (symbol, side) pair
@@ -59,6 +60,10 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL   = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 ANTHROPIC_BASE    = "https://api.anthropic.com/v1"
 
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL   = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_BASE    = os.environ.get("OPENAI_BASE", "https://api.openai.com/v1")
+
 XAI_API_KEY = os.environ.get("XAI_API_KEY", "")
 XAI_MODEL   = os.environ.get("XAI_MODEL", "grok-4-1-fast")
 XAI_BASE    = "https://api.x.ai/v1"
@@ -81,7 +86,7 @@ class Decision:
     size_mult: float = 1.0        # 0.3..2.0
     rationale: str = ""
     risks: List[str] = field(default_factory=list)
-    provider: str = "fallback"    # claude | grok | fallback
+    provider: str = "fallback"    # claude | openai | grok | fallback
     elapsed_ms: int = 0
     cached: bool = False
 
@@ -212,20 +217,23 @@ class LLMBrain:
         self.budget = _Budget(DAILY_BUDGET)
         self.cache = _DecisionCache()
         self._claude_ok = bool(ANTHROPIC_API_KEY)
+        self._openai_ok = bool(OPENAI_API_KEY)
         self._grok_ok = bool(XAI_API_KEY)
         # Recent decision log (last 50) for the dashboard
         self._recent: deque = deque(maxlen=50)
         self._recent_lock = threading.RLock()
         if self._claude_ok:
             log.info("LLMBrain: Claude provider ready (model=%s)", ANTHROPIC_MODEL)
+        if self._openai_ok:
+            log.info("LLMBrain: OpenAI provider ready (model=%s)", OPENAI_MODEL)
         if self._grok_ok:
             log.info("LLMBrain: Grok provider ready (model=%s)", XAI_MODEL)
-        if not self._claude_ok and not self._grok_ok:
+        if not self._claude_ok and not self._openai_ok and not self._grok_ok:
             log.info("LLMBrain: no API keys — using local fallback only")
 
     @property
     def has_provider(self) -> bool:
-        return self._claude_ok or self._grok_ok
+        return self._claude_ok or self._openai_ok or self._grok_ok
 
     # ── Public ────────────────────────────────────────────────────────────────
 
@@ -264,11 +272,13 @@ class LLMBrain:
             portfolio_context,
         )
 
-        # Try Claude first if available, else Grok
+        # Claude → OpenAI → Grok
         dec: Optional[Decision] = None
         t0 = time.time()
         if self._claude_ok:
             dec = self._claude_call(prompt, timeout)
+        if dec is None and self._openai_ok:
+            dec = self._openai_call(prompt, timeout)
         if dec is None and self._grok_ok:
             dec = self._grok_call(prompt, timeout)
         if dec is None:
@@ -357,6 +367,38 @@ class LLMBrain:
             return self._parse_decision(text, "claude")
         except Exception as e:
             log.debug("Claude call error: %s", e)
+            return None
+
+    # ── Provider: OpenAI ──────────────────────────────────────────────────────
+
+    def _openai_call(self, user_prompt: str, timeout: int) -> Optional[Decision]:
+        try:
+            r = requests.post(
+                f"{OPENAI_BASE}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": OPENAI_MODEL,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 400,
+                    "response_format": {"type": "json_object"},
+                },
+                timeout=timeout,
+            )
+            if r.status_code != 200:
+                log.debug("OpenAI HTTP %s: %s", r.status_code, r.text[:200])
+                return None
+            data = r.json()
+            text = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+            return self._parse_decision(text, "openai")
+        except Exception as e:
+            log.debug("OpenAI call error: %s", e)
             return None
 
     # ── Provider: Grok ────────────────────────────────────────────────────────
